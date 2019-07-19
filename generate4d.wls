@@ -6,14 +6,14 @@ https://en.wikipedia.org/wiki/Regular_4-polytope#Properties_2
 *)
 
 
-shape = "cell120";
+(* shape = "cell120";*)
 
 
 (* shape = "polytope_52_5_3"; *)
-(* shape = "cell600"; *)
+shape = "cell600";
 
 dataFolder = "data";
-SingleCell = True;
+SingleCell = False;
 
 Print["Generating data for " <> shape];
 
@@ -30,14 +30,10 @@ getCellCenter[cell_] := Total[Flatten[cell, 1]];
 dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}];
 
 phi = GoldenRatio;
-mirrors = {
-	{0, 1, 0, 0	},
-	{1, phi, -1/phi, 0	},
-	{1, -phi, 1/phi, 0	},
-	{1, 0, phi, -1/phi	}
-};
-
-vertex1 = {0, 1/phi^2, 1, phi^2}; (* 120 cell *)
+configs = Get["configs.wl"]
+configs = configs /.{phi -> GoldenRatio};
+mirrors = configs[shape][[1]];
+vertex1 = configs[shape][[2]];
 
 face1 = {vertex1};
 finished = False;
@@ -72,7 +68,7 @@ For[i=0, i < 100 && countStart != Length[cells], i++,
 		cells = Union[cells, Map[reflect[#, mirrors[[mirrorIndex]] ]&, cells, {3}], SameTest -> sameCellCenter];
 	];
 
-	Print[Length[cells]];
+	Print["Generated " <> IntegerString[Length[cells]] <> " cells so far."];
 ]
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
