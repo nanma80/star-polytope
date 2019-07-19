@@ -1,10 +1,14 @@
 #!/usr/bin/env wolframscript
 
-(*
+(* 
+
 shape = "cell120";
+shape = "cell600";
+shape = "polytope_52_5_3";
+shape = "test";
 *)
 
-shape = "cell600";
+shape = "test";
 
 dataFolder = "data";
 
@@ -12,7 +16,7 @@ dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}]
 
 Print["Reading data for " <> shape <> " from " <> dataFileName];
 
-exportToPov = True;
+exportToPov = False;
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -30,9 +34,9 @@ getCellCenter[cell_] := Total[Flatten[cell, 1]];
 
 outputFileName = shape <> ".png";
 imageFolder = "output";
-If[exportToPov, outputFileName = "pov" <> outputFileName ];
+If[exportToPov, outputFileName = "pov_" <> outputFileName ];
 outputFileName = FileNameJoin[{imageFolder, outputFileName}];
-imageSize = {400, 300};
+imageSize = {600, 450};
 
 cells = Get[dataFileName];
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];

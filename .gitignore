@@ -5,6 +5,10 @@ tmp*
 *.gif
 !output/*
 
+
+output/*test.png
+data/test.wl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

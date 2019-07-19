@@ -6,11 +6,15 @@ https://en.wikipedia.org/wiki/Regular_4-polytope#Properties_2
 *)
 
 
-(* shape = "cell120";*)
+(* 
 
-
-(* shape = "polytope_52_5_3"; *)
+shape = "cell120";
 shape = "cell600";
+shape = "polytope_52_5_3";
+shape = "test";
+*)
+
+shape = "test";
 
 dataFolder = "data";
 SingleCell = False;
