@@ -1,14 +1,14 @@
 #!/usr/bin/env wolframscript
 
 (* 
-
+shape = "test";
 shape = "cell120";
 shape = "cell600";
 shape = "polytope_52_5_3";
-shape = "test";
+shape = "polytope_5_52_5";
 *)
 
-shape = "test";
+shape = "polytope_5_3_52";
 
 dataFolder = "data";
 
@@ -55,12 +55,11 @@ lighting = {{"Point", White, {10, -10, 10}}};
 graph = Graphics3D[
 	{
 		{
-			Opacity[0.5], FaceForm[Pink], Map[Polygon, Map[projectTo3d, faces, {2}]]
+			Opacity[0.6], FaceForm[Pink], Map[Polygon, Map[projectTo3d, faces, {2}]]
 		},
 		{
 			Opacity[0.9], FaceForm[Red], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
 		},
-
 		{
 			Opacity[0.9], FaceForm[Darker[Red]], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
 		}

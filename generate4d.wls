@@ -7,14 +7,14 @@ https://en.wikipedia.org/wiki/Regular_4-polytope#Properties_2
 
 
 (* 
-
+shape = "test";
 shape = "cell120";
 shape = "cell600";
 shape = "polytope_52_5_3";
-shape = "test";
+shape = "polytope_5_52_5";
 *)
 
-shape = "test";
+shape = "polytope_5_3_52";
 
 dataFolder = "data";
 SingleCell = False;

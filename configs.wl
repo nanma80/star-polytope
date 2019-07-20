@@ -29,15 +29,36 @@ configs = <|
 		{0, 1, 1/phi, phi}
 	},
 
+	"polytope_5_52_5" -> {
+		{
+			{0, 1, 0, 0	},
+			{1, phi, -1/phi, 0	},
+			{1, -phi, 1/phi, 0	},
+			{1, 0, phi, -1/phi	}
+		}, 
+		{0, 1, 1/phi, phi}
+	},
+
+	"polytope_5_3_52" -> {
+		{
+			{0, 1, 0, 0	},
+			{1, phi, -1/phi, 0	},
+			{1, -phi, 1/phi, 0	},
+			{1, 0, phi, -1/phi	}
+		}, 
+		{1, 1, 1, 1}
+	},
+
+
 	(* doesn't work. this is only 600-cell *)
 	"test" -> {
 		{
-			{1, 0, phi, -1/phi	},
-			{1, -phi, 1/phi, 0	},
+			{0, 1, 0, 0	},
 			{1, phi, -1/phi, 0	},
-			{1, -phi, -1/phi, 0	}
+			{1, -phi, 1/phi, 0	},
+			{1, 0, phi, -1/phi	}
 		}, 
-		{0, 0, 0, 1}
+		{1, 1, 1, 1}
 	},
 
 	"null" -> {}
