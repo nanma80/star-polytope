@@ -10,16 +10,17 @@ https://en.wikipedia.org/wiki/Regular_4-polytope#Properties_2
 shape = "test";
 shape = "cell120";
 shape = "cell600";
+shape = "polytope_3_5_52";
 shape = "polytope_52_5_3";
 shape = "polytope_5_52_5";
 shape = "polytope_5_3_52";
 shape = "polytope_52_5_52";
 *)
 
-shape = "test";
+shape = "polytope_3_5_52";
 
 dataFolder = "data";
-SingleCell = False;
+AllCells = True;
 
 Print["Generating data for " <> shape];
 
@@ -65,7 +66,7 @@ Print["Each cell contains " <> IntegerString[Length[cell1]] <> " faces."];
 
 cells = {cell1};
 countStart = -1;
-mirrorCount = If[SingleCell, 3, 4];
+mirrorCount = If[AllCells, 4, 3];
 
 For[i=0, i < 100 && countStart != Length[cells], i++,
 	countStart = Length[cells];
