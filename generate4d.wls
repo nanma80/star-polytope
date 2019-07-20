@@ -12,9 +12,11 @@ shape = "cell120";
 shape = "cell600";
 shape = "polytope_52_5_3";
 shape = "polytope_5_52_5";
+shape = "polytope_5_3_52";
+shape = "polytope_52_5_52";
 *)
 
-shape = "polytope_5_3_52";
+shape = "test";
 
 dataFolder = "data";
 SingleCell = False;
