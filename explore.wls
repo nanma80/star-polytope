@@ -10,7 +10,7 @@ shape = "polytope_5_3_52";
 shape = "polytope_52_5_52";
 *)
 
-shape = "polytope_3_5_52";
+shape = "test";
 
 dataFolder = "data";
 
@@ -43,7 +43,36 @@ imageSize = {600, 450};
 cells = Get[dataFileName];
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
-cellCenters = Map[getCellCenter, cells];
-cellCenters = SortBy[cellCenters, Last];
-Print[cellCenters[[1]]//Simplify];
+cellCenters = Map[getCellCenter[#]&, cells];
+cellCenters = SortBy[N[cellCenters], Last];
 
+face = cells[[1]][[1]]//Simplify;
+
+Print[face];
+Print[face[[1]]-face[[2]]//Simplify//N];
+Print[face[[2]]-face[[3]]//Simplify//N];
+Print[Total[face]//Simplify//N ];
+
+m = {face[[1]]-face[[2]], face[[2]]-face[[3]], Total[face]};
+Print[m];
+Print[NullSpace[m]//FullSimplify];
+
+Print[cellCenters//N];
+Print[Map[Norm, cellCenters]];
+
+(*Print[cellCenters[[1]]//Simplify];*)
+
+(*
+
+
+centralCell = Select[cells, (getCellCenter[#][[1]] == 0 && getCellCenter[#][[2]] == 0 && getCellCenter[#][[3]] == 0 && getCellCenter[#][[4]] >= 0)&][[1]];
+
+cell2 = Select[cells, (getCellCenter[#][[4]] == 15*(3 + Sqrt[5]))&];
+Print[Length[cell2]];
+
+c1=getCellCenter[centralCell]/60//Simplify;
+c2=getCellCenter[cell2]/60//Simplify;
+
+Print[Simplify[2*(c1-c2)]//N];
+
+*)

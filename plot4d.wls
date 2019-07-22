@@ -11,7 +11,7 @@ shape = "polytope_5_3_52";
 shape = "polytope_52_5_52";
 *)
 
-shape = "polytope_3_5_52";
+shape = "test";
 
 dataFolder = "data";
 
@@ -19,7 +19,9 @@ dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}]
 
 Print["Reading data for " <> shape <> " from " <> dataFileName];
 
-exportToPov = True;
+exportToPov = False;
+plotAllCells = True;
+
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -42,9 +44,11 @@ outputFileName = FileNameJoin[{imageFolder, outputFileName}];
 imageSize = {600, 450};
 
 cells = Get[dataFileName];
-(*
-cells = Select[cells, (getCellCenter[#][[1]] == 0 && getCellCenter[#][[2]] == 0 && getCellCenter[#][[3]] == 0 && getCellCenter[#][[4]] >= 0)&];
-*)
+
+If[plotAllCells,
+	(* doing nothing *) True,
+	cells = Select[cells, (getCellCenter[#][[1]] == 0 && getCellCenter[#][[2]] == 0 && getCellCenter[#][[3]] == 0 && getCellCenter[#][[4]] >= 0)&];
+]
 
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 

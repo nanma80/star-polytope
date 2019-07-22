@@ -17,7 +17,7 @@ shape = "polytope_5_3_52";
 shape = "polytope_52_5_52";
 *)
 
-shape = "polytope_3_5_52";
+shape = "test";
 
 dataFolder = "data";
 AllCells = True;
@@ -68,7 +68,7 @@ cells = {cell1};
 countStart = -1;
 mirrorCount = If[AllCells, 4, 3];
 
-For[i=0, i < 100 && countStart != Length[cells], i++,
+For[i=0, i < 1 && countStart != Length[cells], i++,
 	countStart = Length[cells];
 	
 	For[mirrorIndex = mirrorCount, mirrorIndex >= 1, mirrorIndex--,
@@ -77,6 +77,11 @@ For[i=0, i < 100 && countStart != Length[cells], i++,
 
 	Print["Generated " <> IntegerString[Length[cells]] <> " cells so far."];
 ]
+
+(*
+cells = Union[cells, Map[reflect[#, mirrors[[4]] ]&, cells, {3}], SameTest -> sameCellCenter];
+*)
+
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
 If[FileExistsQ[dataFileName], DeleteFile[dataFileName]];
