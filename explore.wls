@@ -56,7 +56,7 @@ m = {face[[1]],face[[2]], face[[3]]};
 Print[m];
 Print[NullSpace[m]//FullSimplify];
 Print[NullSpace[m]//FullSimplify//N];
-
+Print[NullSpace[m]*GoldenRatio//FullSimplify//N];
 
 (*Print[cellCenters[[1]]//Simplify];*)
 
