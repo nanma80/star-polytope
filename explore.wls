@@ -4,13 +4,17 @@
 shape = "test";
 shape = "cell120";
 shape = "cell600";
+shape = "polytope_3_5_52";
 shape = "polytope_52_5_3";
 shape = "polytope_5_52_5";
 shape = "polytope_5_3_52";
+shape = "polytope_52_3_5";
 shape = "polytope_52_5_52";
+shape = "polytope_5_52_3";
+shape = "polytope_3_52_5";
 *)
 
-shape = "polytope_5_52_3";
+shape = "test";
 
 dataFolder = "data";
 
@@ -18,7 +22,7 @@ dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}]
 
 Print["Reading data for " <> shape <> " from " <> dataFileName];
 
-exportToPov = True;
+exportToPov = False;
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];

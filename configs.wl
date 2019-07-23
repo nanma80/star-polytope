@@ -72,6 +72,13 @@ configs = <|
 
 	(* Great stellated 120-cell. cell: great stellated dodecahedron *)
 	"polytope_52_3_5" -> {
+		{
+			{1, -phi, -1/phi, 0	},
+			{1, phi, -1/phi, 0	},
+			{0, 0, 1, 0},
+			{1, 0, phi, -1/phi	}
+		}, 
+		{1/phi, phi, 0, 1}
 	},
 
 	(* Grand stellated 120-cell. cell: {5/2, 5}. Small stellated dodecahedron. Self dual *)
@@ -119,12 +126,12 @@ configs = <|
 
 	"test" -> {
 		{
-			{0, 1, 0, 0	},
+			{1, -phi, -1/phi, 0	},
 			{1, phi, -1/phi, 0	},
-			{1, -phi, 1/phi, 0	},
+			{0, 0, 1, 0},
 			{1, 0, phi, -1/phi	}
 		}, 
-		{0, phi, 1, 1/phi}
+		{1/phi, phi, 0, 1}
 	},
 
 	"null" -> {}
