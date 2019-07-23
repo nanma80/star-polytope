@@ -15,9 +15,10 @@ shape = "polytope_52_5_3";
 shape = "polytope_5_52_5";
 shape = "polytope_5_3_52";
 shape = "polytope_52_5_52";
+shape = "polytope_3_52_5";
 *)
 
-shape = "polytope_3_52_5";
+shape = "polytope_5_52_3";
 
 dataFolder = "data";
 AllCells = True;
@@ -68,7 +69,7 @@ cells = {cell1};
 countStart = -1;
 mirrorCount = If[AllCells, 4, 3];
 
-For[i=0, i < 10 && countStart != Length[cells], i++,
+For[i=0, i < 100 && countStart != Length[cells], i++,
 	countStart = Length[cells];
 	
 	For[mirrorIndex = mirrorCount, mirrorIndex >= 1, mirrorIndex--,

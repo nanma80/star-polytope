@@ -87,6 +87,13 @@ configs = <|
 
 	(* Great grand 120-cell. cell: Great dodecahedron *)
 	"polytope_5_52_3" -> {
+		{
+			{0, 1, 0, 0	},
+			{1, phi, -1/phi, 0	},
+			{1, -phi, 1/phi, 0	},
+			{1, 0, phi, -1/phi	}
+		}, 
+		{0, phi, 1, 1/phi}
 	},
 
 	(* Greate icosahedral 120-cell. cell: great icosahedron *)
@@ -113,11 +120,11 @@ configs = <|
 	"test" -> {
 		{
 			{0, 1, 0, 0	},
-			{phi, 1, -1/phi, 0},
-			{0, 0, 1, 0},
-			{phi, 1/phi, 0, 1}
-		},
-		{1, phi, 0, 1/phi}
+			{1, phi, -1/phi, 0	},
+			{1, -phi, 1/phi, 0	},
+			{1, 0, phi, -1/phi	}
+		}, 
+		{0, phi, 1, 1/phi}
 	},
 
 	"null" -> {}
