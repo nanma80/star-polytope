@@ -37,6 +37,7 @@ sameCenter[edge1_, edge2_] := Total[edge1] == Total[edge2];
 sameCellCenter[cell1_, cell2_] := getCellCenter[cell1] == getCellCenter[cell2];
 getCellCenter[cell_] := Total[Flatten[cell, 1]];
 
+phi=GoldenRatio;
 
 outputFileName = shape <> ".png";
 imageFolder = "output";
@@ -53,10 +54,27 @@ cellCenters = Map[getCellCenter[#]&, cells];
 face = cells[[1]][[1]]//Simplify;
 
 m = {face[[1]],face[[2]], face[[3]]};
-Print[m];
+Print[m//N];
+Print[EuclideanDistance[face[[1]], face[[2]]]//FullSimplify];
+Print[EuclideanDistance[face[[1]], face[[3]]]//FullSimplify];
+Print[EuclideanDistance[face[[3]], face[[2]]]//FullSimplify];
+Print[EuclideanDistance[face[[3]], face[[2]]]//N];
+
+
+newPoint = -{1/phi, 0, phi, 1};
+
+Print[EuclideanDistance[face[[1]], newPoint]//FullSimplify];
+Print[EuclideanDistance[face[[2]], newPoint]//FullSimplify];
+Print[EuclideanDistance[face[[3]], newPoint]//FullSimplify];
+Print[EuclideanDistance[face[[1]], newPoint]//N];
+
+Print[m[[3]] - newPoint//N];
+
+
 Print[NullSpace[m]//FullSimplify];
 Print[NullSpace[m]//FullSimplify//N];
 Print[NullSpace[m]*GoldenRatio//FullSimplify//N];
+
 
 (*Print[cellCenters[[1]]//Simplify];*)
 

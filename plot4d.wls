@@ -2,8 +2,8 @@
 
 (* 
 shape = "test";
-shape = "cell120";
-shape = "cell600";
+shape = "polytope_5_3_3_cell120";
+shape = "polytope_3_3_5_cell600";
 shape = "polytope_3_5_52";
 shape = "polytope_52_5_3";
 shape = "polytope_5_52_5";
@@ -12,10 +12,11 @@ shape = "polytope_52_3_5";
 shape = "polytope_52_5_52";
 shape = "polytope_5_52_3";
 shape = "polytope_3_52_5";
+shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "test";
+shape = "polytope_5_3_3_cell120";
 
 dataFolder = "data";
 
@@ -67,16 +68,30 @@ Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."];
 thinkness = Norm[vertices[[1]]] * 0.008;
 lighting = {{"Point", White, {10, -10, 10}}};
 
+shapeTokens = StringSplit[shape, "_"];
+cellShape = shapeTokens[[2]] <> "_" <> shapeTokens[[3]];
+
+colors = <|
+	"5_3" -> Red,
+	"3_5" -> Green,
+	"52_5" -> Blue,
+	"5_52" -> Yellow,
+	"52_3" -> Magenta,
+	"3_52" -> Purple
+|>
+
+color = colors[cellShape];
+
 graph = Graphics3D[
 	{
 		{
-			Opacity[0.7], FaceForm[Pink], Map[Polygon, Map[projectTo3d, faces, {2}]]
+			Opacity[0.7], FaceForm[Lighter[color, 0.65]], Map[Polygon, Map[projectTo3d, faces, {2}]]
 		},
 		{
-			Opacity[0.9], FaceForm[Red], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
+			Opacity[0.9], FaceForm[color], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
 		},
 		{
-			Opacity[0.9], FaceForm[Darker[Red]], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
+			Opacity[0.9], FaceForm[Darker[color]], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
 		}
 	},
 (*	ViewPoint -> vertices[[7]] * 3, *)

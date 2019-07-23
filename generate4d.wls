@@ -8,8 +8,8 @@ https://en.wikipedia.org/wiki/Regular_4-polytope#Properties_2
 
 (* 
 shape = "test";
-shape = "cell120";
-shape = "cell600";
+shape = "polytope_5_3_3_cell120";
+shape = "polytope_3_3_5_cell600";
 shape = "polytope_3_5_52";
 shape = "polytope_52_5_3";
 shape = "polytope_5_52_5";
@@ -18,13 +18,14 @@ shape = "polytope_52_3_5";
 shape = "polytope_52_5_52";
 shape = "polytope_5_52_3";
 shape = "polytope_3_52_5";
+shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
 shape = "test";
 
 dataFolder = "data";
-AllCells = False;
+AllCells = True;
 
 Print["Generating data for " <> shape];
 
@@ -77,7 +78,6 @@ For[i=0, i < 100 && countStart != Length[cells], i++,
 	
 	For[mirrorIndex = mirrorCount, mirrorIndex >= 1, mirrorIndex--,
 		cells = Union[cells, Map[reflect[#, mirrors[[mirrorIndex]] ]&, cells, {3}], SameTest -> sameCellCenter];
-		Print["Generated " <> IntegerString[Length[cells]] <> " cells so far."];
 	];
 
 	Print["Generated " <> IntegerString[Length[cells]] <> " cells so far."];

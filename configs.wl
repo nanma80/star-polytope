@@ -5,7 +5,7 @@ configs = <|
 	*)
 
 	(* 120-cell *)
-	"cell120" -> {
+	"polytope_5_3_3_cell120" -> {
 		{
 			{0, 1, 0, 0	},
 			{1, phi, -1/phi, 0	},
@@ -16,7 +16,7 @@ configs = <|
 	},
 
 	(* 600-cell *)
-	"cell600" -> {
+	"polytope_3_3_5_cell600" -> {
 		{
 			{1, 0, phi, -1/phi	},
 			{1, -phi, 1/phi, 0	},
@@ -116,6 +116,13 @@ configs = <|
 
 	(* Grand 600-cell. cell: tetrahedron, 600 cells *)
 	"polytope_3_3_52" -> {
+		{
+			{phi, 1, -1/phi, 0},
+			{0, 1, 0, 0	},
+			{-1/phi, 0, phi, 1},
+			{1/phi, 0, phi, -1}
+		},
+		{1, phi, 0, 1/phi}
 	},
 
 	(* Great grand stellated 120-cell. cell: great stellated dodecahedron *)
@@ -129,14 +136,12 @@ configs = <|
 		{1, phi^2, 0, 1/phi^2}
 	},
 
-
-
 	"test" -> {
 		{
-			{0, 1, 0, 0	},
 			{phi, 1, -1/phi, 0},
-			{1, phi, -1/phi, 0	},
-			{0, 1, 0, 0	}
+			{0, 1, 0, 0	},
+			{-1/phi, 0, phi, 1},
+			{1/phi, 0, phi, -1}
 		},
 		{1, phi, 0, 1/phi}
 	},
