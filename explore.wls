@@ -10,7 +10,7 @@ shape = "polytope_5_3_52";
 shape = "polytope_52_5_52";
 *)
 
-shape = "test";
+shape = "polytope_3_5_52";
 
 dataFolder = "data";
 
@@ -44,26 +44,22 @@ cells = Get[dataFileName];
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
 cellCenters = Map[getCellCenter[#]&, cells];
-cellCenters = SortBy[N[cellCenters], Last];
+(*cellCenters = SortBy[N[cellCenters], Last];*)
 
 face = cells[[1]][[1]]//Simplify;
 
-Print[face];
-Print[face[[1]]-face[[2]]//Simplify//N];
-Print[face[[2]]-face[[3]]//Simplify//N];
-Print[Total[face]//Simplify//N ];
-
-m = {face[[1]]-face[[2]], face[[2]]-face[[3]], Total[face]};
+m = {face[[1]],face[[2]], face[[3]]};
 Print[m];
 Print[NullSpace[m]//FullSimplify];
+Print[NullSpace[m]//FullSimplify//N];
 
-Print[cellCenters//N];
-Print[Map[Norm, cellCenters]];
 
 (*Print[cellCenters[[1]]//Simplify];*)
 
 (*
 
+Print[cellCenters//N];
+Print[Map[Norm, cellCenters]];
 
 centralCell = Select[cells, (getCellCenter[#][[1]] == 0 && getCellCenter[#][[2]] == 0 && getCellCenter[#][[3]] == 0 && getCellCenter[#][[4]] >= 0)&][[1]];
 

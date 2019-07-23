@@ -29,12 +29,12 @@ configs = <|
 	(* Icosahedral 120-cell. cell: icosahedron *)
 	"polytope_3_5_52" -> {
 		{
-			{1, 0, phi, -1/phi	},
-			{1, -phi, 1/phi, 0	},
 			{0, 1, 0, 0	},
-			{1, phi, -1/phi, 0	}
+			{phi, 1, -1/phi, 0},
+			{1/phi, phi, -1, 0},
+			{phi, 1/phi, 0, 1}
 		},
-		{0, 0, 0, 1}
+		{0, 1/phi, 1, phi}
 	},
 
 	(* Small stellated 120-cell. cell: {5/2, 5}. Small stellated dodecahedron *)
@@ -105,13 +105,12 @@ configs = <|
 
 	"test" -> {
 		{
-			{1, 0, phi, -1/phi	},
-			{1, -phi, 1/phi, 0	},
 			{0, 1, 0, 0	},
-			(*{1, phi, -1/phi, 0	}*)
-			{1, -1, -1, 1}
+			{phi, 1, -1/phi, 0},
+			{1/phi, phi, -1, 0},
+			{phi, 1/phi, 0, 1}
 		},
-		{0, -phi, 1, phi^2}
+		{0, 1/phi, 1, phi}
 	},
 
 	"null" -> {}
