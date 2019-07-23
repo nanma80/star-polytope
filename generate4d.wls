@@ -20,7 +20,7 @@ shape = "polytope_52_5_52";
 shape = "test";
 
 dataFolder = "data";
-AllCells = True;
+AllCells = False;
 
 Print["Generating data for " <> shape];
 
@@ -68,19 +68,20 @@ cells = {cell1};
 countStart = -1;
 mirrorCount = If[AllCells, 4, 3];
 
-For[i=0, i < 1 && countStart != Length[cells], i++,
+For[i=0, i < 10 && countStart != Length[cells], i++,
 	countStart = Length[cells];
 	
 	For[mirrorIndex = mirrorCount, mirrorIndex >= 1, mirrorIndex--,
 		cells = Union[cells, Map[reflect[#, mirrors[[mirrorIndex]] ]&, cells, {3}], SameTest -> sameCellCenter];
+		Print["Generated " <> IntegerString[Length[cells]] <> " cells so far."];
 	];
 
 	Print["Generated " <> IntegerString[Length[cells]] <> " cells so far."];
 ]
 
-(*
+
 cells = Union[cells, Map[reflect[#, mirrors[[4]] ]&, cells, {3}], SameTest -> sameCellCenter];
-*)
+
 
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 

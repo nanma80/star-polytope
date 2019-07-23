@@ -107,12 +107,11 @@ configs = <|
 		{
 			{1, 0, phi, -1/phi	},
 			{1, -phi, 1/phi, 0	},
-			{0, 1, 0, 0},
-			(*{1, 0, -phi, -1/phi	} exhausted all ending with 1/phi and -1/phi*)
-			{2, 1, -1/phi, phi}
+			{0, 1, 0, 0	},
+			(*{1, phi, -1/phi, 0	}*)
+			{1, -1, -1, 1}
 		},
-		(*{-1, -1, -1, -1}*)
-		{0, -1, 1/phi, phi}
+		{0, -phi, 1, phi^2}
 	},
 
 	"null" -> {}
