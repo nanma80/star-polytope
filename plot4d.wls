@@ -11,7 +11,7 @@ shape = "polytope_5_3_52";
 shape = "polytope_52_5_52";
 *)
 
-shape = "test";
+shape = "polytope_3_52_5";
 
 dataFolder = "data";
 
@@ -19,7 +19,7 @@ dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}]
 
 Print["Reading data for " <> shape <> " from " <> dataFileName];
 
-exportToPov = False;
+exportToPov = True;
 plotAllCells = True;
 
 

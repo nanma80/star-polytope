@@ -17,7 +17,7 @@ shape = "polytope_5_3_52";
 shape = "polytope_52_5_52";
 *)
 
-shape = "test";
+shape = "polytope_3_52_5";
 
 dataFolder = "data";
 AllCells = True;
@@ -79,9 +79,9 @@ For[i=0, i < 10 && countStart != Length[cells], i++,
 	Print["Generated " <> IntegerString[Length[cells]] <> " cells so far."];
 ]
 
-
+(*
 cells = Union[cells, Map[reflect[#, mirrors[[4]] ]&, cells, {3}], SameTest -> sameCellCenter];
-
+*)
 
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
