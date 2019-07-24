@@ -1,5 +1,10 @@
 #!/usr/bin/env wolframscript
 
+(*
+mogrify -crop 450x450+75+0 -path . pov_*.png
+mogrify -crop 300x300+50+0 -path . explode*.gif
+*)
+
 (* 
 shape = "test";
 shape = "polytope_5_3_3_cell120";
@@ -16,10 +21,10 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "polytope_3_52_5";
+shape = "test";
 
-activeLayer = 4;
-
+activeLayer = 3;
+exportToPov = True;
 
 dataFolder = "data";
 
@@ -27,7 +32,7 @@ dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}]
 
 Print["Reading data for " <> shape <> " from " <> dataFileName];
 
-exportToPov = False;
+
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -96,10 +101,10 @@ graph = Graphics3D[
 			Opacity[0.6], FaceForm[Lighter[color, 0.3]], Map[Polygon, Map[projectTo3d, faces, {2}]]
 		},
 		{
-			Opacity[0.9], FaceForm[color], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
+			Opacity[0.9], FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
 		},
 		{
-			Opacity[0.9], FaceForm[Darker[color]], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
+			Opacity[0.9], FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
 		}
 	},
 (*	ViewPoint -> vertices[[7]] * 3, *)
