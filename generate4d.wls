@@ -25,7 +25,7 @@ shape = "polytope_52_3_3";
 shape = "test";
 
 dataFolder = "data";
-AllCells = True;
+AllCells = False;
 
 Print["Generating data for " <> shape];
 

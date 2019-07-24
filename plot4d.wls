@@ -16,7 +16,7 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "polytope_5_3_3_cell120";
+shape = "polytope_52_5_52";
 
 dataFolder = "data";
 
@@ -24,7 +24,7 @@ dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}]
 
 Print["Reading data for " <> shape <> " from " <> dataFileName];
 
-exportToPov = False;
+exportToPov = True;
 plotAllCells = True;
 
 
@@ -69,23 +69,26 @@ thinkness = Norm[vertices[[1]]] * 0.008;
 lighting = {{"Point", White, {10, -10, 10}}};
 
 shapeTokens = StringSplit[shape, "_"];
-cellShape = shapeTokens[[2]] <> "_" <> shapeTokens[[3]];
+If[Length[shapeTokens] < 3,
+	color = Gray,
 
-colors = <|
-	"5_3" -> Red,
-	"3_5" -> Green,
-	"52_5" -> Blue,
-	"5_52" -> Yellow,
-	"52_3" -> Magenta,
-	"3_52" -> Purple
-|>
-
-color = colors[cellShape];
+	cellShape = shapeTokens[[2]] <> "_" <> shapeTokens[[3]];
+	colors = <|
+		"3_3" -> Cyan,
+		"5_3" -> Red,
+		"3_5" -> Green,
+		"52_5" -> Blue,
+		"5_52" -> Yellow,
+		"52_3" -> Magenta,
+		"3_52" -> Purple
+	|>;
+	color = colors[cellShape];
+]
 
 graph = Graphics3D[
 	{
 		{
-			Opacity[0.7], FaceForm[Lighter[color, 0.65]], Map[Polygon, Map[projectTo3d, faces, {2}]]
+			Opacity[0.6], FaceForm[Lighter[color, 0.3]], Map[Polygon, Map[projectTo3d, faces, {2}]]
 		},
 		{
 			Opacity[0.9], FaceForm[color], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
@@ -101,7 +104,7 @@ graph = Graphics3D[
 
 If[exportToPov,
 	If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
-	POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize];
+	POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize, RenderOptions -> "+A0.001 -J +UA"];
 	,
 	Export[outputFileName, graph]
 ]
