@@ -16,7 +16,7 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "polytope_52_5_52";
+shape = "polytope_52_3_3";
 
 dataFolder = "data";
 
