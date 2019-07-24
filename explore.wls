@@ -35,9 +35,9 @@ explodedFace[face_, explosionFactor_] := Map[(# + Mean[face] * explosionFactor)&
 sameVertex[point1_, point2_] := point1 == point2;
 sameCenter[edge1_, edge2_] := Total[edge1] == Total[edge2];
 sameCellCenter[cell1_, cell2_] := getCellCenter[cell1] == getCellCenter[cell2];
-getCellCenter[cell_] := Total[Flatten[cell, 1]];
+getCellCenter[cell_] := Simplify[Total[Flatten[cell, 1]]];
 
-phi=GoldenRatio;
+phi = GoldenRatio;
 
 outputFileName = shape <> ".png";
 imageFolder = "output";
@@ -49,7 +49,26 @@ cells = Get[dataFileName];
 Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
 cellCenters = Map[getCellCenter[#]&, cells];
+(*Print[Map[#[[4]]&, cellCenters]];*)
+
+cellsByLayers = GroupBy[cells, getCellCenter[#][[4]]&];
+layerKeys = Sort[Keys[cellsByLayers], Greater];
+
+Print[layerKeys//N];
+Map[Print[{N[#], Length[cellsByLayers[#]]}]& , layerKeys];
+
+layerLimit = 2;
+cells = Apply[Join, Table[cellsByLayers[layerKeys[[k]]], {k, 1, layerLimit}]];
+Print[cells//Length];
+
+
 (*cellCenters = SortBy[N[cellCenters], Last];*)
+
+
+
+(*Print[cellCenters[[1]]//Simplify];*)
+
+(*
 
 face = cells[[1]][[1]]//Simplify;
 
@@ -75,10 +94,6 @@ Print[NullSpace[m]//FullSimplify];
 Print[NullSpace[m]//FullSimplify//N];
 Print[NullSpace[m]*GoldenRatio//FullSimplify//N];
 
-
-(*Print[cellCenters[[1]]//Simplify];*)
-
-(*
 
 Print[cellCenters//N];
 Print[Map[Norm, cellCenters]];

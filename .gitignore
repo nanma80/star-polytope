@@ -6,7 +6,7 @@ tmp*
 !output/*
 
 
-output/*test.png
+output/*test*.png
 data/test.wl
 
 # Byte-compiled / optimized / DLL files
