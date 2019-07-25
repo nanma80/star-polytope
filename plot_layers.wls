@@ -21,9 +21,9 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "test";
+shape = "polytope_52_5_52";
 
-activeLayer = 3;
+activeLayer = 2;
 exportToPov = True;
 
 dataFolder = "data";
