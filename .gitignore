@@ -8,6 +8,7 @@ tmp*
 
 output/*test*.png
 data/test.wl
+output/*.gif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

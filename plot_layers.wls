@@ -3,6 +3,11 @@
 (*
 mogrify -crop 450x450+75+0 -path . pov_*.png
 mogrify -crop 300x300+50+0 -path . explode*.gif
+
+magick convert -delay 5 -dispose 2 *.png out.gif
+magick convert out.gif -coalesce -duplicate 1,-2-1 -quiet -layers OptimizePlus  -loop 0 cycle.gif
+python -m SimpleHTTPServer 8000
+
 *)
 
 (* global config *)
@@ -20,10 +25,48 @@ allColors = <|
 	"3_52" -> Orange
 |>;
 
-rangeFactor = 1.25;
-frameCount = 30;
-maxExplosionFactor = 1;
-explodeStep = maxExplosionFactor/frameCount;
+(* shape -> {maxExplosionFactor, frameCount}*)
+explosionConfigs = <|
+	(* 120-cell *)
+	"polytope_5_3_3_cell120" -> {2.0, 3},
+
+	(* 600-cell *)
+	"polytope_3_3_5_cell600" -> {2.0, 3},
+
+	(* Icosahedral 120-cell. cell: icosahedron *)
+	"polytope_3_5_52" -> {2.0, 3},
+
+	(* Small stellated 120-cell. cell: {5/2, 5}. Small stellated dodecahedron *)
+	"polytope_52_5_3" -> {2.0, 3},
+
+	(* Great 120-cell. cell: {5, 5/2}. Great dodecahedron. Self dual *)
+	"polytope_5_52_5" -> {2.0, 3},
+
+	(* Grand 120-cell. cell: {5, 3}. Dodecahedron *)
+	"polytope_5_3_52" -> {2.0, 3},
+
+	(* Great stellated 120-cell. cell: great stellated dodecahedron *)
+	"polytope_52_3_5" -> {2.0, 3},
+
+	(* Grand stellated 120-cell. cell: {5/2, 5}. Small stellated dodecahedron. Self dual *)
+	"polytope_52_5_52" -> {2.0, 3},
+
+	(* Great grand 120-cell. cell: Great dodecahedron *)
+	"polytope_5_52_3" -> {2.0, 3},
+
+	(* Greate icosahedral 120-cell. cell: great icosahedron *)
+	"polytope_3_52_5" -> {2.0, 3},
+
+	(* Grand 600-cell. cell: tetrahedron, 600 cells *)
+	"polytope_3_3_52" -> {2.0, 3},
+
+	(* Great grand stellated 120-cell. cell: great stellated dodecahedron *)
+	"polytope_52_3_3" -> {2.0, 3},
+
+	"test" -> {2.0, 3}
+|>
+
+rangeFactor = 1.5;
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -97,7 +140,7 @@ exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
 
-	outputFileName = shape <> "_layer_" <> IntegerString[activeLayer] <> "_" <> IntegerString[serialNumber, 10, 4] <> ".png";
+	outputFileName = "animation_" <> shape <> "_layer_" <> IntegerString[activeLayer] <> "_" <> IntegerString[serialNumber, 10, 4] <> ".png";
 	If[exportToPov, outputFileName = "pov_" <> outputFileName ];
 	outputFileName = FileNameJoin[{outputFolder, outputFileName}];
 	cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
@@ -113,11 +156,12 @@ exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
 	Print["Selected " <> IntegerString[Length[activeCells]] <> " active cells."];
 
 	(* before explosion *)
+	(*
 	activeFaces = Flatten[activeCells, 1];
 	allIndices = Table[k, {k, 1, Length[activeFaces]}];
 	touchingIndices = Select[ allIndices, ContainsAny[inactiveFaces, {activeFaces[[#]]}, SameTest -> sameCenter]&];
 	notTouchingIndices = Complement[allIndices, touchingIndices];
-
+	*)
 	(* explosion *)
 	activeCells = Map[explodedCell[#, explosionFactor]&, activeCells];
 
@@ -126,10 +170,11 @@ exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
 	activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
 	activeVertices = Union[ Flatten[activeFaces,1], SameTest -> sameVertex];
 
+	(*
 	touchingActiveFaces = Map[activeFaces[[#]]&, touchingIndices];
 	notTouchingActiveFaces = Map[activeFaces[[#]]&, notTouchingIndices];
 	Print["There are " <> IntegerString[Length[touchingActiveFaces]] <> " faces in the active cells that will touch the inactive cells."];
-
+	*)
 
 	graph = Graphics3D[
 		{
@@ -143,12 +188,17 @@ exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
 				FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, inactiveVertices]]
 			},
 
-
+			(*
 			{
 				Opacity[0.9], FaceForm[Gray], Map[Polygon, Map[projectTo3d, touchingActiveFaces, {2}]]
 			},
 			{
 				Opacity[0.4], FaceForm[Lighter[color, 0.3]], Map[Polygon, Map[projectTo3d, notTouchingActiveFaces, {2}]]
+			},
+			*)
+
+			{
+				Opacity[0.4], FaceForm[Lighter[color, 0.3]], Map[Polygon, Map[projectTo3d, activeFaces, {2}]]
 			},
 			{
 				FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectTo3d, activeEdges, {2}]]
@@ -189,13 +239,40 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "test";
-activeLayer = 2;
+shape = "polytope_3_3_5_cell600";
 
-explosionFactors = Join[Table[0.001, {k, 7}], Table[k, {k, 0.001, maxExplosionFactor, explodeStep}]];
-For[ frameIndex = 1, frameIndex <= Length[explosionFactors] , frameIndex++,
-	Print["Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[explosionFactors]]];
-	explosionFactor = explosionFactors[[frameIndex]];
-	exportImage[shape, activeLayer, explosionFactor, frameIndex];
+If[
+	StringContainsQ[shape, "polytope_3_3_"],
+	activeLayerMin = 1; activeLayerMax = 8,
+	activeLayerMin = 2; activeLayerMax = 5,
+]
+
+
+For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++, 
+	Print["activeLayer: " <> IntegerString[activeLayer] <> " in [" <> IntegerString[activeLayerMin] <> ", " <>  IntegerString[activeLayerMax] <> "]"];
+	outputFolder = shape <> "_layer_" <> IntegerString[activeLayer];
+	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
+	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
+	gifFileName = shape <> "_layer_" <> IntegerString[activeLayer];
+
+	explosionConfig = explosionConfigs[shape];
+	maxExplosionFactor = explosionConfig[[1]];
+	frameCount = explosionConfig[[2]];
+	explodeStep = maxExplosionFactor/frameCount;
+
+	explosionFactors = Join[Table[0.001, {k, Ceiling[frameCount / 6]}], Table[k, {k, 0.001, maxExplosionFactor, explodeStep}]];
+	For[ frameIndex = 1, frameIndex <= Length[explosionFactors] , frameIndex++,
+		Print["Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[explosionFactors]]];
+		explosionFactor = explosionFactors[[frameIndex]];
+		(*
+		exportImage[shape, activeLayer, explosionFactor, frameIndex];
+		*)
+	];
+
+	gifCommand = "magick convert -duplicate 1,-2-1 -quiet -loop 0 -delay " <> IntegerString[Floor[150/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> imageFolder <> "\\" <> gifFileName <> ".gif";
+
+	Print[gifCommand];
+	Run[gifCommand];
+
 ]
 
