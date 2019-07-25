@@ -46,7 +46,9 @@ outputFileName = shape <> ".png";
 imageFolder = "output";
 If[exportToPov, outputFileName = "pov_" <> outputFileName ];
 outputFileName = FileNameJoin[{imageFolder, outputFileName}];
-imageSize = {600, 450};
+imageSize = {600, 450}; (* has to be 4:3 *)
+(*imageSize = {1000, 750};*)
+cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
 
 cells = Get[dataFileName];
 
@@ -65,8 +67,10 @@ Print["There are " <> IntegerString[Length[faces]] <> " faces in total."];
 Print["There are " <> IntegerString[Length[edges]] <> " edges in total."];
 Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."];
 
-thinkness = Norm[vertices[[1]]] * 0.008;
+thinkness = Norm[cells[[1]][[1]][[1]]] * 0.008;
 lighting = {{"Point", White, {10, -10, 10}}};
+rangeFactor = 1.25;
+range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
 
 shapeTokens = StringSplit[shape, "_"];
 If[Length[shapeTokens] < 3,
@@ -98,6 +102,7 @@ graph = Graphics3D[
 		}
 	},
 (*	ViewPoint -> vertices[[7]] * 3, *)
+	PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 	Lighting -> lighting
 ];
 
@@ -105,6 +110,7 @@ graph = Graphics3D[
 If[exportToPov,
 	If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
 	POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize, RenderOptions -> "+A0.001 -J +UA"];
+	Run[cropCommand];
 	,
 	Export[outputFileName, graph]
 ]
