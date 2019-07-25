@@ -21,7 +21,7 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "polytope_52_5_52";
+shape = "polytope_3_52_5";
 
 activeLayer = 2;
 exportToPov = True;
@@ -104,7 +104,7 @@ If[Length[shapeTokens] < 3,
 		"52_5" -> Blue,
 		"5_52" -> Yellow,
 		"52_3" -> Magenta,
-		"3_52" -> Purple
+		"3_52" -> Orange
 	|>;
 	color = colors[cellShape];
 ]

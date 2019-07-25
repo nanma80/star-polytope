@@ -16,7 +16,7 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "polytope_52_3_3";
+shape = "polytope_3_52_5";
 
 dataFolder = "data";
 
@@ -80,7 +80,7 @@ If[Length[shapeTokens] < 3,
 		"52_5" -> Blue,
 		"5_52" -> Yellow,
 		"52_3" -> Magenta,
-		"3_52" -> Purple
+		"3_52" -> Orange
 	|>;
 	color = colors[cellShape];
 ]
@@ -88,13 +88,13 @@ If[Length[shapeTokens] < 3,
 graph = Graphics3D[
 	{
 		{
-			Opacity[0.6], FaceForm[Lighter[color, 0.3]], Map[Polygon, Map[projectTo3d, faces, {2}]]
+			Opacity[0.6], FaceForm[color], Map[Polygon, Map[projectTo3d, faces, {2}]]
 		},
 		{
-			Opacity[0.9], FaceForm[color], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
+			Opacity[0.9], FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
 		},
 		{
-			Opacity[0.9], FaceForm[Darker[color]], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
+			Opacity[0.9], FaceForm[Darker[White]], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
 		}
 	},
 (*	ViewPoint -> vertices[[7]] * 3, *)
