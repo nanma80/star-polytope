@@ -11,10 +11,34 @@ python -m SimpleHTTPServer 8000
 *)
 
 (* global config *)
+(* 
+shape = "test";
+shape = "polytope_5_3_3_cell120";
+shape = "polytope_3_3_5_cell600";
+shape = "polytope_3_5_52";
+shape = "polytope_52_5_3";
+shape = "polytope_5_52_5";
+shape = "polytope_5_3_52";
+shape = "polytope_52_3_5";
+shape = "polytope_52_5_52";
+shape = "polytope_5_52_3";
+shape = "polytope_3_52_5";
+shape = "polytope_3_3_52";
+shape = "polytope_52_3_3";
+*)
+
+shape = "test";
+explodeAllLayers = True;
+
 exportToPov = True;
 dataFolder = "data";
 imageFolder = "output";
-imageSize = {600, 450}; (* has to be 4:3 *)
+
+imageSizes = <|
+	"allLayers" -> {1000, 750}, (* must be 4:3 *)
+	"singleLayer" -> {600, 450} (* must be 4:3 *)
+|>;
+
 allColors = <|
 	"3_3" -> Cyan,
 	"5_3" -> Red,
@@ -83,7 +107,7 @@ getFaceCenter[face_] := Simplify[Total[face]];
 getCellCenter[cell_] := Simplify[Total[Flatten[cell, 1]]];
 explodedFace[face_, explosionFactor_] := Map[(# + Mean[face] * explosionFactor)&, face];
 explodedCell[cell_, explosionFactor_] := Map[(# + Mean[Map[Mean,cell]] * explosionFactor)&, cell, {2}];
-exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
+exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNumber_] := Module[
 	{
 		dataFileName,
 		shapeTokens,
@@ -111,7 +135,8 @@ exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
 		allIndices,
 		activeEdges,
 		activeVertices,
-		graph
+		graph,
+		imageSize
 	},
 
 	dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}];
@@ -136,45 +161,31 @@ exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
 	lighting = {{"Point", White, {10, -10, 10}}};
 	range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
 
-	outputFolder = shape <> "_layer_" <> IntegerString[activeLayer];
+	outputFolder = shape <> "_layers_" <> IntegerString[activeLayerMin] <> "_" <> IntegerString[activeLayerMax];
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
 
-	outputFileName = "animation_" <> shape <> "_layer_" <> IntegerString[activeLayer] <> "_" <> IntegerString[serialNumber, 10, 4] <> ".png";
+	outputFileName = "animation_" <> shape <> "_layers_" <> IntegerString[activeLayerMin] <> "_" <> IntegerString[activeLayerMax] <> "_" <> IntegerString[serialNumber, 10, 4] <> ".png";
 	If[exportToPov, outputFileName = "pov_" <> outputFileName ];
 	outputFileName = FileNameJoin[{outputFolder, outputFileName}];
+
+	imageSize = imageSizes[If[activeLayerMin < activeLayerMax, "allLayers", "singleLayer"]];
 	cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
 
-	inactiveCells = Apply[Join, Table[cellsByLayers[layerKeys[[k]]], {k, 1, activeLayer - 1}]];
+	inactiveCells = Apply[Join, Table[cellsByLayers[layerKeys[[k]]], {k, 1, activeLayerMin - 1}]];
 	Print["Selected " <> IntegerString[Length[inactiveCells]] <> " inactive cells."];
 
 	inactiveFaces = Union[ Flatten[inactiveCells, 1], SameTest -> sameCenter];
 	inactiveEdges = Union[ Flatten[Map[getEdgesFromFace, inactiveFaces], 1], SameTest -> sameCenter];
 	inactiveVertices = Union[ Flatten[inactiveFaces,1], SameTest -> sameVertex];
 
-	activeCells = cellsByLayers[layerKeys[[activeLayer]]];
+	activeCells = Apply[Join, Table[cellsByLayers[layerKeys[[k]]], {k, activeLayerMin, activeLayerMax}]];
 	Print["Selected " <> IntegerString[Length[activeCells]] <> " active cells."];
 
-	(* before explosion *)
-	(*
-	activeFaces = Flatten[activeCells, 1];
-	allIndices = Table[k, {k, 1, Length[activeFaces]}];
-	touchingIndices = Select[ allIndices, ContainsAny[inactiveFaces, {activeFaces[[#]]}, SameTest -> sameCenter]&];
-	notTouchingIndices = Complement[allIndices, touchingIndices];
-	*)
-	(* explosion *)
 	activeCells = Map[explodedCell[#, explosionFactor]&, activeCells];
-
-	(* after explosion *)
 	activeFaces = Flatten[activeCells, 1];
 	activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
 	activeVertices = Union[ Flatten[activeFaces,1], SameTest -> sameVertex];
-
-	(*
-	touchingActiveFaces = Map[activeFaces[[#]]&, touchingIndices];
-	notTouchingActiveFaces = Map[activeFaces[[#]]&, notTouchingIndices];
-	Print["There are " <> IntegerString[Length[touchingActiveFaces]] <> " faces in the active cells that will touch the inactive cells."];
-	*)
 
 	graph = Graphics3D[
 		{
@@ -187,15 +198,6 @@ exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
 			{
 				FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, inactiveVertices]]
 			},
-
-			(*
-			{
-				Opacity[0.9], FaceForm[Gray], Map[Polygon, Map[projectTo3d, touchingActiveFaces, {2}]]
-			},
-			{
-				Opacity[0.4], FaceForm[Lighter[color, 0.3]], Map[Polygon, Map[projectTo3d, notTouchingActiveFaces, {2}]]
-			},
-			*)
 
 			{
 				Opacity[0.4], FaceForm[Lighter[color, 0.3]], Map[Polygon, Map[projectTo3d, activeFaces, {2}]]
@@ -223,37 +225,27 @@ exportImage[shape_, activeLayer_, explosionFactor_, serialNumber_] := Module[
 	Print["Saved the image to " <> outputFileName];
 ]
 
-(* 
-shape = "test";
-shape = "polytope_5_3_3_cell120";
-shape = "polytope_3_3_5_cell600";
-shape = "polytope_3_5_52";
-shape = "polytope_52_5_3";
-shape = "polytope_5_52_5";
-shape = "polytope_5_3_52";
-shape = "polytope_52_3_5";
-shape = "polytope_52_5_52";
-shape = "polytope_5_52_3";
-shape = "polytope_3_52_5";
-shape = "polytope_3_3_52";
-shape = "polytope_52_3_3";
-*)
+exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
+	{
+		outputFolder,
+		gifFileName,
+		gifFolder,
+		explosionConfig,
+		maxExplosionFactor,
+		frameCount,
+		explodeStep,
+		explosionFactors,
+		frameIndex,
+		explosionFactor,
+		gifCommand
+	},
 
-shape = "polytope_5_3_3_cell120";
-
-If[
-	StringContainsQ[shape, "polytope_3_3_"],
-	activeLayerMin = 1; activeLayerMax = 8,
-	activeLayerMin = 2; activeLayerMax = 5
-]
-
-
-For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++, 
-	Print["activeLayer: " <> IntegerString[activeLayer] <> " in [" <> IntegerString[activeLayerMin] <> ", " <>  IntegerString[activeLayerMax] <> "]"];
-	outputFolder = shape <> "_layer_" <> IntegerString[activeLayer];
+	outputFolder = shape <> "_layers_" <> IntegerString[activeLayerMin] <> "_" <> IntegerString[activeLayerMax];
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
-	gifFileName = shape <> "_layer_" <> IntegerString[activeLayer];
+	gifFileName = shape <> "_layers_" <> IntegerString[activeLayerMin] <> "_" <> IntegerString[activeLayerMax];
+	gifFolder = FileNameJoin[{imageFolder, shape}];
+	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
 	explosionConfig = explosionConfigs[shape];
 	maxExplosionFactor = explosionConfig[[1]];
@@ -262,15 +254,29 @@ For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++,
 
 	explosionFactors = Join[Table[0.001, {k, Ceiling[frameCount / 6]}], Table[k, {k, 0.001, maxExplosionFactor, explodeStep}]];
 	For[ frameIndex = 1, frameIndex <= Length[explosionFactors] , frameIndex++,
-		Print["Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[explosionFactors]]];
+		Print["activeLayers: " <> IntegerString[activeLayerMin] <> "-" <> IntegerString[activeLayerMax] <> ". Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[explosionFactors]]];
 		explosionFactor = explosionFactors[[frameIndex]];
-		exportImage[shape, activeLayer, explosionFactor, frameIndex];
+		exportImage[shape, activeLayerMin, activeLayerMax, explosionFactor, frameIndex];
 	];
 
-	gifCommand = "magick convert -duplicate 1,-2-1 -quiet -loop 0 -delay " <> IntegerString[Floor[150/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> imageFolder <> "\\" <> gifFileName <> ".gif";
+	gifCommand = "magick convert -duplicate 1,-2-1 -quiet -loop 0 -delay " <> IntegerString[Floor[150/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
 	Run[gifCommand];
-
+	Print["Saved the animation to " <> gifFolder <> "\\" <> gifFileName <> ".gif"];
 ]
+
+
+If[
+	StringContainsQ[shape, "polytope_3_3_"],
+	activeLayerMin = 1; activeLayerMax = 8,
+	activeLayerMin = 2; activeLayerMax = 5
+]
+
+For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++, 
+	exportAnimation[shape, activeLayer, activeLayer]
+];
+exportAnimation[shape, activeLayerMin, activeLayerMax];
+
+
 

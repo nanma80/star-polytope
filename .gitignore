@@ -5,8 +5,10 @@ tmp*
 *.gif
 !output/**
 
-
 output/*test*.png
+output/*test*/**
+output/*layer*/**
+
 data/test.wl
 # output/*.gif
 
