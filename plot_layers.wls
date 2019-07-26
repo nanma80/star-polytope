@@ -11,24 +11,24 @@ python -m SimpleHTTPServer 8000
 *)
 
 (* global config *)
-(* 
-shape = "test";
-shape = "polytope_5_3_3_cell120";
-shape = "polytope_3_3_5_cell600";
-shape = "polytope_3_5_52";
-shape = "polytope_52_5_3";
-shape = "polytope_5_52_5";
-shape = "polytope_5_3_52";
-shape = "polytope_52_3_5";
-shape = "polytope_52_5_52";
-shape = "polytope_5_52_3";
-shape = "polytope_3_52_5";
-shape = "polytope_3_3_52";
-shape = "polytope_52_3_3";
-*)
 
-shape = "test";
-explodeAllLayers = True;
+shapes = {
+	"test",
+	"polytope_5_3_3_cell120",
+	"polytope_3_3_5_cell600",
+	"polytope_3_5_52",
+	"polytope_52_5_3",
+	"polytope_5_52_5",
+	"polytope_5_3_52",
+	"polytope_52_3_5",
+	"polytope_52_5_52",
+	"polytope_5_52_3",
+	"polytope_3_52_5",
+	"polytope_3_3_52",
+	"polytope_52_3_3",
+}
+
+shape = "polytope_52_5_3";
 
 exportToPov = True;
 dataFolder = "data";
@@ -61,7 +61,7 @@ explosionConfigs = <|
 	"polytope_3_5_52" -> {2.0, 3},
 
 	(* Small stellated 120-cell. cell: {5/2, 5}. Small stellated dodecahedron *)
-	"polytope_52_5_3" -> {2.0, 3},
+	"polytope_52_5_3" -> {2.0, 30},
 
 	(* Great 120-cell. cell: {5, 5/2}. Great dodecahedron. Self dual *)
 	"polytope_5_52_5" -> {2.0, 3},
@@ -90,7 +90,7 @@ explosionConfigs = <|
 	"test" -> {2.0, 3}
 |>
 
-rangeFactor = 1.5;
+rangeFactor = 1.8;
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -106,7 +106,10 @@ sameCellCenter[cell1_, cell2_] := getCellCenter[cell1] == getCellCenter[cell2];
 getFaceCenter[face_] := Simplify[Total[face]];
 getCellCenter[cell_] := Simplify[Total[Flatten[cell, 1]]];
 explodedFace[face_, explosionFactor_] := Map[(# + Mean[face] * explosionFactor)&, face];
-explodedCell[cell_, explosionFactor_] := Map[(# + Mean[Map[Mean,cell]] * explosionFactor)&, cell, {2}];
+explodedCell[cell_, explosionFactor_] := Map[
+	(# + Mean[Map[Mean,cell]]*(Norm[First[First[cell]]//N]/Norm[Mean[Map[Mean,cell]]//N])^1.5 * explosionFactor)&, 
+	cell, {2}];
+
 exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNumber_] := Module[
 	{
 		dataFileName,
@@ -180,7 +183,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 	inactiveVertices = Union[ Flatten[inactiveFaces,1], SameTest -> sameVertex];
 
 	activeCells = Apply[Join, Table[cellsByLayers[layerKeys[[k]]], {k, activeLayerMin, activeLayerMax}]];
-	Print["Selected " <> IntegerString[Length[activeCells]] <> " active cells."];
+	Print["Selected " <> IntegerString[Length[activeCells]] <> " active cells. ExplosionFactor: " <> TextString[explosionFactor]];
 
 	activeCells = Map[explodedCell[#, explosionFactor]&, activeCells];
 	activeFaces = Flatten[activeCells, 1];
@@ -209,7 +212,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 				FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, activeVertices]]
 			}
 		},
-	(*	ViewPoint -> vertices[[7]] * 3, *)
+		ViewPoint -> {3, -3, 5}*3,
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		Lighting -> lighting
 	];
@@ -252,7 +255,8 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	frameCount = explosionConfig[[2]];
 	explodeStep = maxExplosionFactor/frameCount;
 
-	explosionFactors = Join[Table[0.001, {k, Ceiling[frameCount / 6]}], Table[k, {k, 0.001, maxExplosionFactor, explodeStep}]];
+	epsilon = 0.001;
+	explosionFactors = Join[Table[epsilon, {k, Floor[frameCount / 6]}], Table[k, {k, epsilon, maxExplosionFactor + epsilon, explodeStep}]];
 	For[ frameIndex = 1, frameIndex <= Length[explosionFactors] , frameIndex++,
 		Print["activeLayers: " <> IntegerString[activeLayerMin] <> "-" <> IntegerString[activeLayerMax] <> ". Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[explosionFactors]]];
 		explosionFactor = explosionFactors[[frameIndex]];
@@ -273,10 +277,14 @@ If[
 	activeLayerMin = 2; activeLayerMax = 5
 ]
 
+
 For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++, 
 	exportAnimation[shape, activeLayer, activeLayer]
 ];
 exportAnimation[shape, activeLayerMin, activeLayerMax];
 
 
+(*
+exportImage[shape, 5, 5, 0.5, 6];
+*)
 
