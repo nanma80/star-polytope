@@ -28,7 +28,7 @@ allColors = <|
 (* shape -> {maxExplosionFactor, frameCount}*)
 explosionConfigs = <|
 	(* 120-cell *)
-	"polytope_5_3_3_cell120" -> {2.0, 3},
+	"polytope_5_3_3_cell120" -> {2.0, 30},
 
 	(* 600-cell *)
 	"polytope_3_3_5_cell600" -> {2.0, 3},
@@ -239,12 +239,12 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "polytope_3_3_5_cell600";
+shape = "polytope_5_3_3_cell120";
 
 If[
 	StringContainsQ[shape, "polytope_3_3_"],
 	activeLayerMin = 1; activeLayerMax = 8,
-	activeLayerMin = 2; activeLayerMax = 5,
+	activeLayerMin = 2; activeLayerMax = 5
 ]
 
 
@@ -264,9 +264,7 @@ For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++,
 	For[ frameIndex = 1, frameIndex <= Length[explosionFactors] , frameIndex++,
 		Print["Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[explosionFactors]]];
 		explosionFactor = explosionFactors[[frameIndex]];
-		(*
 		exportImage[shape, activeLayer, explosionFactor, frameIndex];
-		*)
 	];
 
 	gifCommand = "magick convert -duplicate 1,-2-1 -quiet -loop 0 -delay " <> IntegerString[Floor[150/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> imageFolder <> "\\" <> gifFileName <> ".gif";

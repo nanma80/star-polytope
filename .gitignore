@@ -3,12 +3,12 @@ tmp*
 *.tmp
 *.png
 *.gif
-!output/*
+!output/**
 
 
 output/*test*.png
 data/test.wl
-output/*.gif
+# output/*.gif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
