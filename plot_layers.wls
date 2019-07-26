@@ -28,7 +28,7 @@ shapes = {
 	"polytope_52_3_3",
 }
 
-shape = "polytope_52_5_3";
+(*shape = "test";*)
 
 exportToPov = True;
 dataFolder = "data";
@@ -52,7 +52,7 @@ allColors = <|
 (* shape -> {maxExplosionFactor, frameCount}*)
 explosionConfigs = <|
 	(* 120-cell *)
-	"polytope_5_3_3_cell120" -> {2.0, 30},
+	"polytope_5_3_3_cell120" -> {2.0, 3},
 
 	(* 600-cell *)
 	"polytope_3_3_5_cell600" -> {2.0, 3},
@@ -61,7 +61,7 @@ explosionConfigs = <|
 	"polytope_3_5_52" -> {2.0, 3},
 
 	(* Small stellated 120-cell. cell: {5/2, 5}. Small stellated dodecahedron *)
-	"polytope_52_5_3" -> {2.0, 30},
+	"polytope_52_5_3" -> {2.0, 3},
 
 	(* Great 120-cell. cell: {5, 5/2}. Great dodecahedron. Self dual *)
 	"polytope_5_52_5" -> {2.0, 3},
@@ -271,17 +271,19 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 ]
 
 
-If[
-	StringContainsQ[shape, "polytope_3_3_"],
-	activeLayerMin = 1; activeLayerMax = 8,
-	activeLayerMin = 2; activeLayerMax = 5
+
+For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
+	shape = shapes[[shapeIndex]];
+	If[
+		StringContainsQ[shape, "polytope_3_3_"],
+		activeLayerMin = 1; activeLayerMax = 8,
+		activeLayerMin = 2; activeLayerMax = 5
+	];
+	For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++, 
+		exportAnimation[shape, activeLayer, activeLayer]
+	];
+	exportAnimation[shape, activeLayerMin, activeLayerMax];
 ]
-
-
-For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++, 
-	exportAnimation[shape, activeLayer, activeLayer]
-];
-exportAnimation[shape, activeLayerMin, activeLayerMax];
 
 
 (*
