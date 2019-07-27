@@ -263,7 +263,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 		exportImage[shape, activeLayerMin, activeLayerMax, explosionFactor, frameIndex];
 	];
 
-	gifCommand = "magick convert -duplicate 1,-2-1 -quiet -alpha remove -loop 0 -delay " <> IntegerString[Floor[150/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
+	gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay " <> IntegerString[Floor[150/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
 	Run[gifCommand];
