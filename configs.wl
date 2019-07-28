@@ -23,7 +23,7 @@ configs = <|
 			{1, phi, -1/phi, 0	},
 			{0, 1, 0, 0	}
 		}, 
-		{0, 0, 0, 1}
+		{0, 0, 0, 2}
 	},
 
 	(* Icosahedral 120-cell. cell: icosahedron *)
