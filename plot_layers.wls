@@ -280,9 +280,16 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 		activeLayerMin = 2; activeLayerMax = 5
 	];
 	For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++, 
-		exportAnimation[shape, activeLayer, activeLayer]
+		exportAnimation[shape, activeLayer, activeLayer];
+		Run["copy .\\output\\" <> shape <> "_layers_" <> IntegerString[activeLayer] <> "_" <> IntegerString[activeLayer] <> 
+			"\\pov_animation_" <> shape <> "_layers_" <> IntegerString[activeLayer] <> "_" <> IntegerString[activeLayer] <> 
+			"_0001.png .\\output\\" <> shape <> "\\"];
 	];
+
 	exportAnimation[shape, activeLayerMin, activeLayerMax];
+	Run["copy .\\output\\" <> shape <> "_layers_" <> IntegerString[activeLayerMin] <> "_" <> IntegerString[activeLayerMax] <> 
+			"\\pov_animation_" <> shape <> "_layers_" <> IntegerString[activeLayerMin] <> "_" <> IntegerString[activeLayerMax] <> 
+			"_0001.png .\\output\\" <> shape <> "\\"];
 ]
 
 
