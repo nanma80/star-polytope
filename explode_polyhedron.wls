@@ -9,73 +9,91 @@ python -m SimpleHTTPServer 8000
 *)
 
 exportToPov = True;
+dataFolder = "data";
+imageFolder = "output";
+imageSize = {600, 450};
 
-(* SmallStellatedDodecahedron *)
-(*
+allColors = <|
+	"3_3" -> Cyan,
+	"5_3" -> Red,
+	"3_5" -> Green,
+	"52_5" -> Blue,
+	"5_52" -> Yellow,
+	"52_3" -> Magenta,
+	"3_52" -> Orange
+|>;
+
+
+allSchlaefliSymbols = <|
+	"Icosahedron" -> "3_5",
+	"Dodecahedron" -> "5_3",
+	"GreatDodecahedron" -> "5_52",
+	"GreatIcosahedron" -> "3_52", 
+	"GreatStellatedDodecahedron" -> "52_3", 
+	"SmallStellatedDodecahedron" -> "52_5"
+|>;
+
+(* shape -> {maxExplosionFactor, frameCount}*)
+explosionConfigs = <|
+	"Icosahedron" -> {0.8, 30},
+	"Dodecahedron" -> {0.8, 30},
+	"GreatDodecahedron" -> {0.8, 30},
+	"GreatIcosahedron" -> {0.8, 30},
+	"GreatStellatedDodecahedron" -> {0.8, 30},
+	"SmallStellatedDodecahedron" -> {0.8, 30}
+|>;
+
 rangeFactor = 1.5;
-maxExplode = 280;
-explodeStep = 5;
-*)
-
-(* GreatStellatedDodecahedron *)
-(*
-rangeFactor = 1.5;
-maxExplode = 800;
-explodeStep = 20;
-*)
-
-(* GreatDodecahedron *)
-(*
-rangeFactor = 1.5;
-maxExplode = 300;
-explodeStep = 6;
-*)
-
-(* GreatIcosahedron *)
-
-rangeFactor = 1.5;
-maxExplode = 1400;
-explodeStep = 28;
-
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
 
 getEdgesFromFace[face_] := Table[{face[[i+1]], face[[Mod[i+1, Length[face]] + 1]]}, {i, 0, Length[face] - 1}];
 
-explodedFace[face_, explosionFactor_] := Map[(# + Mean[face] * explosionFactor)&, face];
+explodedFace[face_, explosionFactor_] := Map[(# + Mean[face] * (Norm[First[face]//N]/Norm[Mean[face]//N])^1.5 * explosionFactor)&, face];
+explodedCell[cell_, explosionFactor_] := Map[
+	(# + Mean[Map[Mean,cell]]*(Norm[First[First[cell]]//N]/Norm[Mean[Map[Mean,cell]]//N])^1.0 * explosionFactor)&, 
+	cell, {2}];
 
-exportPolyhedron[shape_, explosionPercent_] := Module[
-	{outputFileName, imageSize, vertices, edges, faces, originalFacesCoordinates, facesCoordinates, edgesCoordinates, thinkness, lighting, graph},
-	outputFileName = "explode" <> shape <> IntegerString[explosionPercent, 10, 4] <>".png";
-	If[exportToPov, outputFileName = "pov" <> outputFileName ];
-	imageSize = {400, 300};
+exportImage[shape_, explosionFactor_, serialNumber_] := Module[
+	{outputFileName, vertices, edges, faces, originalFacesCoordinates, facesCoordinates, edgesCoordinates, thinkness, lighting, graph},
+
+	outputFolder = shape <> "_animation_images";
+	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
+	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
+
+	outputFileName = "animation_" <> shape <> "_" <> IntegerString[serialNumber, 10, 4] <> ".png";
+	If[exportToPov, outputFileName = "pov_" <> outputFileName ];
+	outputFileName = FileNameJoin[{outputFolder, outputFileName}];
+
+	cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
 
 	faces = PolyhedronData[shape, "Polygons"];
 	originalFacesCoordinates = Map[PolygonCoordinates, faces];
-	facesCoordinates = Map[explodedFace[#, explosionPercent / 100.0]&, originalFacesCoordinates];
+	facesCoordinates = Map[explodedFace[#, explosionFactor]&, originalFacesCoordinates];
 	edgesCoordinates = Map[getEdgesFromFace, facesCoordinates];
 	vertices = Flatten[facesCoordinates,1];
 	edges = Flatten[edgesCoordinates,1];
 
 	thinkness = Norm[originalFacesCoordinates[[1]][[1]]] * 0.03;
 	lighting = {{"Point", White, {10, -10, 10}}};
+	color = allColors[ allSchlaefliSymbols[shape]];
 
 	range = Max[originalFacesCoordinates] * rangeFactor;
 
 	graph = Graphics3D[
 		{
 			{
-				Opacity[0.5], FaceForm[Pink], Map[Polygon, facesCoordinates]
+				Opacity[0.5], FaceForm[color], Map[Polygon, facesCoordinates]
 			},
 			{
-				Opacity[0.9], FaceForm[Red], Map[Cylinder[#, thinkness]&, edges]
+				FaceForm[White], Map[Cylinder[#, thinkness]&, edges]
 			},
 			{
-				Opacity[0.9], FaceForm[Darker[Red]], Map[Sphere[#, thinkness * 2]&, vertices]
+				FaceForm[White], Map[Sphere[#, thinkness * 2]&, vertices]
 			}
 		},
-	(*	ViewPoint -> vertices[[7]] * 3, *)
+		ViewPoint -> {3, -3, 5}*3,
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		Lighting -> lighting
 	];
@@ -83,11 +101,58 @@ exportPolyhedron[shape_, explosionPercent_] := Module[
 
 	If[exportToPov,
 		If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
-		POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize];
+		POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize, RenderOptions -> "+A0.001 -J +UA"];
+		Run[cropCommand];
 		,
-		Export[outputFileName, graph]
-	]
+		Export[outputFileName, graph];
+	];
+	Print["Saved the image to " <> outputFileName];
 ]
+
+exportAnimation[shape_] := Module[
+	{
+		outputFolder,
+		gifFileName,
+		gifFolder,
+		explosionConfig,
+		maxExplosionFactor,
+		frameCount,
+		explodeStep,
+		explosionFactors,
+		frameIndex,
+		explosionFactor,
+		gifCommand
+	},
+
+	outputFolder = shape <> "_animation_images";
+	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
+	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
+
+	gifFileName = "exploded_" <> shape;
+	gifFolder = FileNameJoin[{imageFolder, shape}];
+	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
+
+	explosionConfig = explosionConfigs[shape];
+	maxExplosionFactor = explosionConfig[[1]];
+	frameCount = explosionConfig[[2]];
+	explodeStep = maxExplosionFactor/frameCount;
+
+	epsilon = 0.001;
+	explosionFactors = Join[Table[epsilon, {k, Floor[frameCount / 6]}], Table[k, {k, epsilon, maxExplosionFactor + epsilon, explodeStep}]];
+	For[ frameIndex = 1, frameIndex <= Length[explosionFactors] , frameIndex++,
+		Print["Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[explosionFactors]]];
+		explosionFactor = explosionFactors[[frameIndex]];
+		exportImage[shape, explosionFactor, frameIndex];
+	];
+
+	gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay " <> IntegerString[Floor[150/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
+
+	Print[gifCommand];
+	Run[gifCommand];
+	Print["Saved the animation to " <> gifFolder <> "\\" <> gifFileName <> ".gif"];
+]
+
+
 
 (*
 PolyhedronData["Platonic"]
@@ -97,19 +162,16 @@ PolyhedronData["KeplerPoinsot"]
 {GreatDodecahedron, GreatIcosahedron, GreatStellatedDodecahedron, SmallStellatedDodecahedron}
 *)
 
-shapes = {"GreatDodecahedron", "GreatIcosahedron", "GreatStellatedDodecahedron", "SmallStellatedDodecahedron"};
+shapes = {
+	(* "Icosahedron",  *)
+	(* "Dodecahedron",  *)
+	"GreatDodecahedron", 
+	"GreatIcosahedron", 
+	"GreatStellatedDodecahedron", 
+	"SmallStellatedDodecahedron"
+};
 
-shapes = {"GreatIcosahedron"};
-
-(*shapes = {"Dodecahedron"}*)
-
-(*Map[exportPolyhedron, shapes];*)
-
-(*
-exportPolyhedron[shapes[[1]], 1400];
-*)
-
-Table[ exportPolyhedron[shapes[[1]], k], {k, 0, maxExplode, explodeStep} ]
+Map[exportAnimation, shapes];
 
 
 

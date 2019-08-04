@@ -8,6 +8,8 @@ tmp*
 output/*test*.png
 output/*test*/**
 output/*layer*/**
+output/*animation_images*/**
+
 # temp ignore face_ while tuning
 output/**/face_*
 
