@@ -15,12 +15,14 @@ shapes = {
 	{5, 2},
 	{7, 1},
 	{7, 2},
-	{7, 3}
+	{7, 3},
+	{6, 2}
 };
 
 allColors = <|
-	5 -> Red,
-	7 -> Blue
+	1 -> Red,
+	2 -> Blue,
+	3 -> Green
 |>;
 
 
@@ -33,15 +35,23 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex++,
 	p = shape[[1]];
 	q = shape[[2]];
 
-	face = Table[{Sin[t], -Cos[t], 0}, {t, 0, 2 Pi * q, (2 Pi * q) / p}];
-	edges = getEdgesFromFace[face];
-	vertices = face;
-	color = allColors[p];
+	faces = {Table[{Sin[t], -Cos[t], 0}, {t, 0, 2 Pi * q, (2 Pi * q) / p}]};
+	If[p == 6 && q == 2,
+		faces = {
+			Table[{Sin[t], -Cos[t], 0}, {t, 0, 2 Pi * q, (2 Pi * q) / p}],
+			Table[{-Sin[t], Cos[t], 0}, {t, 0, 2 Pi * q, (2 Pi * q) / p}]
+		};
+	];
+
+	edges = Union[Flatten[ Map[getEdgesFromFace, faces], 1]];
+	vertices = Union[Flatten[faces, 1]];
+	color = allColors[q];
+
 
 	graph = Graphics3D[
 		{
 			{
-				Opacity[1], FaceForm[Lighter[color]], Polygon[face]
+				Opacity[1], FaceForm[Lighter[color]], Map[Polygon,faces]
 			},
 			{
 				FaceForm[White], Map[Cylinder[#, thickness]&, edges]
