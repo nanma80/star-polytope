@@ -8,9 +8,12 @@ tmp*
 output/*test*.png
 output/*test*/**
 output/*layer*/**
+# temp ignore face_ while tuning
+output/**/face_*
 
 data/test*.*
 # output/*.gif
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

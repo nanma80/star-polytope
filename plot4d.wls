@@ -1,28 +1,26 @@
 #!/usr/bin/env wolframscript
 
-(* 
-shape = "test";
-shape = "polytope_5_3_3_cell120";
-shape = "polytope_3_3_5_cell600";
-shape = "polytope_3_5_52";
-shape = "polytope_52_5_3";
-shape = "polytope_5_52_5";
-shape = "polytope_5_3_52";
-shape = "polytope_52_3_5";
-shape = "polytope_52_5_52";
-shape = "polytope_5_52_3";
-shape = "polytope_3_52_5";
-shape = "polytope_3_3_52";
-shape = "polytope_52_3_3";
-*)
 
-shape = "polytope_3_52_5";
+shapes = {
+	(* "test", *)
+	"polytope_5_3_3_cell120",
+	"polytope_3_3_5_cell600",
+	"polytope_3_5_52",
+	"polytope_52_5_3",
+	"polytope_5_52_5",
+	"polytope_5_3_52",
+	"polytope_52_3_5",
+	"polytope_52_5_52",
+	"polytope_5_52_3",
+	"polytope_3_52_5",
+	"polytope_3_3_52",
+	"polytope_52_3_3"
+};
+
+(* shape = "polytope_3_52_5"; *)
 
 dataFolder = "data";
 
-dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}]
-
-Print["Reading data for " <> shape <> " from " <> dataFileName];
 
 exportToPov = True;
 plotAllCells = True;
@@ -42,77 +40,82 @@ sameCellCenter[cell1_, cell2_] := getCellCenter[cell1] == getCellCenter[cell2];
 getCellCenter[cell_] := Total[Flatten[cell, 1]];
 
 
-outputFileName = shape <> ".png";
-imageFolder = "output";
-If[exportToPov, outputFileName = "pov_" <> outputFileName ];
-outputFileName = FileNameJoin[{imageFolder, outputFileName}];
-imageSize = {600, 450}; (* has to be 4:3 *)
-(*imageSize = {1000, 750};*)
-cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
+For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
+	shape = shapes[[shapeIndex]];
+	dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}];
+	Print["Reading data for " <> shape <> " from " <> dataFileName];
 
-cells = Get[dataFileName];
+	outputFileName = "whole_" <> shape <> ".png";
+	imageFolder = "output";
+	If[exportToPov, outputFileName = "pov_" <> outputFileName ];
+	outputFileName = FileNameJoin[{imageFolder, shape, outputFileName}];
+	imageSize = {600, 450}; (* has to be 4:3 *)
+	(*imageSize = {1000, 750};*)
+	cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
 
-If[plotAllCells,
-	(* doing nothing *) True,
-	cells = Select[cells, (getCellCenter[#][[1]] == 0 && getCellCenter[#][[2]] == 0 && getCellCenter[#][[3]] == 0 && getCellCenter[#][[4]] >= 0)&];
-]
+	cells = Get[dataFileName];
 
-Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
+	If[plotAllCells,
+		(* doing nothing *) True,
+		cells = Select[cells, (getCellCenter[#][[1]] == 0 && getCellCenter[#][[2]] == 0 && getCellCenter[#][[3]] == 0 && getCellCenter[#][[4]] >= 0)&];
+	];
 
-faces = Union[ Flatten[cells, 1], SameTest -> sameCenter];
-edges = Union[ Flatten[Map[getEdgesFromFace, faces], 1], SameTest -> sameCenter];
-vertices = Union[ Flatten[faces,1], SameTest -> sameVertex];
+	Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
-Print["There are " <> IntegerString[Length[faces]] <> " faces in total."];
-Print["There are " <> IntegerString[Length[edges]] <> " edges in total."];
-Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."];
+	faces = Union[ Flatten[cells, 1], SameTest -> sameCenter];
+	edges = Union[ Flatten[Map[getEdgesFromFace, faces], 1], SameTest -> sameCenter];
+	vertices = Union[ Flatten[faces,1], SameTest -> sameVertex];
 
-thinkness = Norm[cells[[1]][[1]][[1]]] * 0.008;
-lighting = {{"Point", White, {10, -10, 10}}};
-rangeFactor = 1.25;
-range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
+	Print["There are " <> IntegerString[Length[faces]] <> " faces in total."];
+	Print["There are " <> IntegerString[Length[edges]] <> " edges in total."];
+	Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."];
 
-shapeTokens = StringSplit[shape, "_"];
-If[Length[shapeTokens] < 3,
-	color = Gray,
+	thinkness = Norm[cells[[1]][[1]][[1]]] * 0.008;
+	lighting = {{"Point", White, {10, -10, 10}}};
+	rangeFactor = 0.8;
+	range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
 
-	cellShape = shapeTokens[[2]] <> "_" <> shapeTokens[[3]];
-	colors = <|
-		"3_3" -> Cyan,
-		"5_3" -> Red,
-		"3_5" -> Green,
-		"52_5" -> Blue,
-		"5_52" -> Yellow,
-		"52_3" -> Magenta,
-		"3_52" -> Orange
-	|>;
-	color = colors[cellShape];
-]
+	shapeTokens = StringSplit[shape, "_"];
+	If[Length[shapeTokens] < 3,
+		color = Red,
 
-graph = Graphics3D[
-	{
+		cellShape = shapeTokens[[2]] <> "_" <> shapeTokens[[3]];
+		colors = <|
+			"3_3" -> Cyan,
+			"5_3" -> Red,
+			"3_5" -> Green,
+			"52_5" -> Blue,
+			"5_52" -> Yellow,
+			"52_3" -> Magenta,
+			"3_52" -> Orange
+		|>;
+		color = colors[cellShape];
+	];
+
+	graph = Graphics3D[
 		{
-			Opacity[0.6], FaceForm[color], Map[Polygon, Map[projectTo3d, faces, {2}]]
+			{
+				Opacity[0.5], FaceForm[color], Map[Polygon, Map[projectTo3d, faces, {2}]]
+			},
+			{
+				Opacity[1], FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
+			},
+			{
+				Opacity[1], FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
+			}
 		},
-		{
-			Opacity[0.9], FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
-		},
-		{
-			Opacity[0.9], FaceForm[Darker[White]], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
-		}
-	},
-(*	ViewPoint -> vertices[[7]] * 3, *)
-	PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
-	Lighting -> lighting
+		ViewPoint -> {3, -3, 5}*3,
+		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
+		Lighting -> lighting
+	];
+
+
+	If[exportToPov,
+		If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
+		POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize, RenderOptions -> "+A0.001 -J +UA"];
+		Run[cropCommand];
+		,
+		Export[outputFileName, graph]
+	];
+	Print["Saved the image to " <> outputFileName];
 ];
-
-
-If[exportToPov,
-	If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
-	POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize, RenderOptions -> "+A0.001 -J +UA"];
-	Run[cropCommand];
-	,
-	Export[outputFileName, graph]
-]
-Print["Saved the image to " <> outputFileName];
-
