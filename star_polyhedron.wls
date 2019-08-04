@@ -1,0 +1,85 @@
+#!/usr/bin/env wolframscript
+
+exportToPov = True;
+
+Needs["POVRayRender`"];
+ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
+
+(*
+PolyhedronData["KeplerPoinsot"]                                                        
+{GreatDodecahedron, GreatIcosahedron, GreatStellatedDodecahedron, SmallStellatedDodecahedron}
+*)
+
+allColors = <|
+	"3_3" -> Cyan,
+	"5_3" -> Red,
+	"3_5" -> Green,
+	"52_5" -> Blue,
+	"5_52" -> Yellow,
+	"52_3" -> Magenta,
+	"3_52" -> Orange
+|>;
+
+
+allSchlaefliSymbols = <|
+	"GreatDodecahedron" -> "5_52",
+	"GreatIcosahedron" -> "3_52", 
+	"GreatStellatedDodecahedron" -> "52_3", 
+	"SmallStellatedDodecahedron" -> "52_5"
+|>;
+
+
+exportPolyhedron[shape_] := Module[
+	{outputFileName, imageSize, vertices, edges, faces, thinkness, lighting, graph},
+
+	outputFileName = "whole_" <> shape <> ".png";
+	imageFolder = "output";
+	outputFolder = FileNameJoin[{imageFolder, shape}];
+	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
+
+	If[exportToPov, outputFileName = "pov_" <> outputFileName ];
+	outputFileName = FileNameJoin[{outputFolder, outputFileName}];
+	imageSize = {600, 450}; (* has to be 4:3 *)
+	cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
+
+	vertices = PolyhedronData[shape, "Vertices"];
+	edges = PolyhedronData[shape, "EdgeCoordinates"];
+	faces = PolyhedronData[shape, "Polygons"];
+	thinkness = Norm[vertices[[1]]] * 0.02;
+	lighting = {{"Point", White, {10, -10, 10}}};
+	range = 0.8 * Norm[vertices[[1]]];
+	color = allColors[ allSchlaefliSymbols[shape]];
+
+	graph = Graphics3D[
+		{
+			{
+				Opacity[0.5], FaceForm[color], faces
+			},
+			{
+				FaceForm[White], Map[Cylinder[#, thinkness]&, edges]
+			},
+			{
+				FaceForm[White], Map[Sphere[#, thinkness * 2]&, vertices]
+			}
+		},
+		ViewPoint -> {3, -3, 5}*3,
+		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
+		Lighting -> lighting
+	];
+
+
+	If[exportToPov,
+		If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
+		POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize, RenderOptions -> "+A0.001 -J +UA"];
+		Run[cropCommand];
+		,
+		Export[outputFileName, graph]
+	];
+]
+
+shapes = {"GreatDodecahedron", "GreatIcosahedron", "GreatStellatedDodecahedron", "SmallStellatedDodecahedron"};
+
+(* shapes = {"GreatDodecahedron"}; *)
+
+Map[exportPolyhedron, shapes];
+
