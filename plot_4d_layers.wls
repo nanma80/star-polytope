@@ -160,7 +160,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 	Print["There are " <> IntegerString[Length[layerKeys]] <> " layers in total. Layer keys:"];
 	Print[N[layerKeys]];
 
-	thinkness = Norm[cells[[1]][[1]][[1]]] * 0.008;
+	thickness = Norm[cells[[1]][[1]][[1]]] * 0.008;
 	lighting = {{"Point", White, {10, -10, 10}}};
 	range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
 
@@ -196,20 +196,20 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 				Opacity[0.9], FaceForm[Darker[color, 0.5]], Map[Polygon, Map[projectTo3d, inactiveFaces, {2}]]
 			},
 			{
-				FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectTo3d, inactiveEdges, {2}]]
+				FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectTo3d, inactiveEdges, {2}]]
 			},
 			{
-				FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, inactiveVertices]]
+				FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectTo3d, inactiveVertices]]
 			},
 
 			{
 				Opacity[0.4], FaceForm[Lighter[color, 0.3]], Map[Polygon, Map[projectTo3d, activeFaces, {2}]]
 			},
 			{
-				FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectTo3d, activeEdges, {2}]]
+				FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectTo3d, activeEdges, {2}]]
 			},
 			{
-				FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, activeVertices]]
+				FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectTo3d, activeVertices]]
 			}
 		},
 		ViewPoint -> {3, -3, 5}*3,

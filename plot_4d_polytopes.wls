@@ -70,7 +70,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	Print["There are " <> IntegerString[Length[edges]] <> " edges in total."];
 	Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."];
 
-	thinkness = Norm[cells[[1]][[1]][[1]]] * 0.008;
+	thickness = Norm[cells[[1]][[1]][[1]]] * 0.008;
 	lighting = {{"Point", White, {10, -10, 10}}};
 	rangeFactor = 0.8;
 	range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
@@ -98,10 +98,10 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 				Opacity[0.5], FaceForm[color], Map[Polygon, Map[projectTo3d, faces, {2}]]
 			},
 			{
-				Opacity[1], FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectTo3d, edges, {2}]]
+				Opacity[1], FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectTo3d, edges, {2}]]
 			},
 			{
-				Opacity[1], FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectTo3d, vertices]]
+				Opacity[1], FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectTo3d, vertices]]
 			}
 		},
 		ViewPoint -> {3, -3, 5}*3,

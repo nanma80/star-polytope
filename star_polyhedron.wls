@@ -28,7 +28,7 @@ allSchlaefliSymbols = <|
 
 
 exportPolyhedron[shape_] := Module[
-	{outputFileName, imageSize, vertices, edges, faces, thinkness, lighting, graph},
+	{outputFileName, imageSize, vertices, edges, faces, thickness, lighting, graph},
 
 	outputFileName = "whole_" <> shape <> ".png";
 	imageFolder = "output";
@@ -43,7 +43,7 @@ exportPolyhedron[shape_] := Module[
 	vertices = PolyhedronData[shape, "Vertices"];
 	edges = PolyhedronData[shape, "EdgeCoordinates"];
 	faces = PolyhedronData[shape, "Polygons"];
-	thinkness = Norm[vertices[[1]]] * 0.02;
+	thickness = Norm[vertices[[1]]] * 0.02;
 	lighting = {{"Point", White, {10, -10, 10}}};
 	range = 0.8 * Norm[vertices[[1]]];
 	color = allColors[ allSchlaefliSymbols[shape]];
@@ -58,10 +58,10 @@ exportPolyhedron[shape_] := Module[
 				Opacity[0.5], FaceForm[color], faces
 			},
 			{
-				FaceForm[White], Map[Cylinder[#, thinkness]&, edges]
+				FaceForm[White], Map[Cylinder[#, thickness]&, edges]
 			},
 			{
-				FaceForm[White], Map[Sphere[#, thinkness * 2]&, vertices]
+				FaceForm[White], Map[Sphere[#, thickness * 2]&, vertices]
 			}
 		},
 		ViewPoint -> viewPoint,

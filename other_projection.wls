@@ -160,7 +160,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 	cells = Get[dataFileName];
 	Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
-	thinkness = Norm[cells[[1]][[1]][[1]]] * 0.008;
+	thickness = Norm[cells[[1]][[1]][[1]]] * 0.008;
 	lighting = {{"Point", White, {10, -10, 10}}};
 	range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
 
@@ -217,20 +217,20 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 				Opacity[0.9], FaceForm[Darker[color, 0.5]], Map[Polygon, Map[projectToDirection[#, projectionMatrix]&, inactiveFaces, {2}]]
 			},
 			{
-				FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectToDirection[#, projectionMatrix]&, inactiveEdges, {2}]]
+				FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectToDirection[#, projectionMatrix]&, inactiveEdges, {2}]]
 			},
 			{
-				FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectToDirection[#, projectionMatrix]&, inactiveVertices]]
+				FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectToDirection[#, projectionMatrix]&, inactiveVertices]]
 			},
 *)
 			{
 				Opacity[0.8], FaceForm[color], Map[Polygon, Map[projectToDirection[#, projectionMatrix]&, activeFaces, {2}]]
 			},
 			{
-				FaceForm[White], Map[Cylinder[#, thinkness]&, Map[projectToDirection[#, projectionMatrix]&, activeEdges, {2}]]
+				FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectToDirection[#, projectionMatrix]&, activeEdges, {2}]]
 			},
 			{
-				FaceForm[White], Map[Sphere[#, thinkness * 2]&, Map[projectToDirection[#, projectionMatrix]&, activeVertices]]
+				FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectToDirection[#, projectionMatrix]&, activeVertices]]
 			}
 		},
 		ViewPoint -> {3, -3, 5}*3,

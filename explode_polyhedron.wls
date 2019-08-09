@@ -56,7 +56,7 @@ explodedCell[cell_, explosionFactor_] := Map[
 	cell, {2}];
 
 exportImage[shape_, explosionFactor_, serialNumber_] := Module[
-	{outputFileName, vertices, edges, faces, originalFacesCoordinates, facesCoordinates, edgesCoordinates, thinkness, lighting, graph},
+	{outputFileName, vertices, edges, faces, originalFacesCoordinates, facesCoordinates, edgesCoordinates, thickness, lighting, graph},
 
 	outputFolder = shape <> "_animation_images";
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
@@ -75,7 +75,7 @@ exportImage[shape_, explosionFactor_, serialNumber_] := Module[
 	vertices = Flatten[facesCoordinates,1];
 	edges = Flatten[edgesCoordinates,1];
 
-	thinkness = Norm[originalFacesCoordinates[[1]][[1]]] * 0.03;
+	thickness = Norm[originalFacesCoordinates[[1]][[1]]] * 0.03;
 	lighting = {{"Point", White, {10, -10, 10}}};
 	color = allColors[ allSchlaefliSymbols[shape]];
 
@@ -87,10 +87,10 @@ exportImage[shape_, explosionFactor_, serialNumber_] := Module[
 				Opacity[0.5], FaceForm[color], Map[Polygon, facesCoordinates]
 			},
 			{
-				FaceForm[White], Map[Cylinder[#, thinkness]&, edges]
+				FaceForm[White], Map[Cylinder[#, thickness]&, edges]
 			},
 			{
-				FaceForm[White], Map[Sphere[#, thinkness * 2]&, vertices]
+				FaceForm[White], Map[Sphere[#, thickness * 2]&, vertices]
 			}
 		},
 		ViewPoint -> {3, -3, 5}*3,
