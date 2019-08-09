@@ -1,14 +1,10 @@
 #!/usr/bin/env wolframscript
 
 exportToPov = True;
+specialViewPoint = True;
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
-
-(*
-PolyhedronData["KeplerPoinsot"]                                                        
-{GreatDodecahedron, GreatIcosahedron, GreatStellatedDodecahedron, SmallStellatedDodecahedron}
-*)
 
 allColors = <|
 	"3_3" -> Cyan,
@@ -22,6 +18,8 @@ allColors = <|
 
 
 allSchlaefliSymbols = <|
+	"Icosahedron" -> "3_5",
+	"Dodecahedron" -> "5_3",
 	"GreatDodecahedron" -> "5_52",
 	"GreatIcosahedron" -> "3_52", 
 	"GreatStellatedDodecahedron" -> "52_3", 
@@ -36,7 +34,7 @@ exportPolyhedron[shape_] := Module[
 	imageFolder = "output";
 	outputFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
-
+	If[specialViewPoint, outputFileName = "north_pole_" <> outputFileName ];
 	If[exportToPov, outputFileName = "pov_" <> outputFileName ];
 	outputFileName = FileNameJoin[{outputFolder, outputFileName}];
 	imageSize = {600, 450}; (* has to be 4:3 *)
@@ -49,6 +47,10 @@ exportPolyhedron[shape_] := Module[
 	lighting = {{"Point", White, {10, -10, 10}}};
 	range = 0.8 * Norm[vertices[[1]]];
 	color = allColors[ allSchlaefliSymbols[shape]];
+	viewPoint = If[specialViewPoint, 
+		If[shape == "SmallStellatedDodecahedron", -vertices[[1]]*10, {0, 0, 1}*10], 
+		{3, -3, 5}*3
+	];
 
 	graph = Graphics3D[
 		{
@@ -62,7 +64,7 @@ exportPolyhedron[shape_] := Module[
 				FaceForm[White], Map[Sphere[#, thinkness * 2]&, vertices]
 			}
 		},
-		ViewPoint -> {3, -3, 5}*3,
+		ViewPoint -> viewPoint,
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		Lighting -> lighting
 	];
@@ -77,9 +79,14 @@ exportPolyhedron[shape_] := Module[
 	];
 ]
 
-shapes = {"GreatDodecahedron", "GreatIcosahedron", "GreatStellatedDodecahedron", "SmallStellatedDodecahedron"};
-
-(* shapes = {"GreatDodecahedron"}; *)
+shapes = {
+	"Icosahedron",
+	"Dodecahedron",
+	"GreatDodecahedron", 
+	"GreatIcosahedron", 
+	"GreatStellatedDodecahedron", 
+	"SmallStellatedDodecahedron"
+};
 
 Map[exportPolyhedron, shapes];
 
