@@ -49,35 +49,32 @@ exportPolyhedron[shape_] := Module[
 	faces = PolyhedronData[shape, "Polygons"];
 	thickness = Norm[vertices[[1]]] * 0.02;
 	lighting = {{"Point", White, {10, -10, 10}}};
-	range = 2.0 * Norm[vertices[[1]]];
+	range = 1.1 * Norm[vertices[[1]]];
 	color = allColors[ allSchlaefliSymbols[shape]];
 	viewPoint = If[specialViewPoint, 
 		If[shape == "SmallStellatedDodecahedron", -vertices[[1]]*10, {0, 0, 1}*10], 
-		{2, -3, 2}*3
+		{2, -3, 1}*3
 	];
 
-	a1 = vertices[[16]];
-	b1 = vertices[[7]];
-	vertex1 = getPentagramVertex[a1, b1];
+ 	a1 = vertices[[10]];
+	b1 = vertices[[9]];
+	newVertex = getPentagramVertex[a1, b1];
 
-	a2 = vertices[[8]];
-	b2 = vertices[[12]];
-	vertex2 = getPentagramVertex[a2, b2];
+	specialVertices = {newVertex};
+	newEdges = {{newVertex, vertices[[9]]}, {newVertex, vertices[[7]]}, {newVertex, vertices[[5]]}};
+	newFaces = {
+		{newVertex, vertices[[9]], vertices[[7]]},
+		{newVertex, vertices[[5]], vertices[[7]]},
+		{newVertex, vertices[[9]], vertices[[5]]}
+	};
 
-	newVertex1 = getPentagramVertex[vertex2, vertex1];
-	newVertex2 = getPentagramVertex[vertex1, vertex2];
+	newFaces = {
+		{newVertex, vertices[[4]], vertices[[8]], vertices[[10]]},
+		{newVertex, vertices[[4]], vertices[[12]], vertices[[1]]},
+		{newVertex, vertices[[9]], vertices[[5]]}
+	}*1.01;
 
-
-	specialVertices = {newVertex1, newVertex2}*1.01;
-
-	newEdges = {{vertices[[7]], newVertex1}, {vertices[[19]], newVertex1},
-				{vertices[[12]], newVertex2}, {vertices[[2]], newVertex2}, 
-					{newVertex1, newVertex2}}*1.01;
-
-	newFaces = {{vertices[[16]], vertices[[8]], newVertex2, newVertex1},
-				{vertices[[17]], vertices[[13]], newVertex2, newVertex1}}*1.01;
-
-	viewCenter = {0.4, 0, 0};
+	viewCenter = {-0.6, 0, 0};
 
 	graph = Graphics3D[
 		{
@@ -91,16 +88,16 @@ exportPolyhedron[shape_] := Module[
 				FaceForm[White], Map[Sphere[#, thickness * 2]&, vertices]
 			},
 			{
-				Table[Text[IntegerString[k], vertices[[k]] + {0.1, 0.1, 0.1}], {k, 1, Length[vertices]}]
+				Table[Text[Style[IntegerString[k], Large, Bold], vertices[[k]]*1.1], {k, 1, Length[vertices]}]
 			},
- 			{
-				Opacity[0.3], FaceForm[Green], Map[Polygon, newFaces]
-			},
-			{
-				FaceForm[Green], Map[Cylinder[#, thickness]&, newEdges]
+  			{
+				Opacity[0.7], FaceForm[Magenta], Map[Polygon, newFaces]
 			},
 			{
-				FaceForm[Green], Map[Sphere[#, thickness * 3]&, specialVertices]
+				FaceForm[Magenta], Map[Cylinder[#, thickness]&, newEdges]
+			},
+			{
+				FaceForm[Magenta], Map[Sphere[#, thickness * 3]&, specialVertices]
 			}
 		},
 		ViewPoint -> viewPoint,
@@ -119,7 +116,7 @@ exportPolyhedron[shape_] := Module[
 ]
 
 shapes = {
-	"Dodecahedron"
+	"GreatDodecahedron"
 };
 
 Map[exportPolyhedron, shapes];
