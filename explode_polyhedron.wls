@@ -80,6 +80,7 @@ exportImage[shape_, explosionFactor_, serialNumber_] := Module[
 	color = allColors[ allSchlaefliSymbols[shape]];
 
 	range = Max[originalFacesCoordinates] * rangeFactor;
+	viewPoint = If[shape == "SmallStellatedDodecahedron", {2.5, -3, -1}*30, {2.5, -3, 1}*30];
 
 	graph = Graphics3D[
 		{
@@ -93,7 +94,7 @@ exportImage[shape_, explosionFactor_, serialNumber_] := Module[
 				FaceForm[White], Map[Sphere[#, thickness * 2]&, vertices]
 			}
 		},
-		ViewPoint -> {3, -3, 5}*3,
+		ViewPoint -> viewPoint,
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		Lighting -> lighting
 	];

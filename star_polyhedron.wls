@@ -1,7 +1,7 @@
 #!/usr/bin/env wolframscript
 
 exportToPov = True;
-specialViewPoint = True;
+specialViewPoint = False;
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -49,7 +49,7 @@ exportPolyhedron[shape_] := Module[
 	color = allColors[ allSchlaefliSymbols[shape]];
 	viewPoint = If[specialViewPoint, 
 		If[shape == "SmallStellatedDodecahedron", -vertices[[1]]*10, {0, 0, 1}*10], 
-		{3, -3, 5}*3
+		If[shape == "SmallStellatedDodecahedron", {2.5, -3, -1}*30, {2.5, -3, 1}*30]
 	];
 
 	graph = Graphics3D[
