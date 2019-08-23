@@ -32,8 +32,6 @@ shapes = {
 	"polytope_52_5_52"
 }; *)
 
-(*shape = "test";*)
-
 exportToPov = True;
 dataFolder = "data";
 imageFolder = "output";
@@ -53,48 +51,8 @@ allColors = <|
 	"3_52" -> Orange
 |>;
 
-(* shape -> {maxExplosionFactor, frameCount}*)
-explosionConfigs = <|
-	(* 120-cell *)
-	"polytope_5_3_3_cell120" -> {2.0, 30},
-
-	(* 600-cell *)
-	"polytope_3_3_5_cell600" -> {2.0, 30},
-
-	(* Icosahedral 120-cell. cell: icosahedron *)
-	"polytope_3_5_52" -> {2.0, 30},
-
-	(* Small stellated 120-cell. cell: {5/2, 5}. Small stellated dodecahedron *)
-	"polytope_52_5_3" -> {2.0, 30},
-
-	(* Great 120-cell. cell: {5, 5/2}. Great dodecahedron. Self dual *)
-	"polytope_5_52_5" -> {2.0, 30},
-
-	(* Grand 120-cell. cell: {5, 3}. Dodecahedron *)
-	"polytope_5_3_52" -> {2.0, 30},
-
-	(* Great stellated 120-cell. cell: great stellated dodecahedron *)
-	"polytope_52_3_5" -> {2.0, 30},
-
-	(* Grand stellated 120-cell. cell: {5/2, 5}. Small stellated dodecahedron. Self dual *)
-	"polytope_52_5_52" -> {2.0, 30},
-
-	(* Great grand 120-cell. cell: Great dodecahedron *)
-	"polytope_5_52_3" -> {2.0, 30},
-
-	(* Greate icosahedral 120-cell. cell: great icosahedron *)
-	"polytope_3_52_5" -> {2.0, 30},
-
-	(* Grand 600-cell. cell: tetrahedron, 600 cells *)
-	"polytope_3_3_52" -> {2.0, 30},
-
-	(* Great grand stellated 120-cell. cell: great stellated dodecahedron *)
-	"polytope_52_3_3" -> {2.0, 30},
-
-	"test" -> {2.0, 3}
-|>
-
-rangeFactor = 2.0;
+explosionConfig = {2.0, 30};
+rangeFactor = 1.5;
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -166,10 +124,15 @@ exportImage[shape_, explosionFactor_, serialNumber_] := Module[
 
 	(* Only keep adjacent cells *)
 	activeCells = Select[cells, Length[Intersection[Flatten[#,1], { centeredVertex }, SameTest -> sameVertex ]] > 0 &];
+	activeFaces = Flatten[activeCells, 1];
+	activeVertices = Union[ Flatten[activeFaces,1], SameTest -> sameVertex];
+
+	projectedVertices = Map[projectToDirection[#, projectionMatrix]&, activeVertices];
+	range = Max[Map[Norm, projectedVertices]] * rangeFactor;
+
 
 	thickness = Norm[cells[[1]][[1]][[1]]] * 0.008;
 	lighting = {{"Point", White, {10, -10, 10}}};
-	range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
 
 	outputFolder = shape <> "_vertex_explode";
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
@@ -220,7 +183,6 @@ exportAnimation[shape_] := Module[
 		outputFolder,
 		gifFileName,
 		gifFolder,
-		explosionConfig,
 		maxExplosionFactor,
 		frameCount,
 		explodeStep,
@@ -237,7 +199,8 @@ exportAnimation[shape_] := Module[
 	gifFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
-	explosionConfig = explosionConfigs[shape];
+	(* explosionConfig = explosionConfigs[shape]; *)
+	
 	maxExplosionFactor = explosionConfig[[1]];
 	frameCount = explosionConfig[[2]];
 	explodeStep = maxExplosionFactor/frameCount;
