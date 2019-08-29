@@ -87,13 +87,13 @@ exportPolyhedron[shape_] := Module[
 				Table[Text[IntegerString[k], vertices[[k]] + {0.1, 0.1, 0.1}], {k, 1, Length[vertices]}]
 			},
  			{
-				Opacity[0.3], FaceForm[Green], Map[Polygon, newFaces]
+				Opacity[0.5], FaceForm[Yellow], Map[Polygon, newFaces]
 			},
 			{
-				FaceForm[Green], Map[Cylinder[#, thickness]&, newEdges]
+				FaceForm[Yellow], Map[Cylinder[#, thickness]&, newEdges]
 			},
 			{
-				FaceForm[Green], Map[Sphere[#, thickness * 3]&, specialVertices]
+				FaceForm[Yellow], Map[Sphere[#, thickness * 3]&, specialVertices]
 			}
 		},
 		ViewPoint -> viewPoint,
