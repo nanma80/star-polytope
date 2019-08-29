@@ -3,7 +3,7 @@
 (* global config *)
 
 exportToPov = True;
-secondLayer = True;
+secondLayer = False;
 range = If[secondLayer, 1.95, 0.8];
 
 
@@ -60,7 +60,7 @@ elements = {
 			Opacity[1], FaceForm[Red], Map[Polygon,{face2}]
 		},
 		{
-			FaceForm[Green], Map[Cylinder[#, thickness]&, edges1]
+			FaceForm[Yellow], Map[Cylinder[#, thickness]&, edges1]
 		},
 		{
 			FaceForm[Blue], Map[Cylinder[#, thickness]&, edges3]

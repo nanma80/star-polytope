@@ -1,5 +1,7 @@
 #!/usr/bin/env wolframscript
 
+(* the image doesn't look well. Abandon *)
+
 exportToPov = True;
 specialViewPoint = False;
 
@@ -28,11 +30,12 @@ allSchlaefliSymbols = <|
 
 getFaceCenter[face_] := Simplify[Total[PolygonCoordinates[face]]/5];
 getEdgesFromFace[face_] := Table[{face[[i+1]], face[[Mod[i+1, Length[face]] + 1]]}, {i, 0, Length[face] - 1}];
+getPentagramVertex[a_, b_] := (b-a)*GoldenRatio + b;
 
 exportPolyhedron[shape_] := Module[
 	{outputFileName, imageSize, vertices, edges, faces, thickness, lighting, graph},
 
-	outputFileName = "stellated_dodecahedron.png";
+	outputFileName = "stellated_dodecahedron_4.png";
 	imageFolder = "output";
 	outputFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
@@ -46,29 +49,24 @@ exportPolyhedron[shape_] := Module[
 	faces = PolyhedronData[shape, "Polygons"];
 	thickness = Norm[vertices[[1]]] * 0.02;
 	lighting = {{"Point", White, {10, -10, 10}}};
-	range = 1.0 * Norm[vertices[[1]]];
+	range = 0.8 * Norm[vertices[[1]]];
 	color = allColors[ allSchlaefliSymbols[shape]];
 	viewPoint = If[specialViewPoint, 
 		If[shape == "SmallStellatedDodecahedron", -vertices[[1]]*10, {0, 0, 1}*10], 
-		{3, -3, 5}*3
+		If[shape == "SmallStellatedDodecahedron", {2.5, -3, -1}*30, {2.5, -3, 1}*30]
 	];
 
+	newFace = Map[vertices[[#]]&, {4,2,7,12,6}];
 
-	a = vertices[[11]];
-	b = vertices[[7]];
-	newVertex = (b-a)*GoldenRatio + b;
-	specialVertices = {newVertex};
-	selectedFace = PolygonCoordinates[SortBy[faces, N[getFaceCenter[#].newVertex]&][[Length[faces]]]];
+	newEdges = getEdgesFromFace[newFace];
+	newFaces = {newFace} * 1.01;
 
-	newEdges = Map[{#, newVertex}&, selectedFace];
-	newFaces = Map[{#[[1]], #[[2]], newVertex}&, getEdgesFromFace[selectedFace]];
-	viewCenter = newVertex * 0.2;
-
+	viewCenter = {0, 0, 0};
 
 	graph = Graphics3D[
 		{
 			{
-				Opacity[0.7], FaceForm[color], faces
+				FaceForm[color], faces
 			},
 			{
 				FaceForm[White], Map[Cylinder[#, thickness]&, edges]
@@ -77,13 +75,13 @@ exportPolyhedron[shape_] := Module[
 				FaceForm[White], Map[Sphere[#, thickness * 2]&, vertices]
 			},
 			{
-				Opacity[0.3], FaceForm[Blue], Map[Polygon, newFaces]
+				Table[Text[Style[IntegerString[k], Large, Bold, Red], vertices[[k]]*1.1], {k, 1, Length[vertices]}]
+			},
+  			{
+				Opacity[0.7], FaceForm[Yellow], Map[Polygon, newFaces]
 			},
 			{
-				FaceForm[Blue], Map[Cylinder[#, thickness]&, newEdges]
-			},
-			{
-				FaceForm[Blue], Map[Sphere[#, thickness * 3]&, specialVertices]
+				FaceForm[Yellow], Map[Cylinder[#, thickness]&, newEdges]
 			}
 		},
 		ViewPoint -> viewPoint,
@@ -102,7 +100,7 @@ exportPolyhedron[shape_] := Module[
 ]
 
 shapes = {
-	"Dodecahedron"
+	"SmallStellatedDodecahedron"
 };
 
 Map[exportPolyhedron, shapes];
