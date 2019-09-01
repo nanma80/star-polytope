@@ -1,0 +1,131 @@
+Stellation:
+
+Stellations of the 120-cell:
+based on the original adjacent cells of the 120-cell
+	"polytope_52_5_3",
+	"polytope_5_52_5",
+	"polytope_52_3_5",
+
+based on the middle latitude cells
+	"polytope_3_5_52",
+	"polytope_3_52_5",
+
+based on the low latitude of the southern hemisphere
+	"polytope_5_3_52",
+	"polytope_52_5_52",
+	"polytope_5_52_3",
+	"polytope_52_3_3"
+
+Stellation of the 600-cell. I don't know how to describe the cells
+	"polytope_3_3_52"
+{polytope_3_3_52, (1 - 3*Sqrt[5])/8, -0.7135254915624212}
+
+=========
+
+Faceting:
+Faceting of the 600-cell:
+arctic vertices (shape of the icosahedron)
+{polytope_52_5_3, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_3_5_52, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_5_52_5, (1 + Sqrt[5])/4, 0.8090169943749475}
+
+middle latitude vertices (shape of the dodecahedron)
+{polytope_52_3_5, 1/2, 0.5}
+{polytope_5_3_52, 1/2, 0.5}
+
+low altitude vertices (shape of an icosahedron)
+{polytope_3_52_5, (-1 + Sqrt[5])/4, 0.30901699437494745}
+{polytope_5_52_3, (-1 + Sqrt[5])/4, 0.30901699437494745}
+{polytope_52_5_52, (-1 + Sqrt[5])/4, 0.30901699437494745}
+
+??? Guess: Take a cell centered projection. Take the vertices just 
+to the north of the equator.
+{polytope_3_3_52, Sqrt[7 - 3*Sqrt[5]]/4, 0.13504537836886316}
+
+Faceting of the 120-cell:
+20 vertices just to the north of the equator. Visible on the orthonormal projection.
+In the projection, the points on the northern and southern hemispheres coincide.
+{polytope_52_3_3, Sqrt[7 - 3*Sqrt[5]]/4, 0.13504537836886316}
+
+
+
+=========
+basicShape = "polytope_5_3_3_cell120";
+shapes = {
+	(* base *)
+	"polytope_5_3_3_cell120",
+	"polytope_52_5_3",
+	"polytope_5_52_5",
+	"polytope_52_3_5",
+
+	(* middle latitude cells *)
+	"polytope_3_5_52",
+	"polytope_3_52_5",
+
+	(* low latitude of the southern hemisphere *)
+	"polytope_5_3_52",
+	"polytope_52_5_52",
+	"polytope_5_52_3",
+	"polytope_52_3_3"
+};
+
+
+Inner products between cell centers of polytope_5_3_3_cell120
+{1, (1 + Sqrt[5])/4, 1/2, (-1 + Sqrt[5])/4, 0, (1 - Sqrt[5])/4, -1/2, (-1 - Sqrt[5])/4, -1}
+{1., 0.8090169943749475, 0.5, 0.30901699437494745, 0., -0.30901699437494745, -0.5, -0.8090169943749475, -1.}
+Number of layers:
+9
+Inner products between a vertex and cell centers of polytope_5_3_3_cell120
+{Sqrt[7 + 3*Sqrt[5]]/4, Sqrt[5/2]/2, 1/Sqrt[2], Sqrt[3 + Sqrt[5]]/4, 1/(2*Sqrt[2]), Sqrt[3 - Sqrt[5]]/4, Sqrt[7 - 3*Sqrt[5]]/4, 0, (-3 + Sqrt[5])/(4*Sqrt[2]), -Sqrt[3 - Sqrt[5]]/4, -1/(2*Sqrt[2]), -Sqrt[3 + Sqrt[5]]/4, -(1/Sqrt[2]), -Sqrt[5/2]/2, -Sqrt[7 + 3*Sqrt[5]]/4}
+{0.9256147934109581, 0.7905694150420949, 0.7071067811865475, 0.5720614028176843, 0.35355339059327373, 0.21850801222441052, 0.13504537836886316, 0., -0.13504537836886318, -0.21850801222441052, -0.35355339059327373, -0.5720614028176843, -0.7071067811865475, -0.7905694150420949, -0.9256147934109581}
+Number of layers:
+15
+Inner products between a cell center and its vertex:
+{polytope_5_3_3_cell120, Sqrt[7 + 3*Sqrt[5]]/4, 0.9256147934109581}
+{polytope_52_5_3, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_5_52_5, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_52_3_5, 1/2, 0.5}
+{polytope_3_5_52, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_3_52_5, (-1 + Sqrt[5])/4, 0.30901699437494745}
+{polytope_5_3_52, 1/2, 0.5}
+{polytope_52_5_52, (-1 + Sqrt[5])/4, 0.30901699437494745}
+{polytope_5_52_3, (-1 + Sqrt[5])/4, 0.30901699437494745}
+{polytope_52_3_3, Sqrt[7 - 3*Sqrt[5]]/4, 0.13504537836886316}
+Inner products between adjacent cell centers:
+{polytope_5_3_3_cell120, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_52_5_3, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_5_52_5, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_52_3_5, (1 + Sqrt[5])/4, 0.8090169943749475}
+{polytope_3_5_52, 1/2, 0.5}
+{polytope_3_52_5, 1/2, 0.5}
+{polytope_5_3_52, (1 - Sqrt[5])/4, -0.30901699437494745}
+{polytope_52_5_52, (1 - Sqrt[5])/4, -0.30901699437494745}
+{polytope_5_52_3, (1 - Sqrt[5])/4, -0.30901699437494745}
+{polytope_52_3_3, (1 - Sqrt[5])/4, -0.30901699437494745}
+
+
+=========
+basicShape = "polytope_3_3_5_cell600";
+shapes = {
+	(* base *)
+	"polytope_3_3_5_cell600",
+	(* a layer on the southern hemisphere *)
+	"polytope_3_3_52"
+};
+
+Inner products between cell centers of polytope_3_3_5_cell600
+{1, (1 + 3*Sqrt[5])/8, (5 + Sqrt[5])/8, (1 + Sqrt[5])/4, 3/4, (-1 + 3*Sqrt[5])/8, (3 + Sqrt[5])/8, Sqrt[5]/4, 1/2, (1 + Sqrt[5])/8, (5 - Sqrt[5])/8, (-1 + Sqrt[5])/4, 1/4, (-1 + Sqrt[5])/8, (3 - Sqrt[5])/8, 0, (-3 + Sqrt[5])/8, (1 - Sqrt[5])/8, -1/4, (1 - Sqrt[5])/4, (-5 + Sqrt[5])/8, (-1 - Sqrt[5])/8, -1/2, -Sqrt[5]/4, (-3 - Sqrt[5])/8, (1 - 3*Sqrt[5])/8, -3/4, (-1 - Sqrt[5])/4, (-5 - Sqrt[5])/8, (-1 - 3*Sqrt[5])/8, -1}
+{1., 0.9635254915624212, 0.9045084971874737, 0.8090169943749475, 0.75, 0.7135254915624212, 0.6545084971874737, 0.5590169943749475, 0.5, 0.4045084971874737, 0.3454915028125263, 0.30901699437494745, 0.25, 0.15450849718747373, 0.09549150281252627, 0., -0.09549150281252627, -0.15450849718747373, -0.25, -0.30901699437494745, -0.3454915028125263, -0.4045084971874737, -0.5, -0.5590169943749475, -0.6545084971874737, -0.7135254915624212, -0.75, -0.8090169943749475, -0.9045084971874737, -0.9635254915624212, -1.}
+Number of layers:
+31
+Inner products between a vertex and cell centers of polytope_3_3_5_cell600
+{Sqrt[7 + 3*Sqrt[5]]/4, Sqrt[5/2]/2, 1/Sqrt[2], Sqrt[3 + Sqrt[5]]/4, 1/(2*Sqrt[2]), Sqrt[3 - Sqrt[5]]/4, Sqrt[7 - 3*Sqrt[5]]/4, 0, (-3 + Sqrt[5])/(4*Sqrt[2]), -Sqrt[3 - Sqrt[5]]/4, -1/(2*Sqrt[2]), -Sqrt[3 + Sqrt[5]]/4, -(1/Sqrt[2]), -Sqrt[5/2]/2, -Sqrt[7 + 3*Sqrt[5]]/4}
+{0.9256147934109581, 0.7905694150420949, 0.7071067811865475, 0.5720614028176843, 0.35355339059327373, 0.21850801222441052, 0.13504537836886316, 0., -0.13504537836886318, -0.21850801222441052, -0.35355339059327373, -0.5720614028176843, -0.7071067811865475, -0.7905694150420949, -0.9256147934109581}
+Number of layers:
+15
+Inner products between a cell center and its vertex:
+{polytope_3_3_5_cell600, Sqrt[7 + 3*Sqrt[5]]/4, 0.9256147934109581}
+{polytope_3_3_52, Sqrt[7 - 3*Sqrt[5]]/4, 0.13504537836886316}
+Inner products between adjacent cell centers:
+{polytope_3_3_5_cell600, (1 + 3*Sqrt[5])/8, 0.9635254915624212}
+{polytope_3_3_52, (1 - 3*Sqrt[5])/8, -0.7135254915624212}
