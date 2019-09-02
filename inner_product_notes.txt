@@ -38,7 +38,7 @@ low altitude vertices (shape of an icosahedron)
 {polytope_5_52_3, (-1 + Sqrt[5])/4, 0.30901699437494745}
 {polytope_52_5_52, (-1 + Sqrt[5])/4, 0.30901699437494745}
 
-??? Guess: Take a cell centered projection. Take the vertices just 
+Take a cell centered projection. Take the 4 vertices just 
 to the north of the equator.
 {polytope_3_3_52, Sqrt[7 - 3*Sqrt[5]]/4, 0.13504537836886316}
 
