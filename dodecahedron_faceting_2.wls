@@ -28,11 +28,12 @@ allSchlaefliSymbols = <|
 
 getFaceCenter[face_] := Simplify[Total[PolygonCoordinates[face]]/5];
 getEdgesFromFace[face_] := Table[{face[[i+1]], face[[Mod[i+1, Length[face]] + 1]]}, {i, 0, Length[face] - 1}];
+sameCenter[edge1_, edge2_] := Total[edge1] == Total[edge2];
 
 exportPolyhedron[shape_] := Module[
 	{outputFileName, imageSize, vertices, edges, faces, thickness, lighting, graph},
 
-	outputFileName = "stellated_dodecahedron.png";
+	outputFileName = "dodecahedron_faceting_2.png";
 	imageFolder = "output";
 	outputFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
@@ -46,29 +47,22 @@ exportPolyhedron[shape_] := Module[
 	faces = PolyhedronData[shape, "Polygons"];
 	thickness = Norm[vertices[[1]]] * 0.02;
 	lighting = {{"Point", White, {10, -10, 10}}};
-	range = 1.0 * Norm[vertices[[1]]];
+	range = 0.8 * Norm[vertices[[1]]];
 	color = allColors[ allSchlaefliSymbols[shape]];
 	viewPoint = If[specialViewPoint, 
 		If[shape == "SmallStellatedDodecahedron", -vertices[[1]]*10, {0, 0, 1}*10], 
-		{3, -3, 5}*3
+		{2, -3, 1}*3
 	];
 
+	newFaces = Map[PolygonCoordinates, PolyhedronData["Dodecahedron", "Polygons"]]/GoldenRatio^2;
+	newEdges = Union[ Flatten[Map[getEdgesFromFace, newFaces], 1], SameTest -> sameCenter];
 
-	a = vertices[[11]];
-	b = vertices[[7]];
-	newVertex = (b-a)*GoldenRatio + b;
-	specialVertices = {newVertex};
-	selectedFace = PolygonCoordinates[SortBy[faces, N[getFaceCenter[#].newVertex]&][[Length[faces]]]];
-
-	newEdges = Map[{#, newVertex}&, selectedFace];
-	newFaces = Map[{#[[1]], #[[2]], newVertex}&, getEdgesFromFace[selectedFace]];
-	viewCenter = newVertex * 0.2;
-
+	viewCenter = {0, 0, 0};
 
 	graph = Graphics3D[
 		{
 			{
-				Opacity[0.7], FaceForm[color], faces
+				Opacity[1.0], FaceForm[color], faces
 			},
 			{
 				FaceForm[White], Map[Cylinder[#, thickness]&, edges]
@@ -77,15 +71,15 @@ exportPolyhedron[shape_] := Module[
 				FaceForm[White], Map[Sphere[#, thickness * 2]&, vertices]
 			},
 			{
-				Opacity[0.3], FaceForm[Blue], Map[Polygon, newFaces]
+				Table[Text[Style[IntegerString[k], Large, Bold, Red], vertices[[k]]*1.1], {k, 1, Length[vertices]}]
 			},
 			{
-				FaceForm[Blue], Map[Cylinder[#, thickness]&, newEdges]
+				FaceForm[White], Map[Cylinder[#, thickness * 1]&, newEdges]
 			},
-			{
-				FaceForm[Blue], Map[Sphere[#, thickness * 3]&, specialVertices]
+ 			{
+				Opacity[0.2], FaceForm[Red], Map[Polygon, newFaces]
 			}
-		},
+ 		},
 		ViewPoint -> viewPoint,
 		PlotRange -> {{viewCenter[[1]]-range, viewCenter[[1]]+range}, {viewCenter[[2]]-range, viewCenter[[2]]+range}, {viewCenter[[3]]-range, viewCenter[[3]]+range}},
 		Lighting -> lighting
@@ -102,7 +96,7 @@ exportPolyhedron[shape_] := Module[
 ]
 
 shapes = {
-	"Dodecahedron"
+	"GreatStellatedDodecahedron"
 };
 
 Map[exportPolyhedron, shapes];

@@ -73,7 +73,7 @@ exportPolyhedron[shape_] := Module[
 				FaceForm[White], Map[Cylinder[#, thickness * 1]&, newEdges]
 			},
  			{
-				FaceForm[Blue], {Polygon[newFace]}
+				FaceForm[If[buildPentagram, Blue, Yellow]], {Polygon[newFace]}
 			}
  		},
 		ViewPoint -> viewPoint,
