@@ -16,13 +16,15 @@ shapes = {
 	{7, 1},
 	{7, 2},
 	{7, 3},
-	{6, 2}
+	{6, 2},
+	{17, 6}
 };
 
 allColors = <|
 	1 -> Red,
 	2 -> Blue,
-	3 -> Green
+	3 -> Green,
+	6 -> Magenta
 |>;
 
 
