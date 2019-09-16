@@ -9,7 +9,7 @@ output/*test*.png
 output/*test*/**
 output/*layer*/**
 output/*vertex_explode/**
-output/*animation_images*/**
+output/*images*/**
 
 # temp ignore face_ while tuning
 output/**/face_*
