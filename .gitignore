@@ -12,7 +12,7 @@ output/*vertex_explode/**
 output/*images*/**
 
 # temp ignore face_ while tuning
-output/**/face_*
+output/**/face_polytope*
 
 data/test*.*
 # output/*.gif
