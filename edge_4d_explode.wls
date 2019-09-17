@@ -13,19 +13,27 @@ python -m SimpleHTTPServer 8000
 (* global config *)
 
 shapes = {
+	(* "polytope_3_5_52", *)
+	(* "polytope_5_52_5", *)
+	(* "polytope_5_3_52", *)
+	(* "polytope_52_3_5", *)
+	(* "polytope_52_5_52", *)
+	(* "polytope_5_52_3", *)
+	(* "polytope_3_52_5", *)
+
 	"polytope_5_3_3_cell120",
 	"polytope_3_3_5_cell600",
-	"polytope_3_5_52",
 	"polytope_52_5_3",
-	"polytope_5_52_5",
-	"polytope_5_3_52",
-	"polytope_52_3_5",
-	"polytope_52_5_52",
-	"polytope_5_52_3",
-	"polytope_3_52_5",
 	"polytope_3_3_52",
 	"polytope_52_3_3"
 };
+
+(* 3_3_5: 0.5
+5_3_3: 0.6
+52_5_3: 0.6
+52_3_3: 0.8
+3_3_52: 0.8
+ *)
 
 shapes = Reverse[shapes];
 
@@ -172,7 +180,9 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 
 	thickness = Norm[cells[[1]][[1]][[1]]] * 0.008;
 	lighting = {{"Point", White, {10, -10, 10}}};
-	(* rangeFactor = If[shape == "polytope_52_3_5", 0.9, 0.6]; *)
+	rangeFactor = If[shape == "polytope_3_3_5_cell600", 0.6, 
+		If[shape == "polytope_5_3_3_cell120" || shape == "polytope_52_5_3", 0.7, 0.8]];
+
 	range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
 
 	outputFolder = shape <> "_edge_layers_" <> IntegerString[activeLayerMin] <> "_" <> IntegerString[activeLayerMax];
