@@ -13,6 +13,7 @@ output/*images*/**
 
 # temp ignore face_ while tuning
 output/**/face_polytope*
+output/polytope_3_5_52/*explore*
 
 data/test*.*
 # output/*.gif
