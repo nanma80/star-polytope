@@ -10,10 +10,10 @@ output/*test*/**
 output/*layer*/**
 output/*vertex_explode/**
 output/*images*/**
+output/polytope_3_5_52/*explore*.png
 
 # temp ignore face_ while tuning
 output/**/face_polytope*
-output/polytope_3_5_52/*explore*
 
 data/test*.*
 # output/*.gif
