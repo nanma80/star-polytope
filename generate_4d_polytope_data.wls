@@ -22,7 +22,7 @@ shape = "polytope_3_3_52";
 shape = "polytope_52_3_3";
 *)
 
-shape = "test";
+shape = "polytope_3_4_3";
 
 dataFolder = "data";
 AllCells = True;

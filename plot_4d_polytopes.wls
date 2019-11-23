@@ -1,7 +1,7 @@
 #!/usr/bin/env wolframscript
 
 
-shapes = {
+(* shapes = {
 	(* "test", *)
 	"polytope_5_3_3_cell120",
 	"polytope_3_3_5_cell600",
@@ -15,6 +15,13 @@ shapes = {
 	"polytope_3_52_5",
 	"polytope_3_3_52",
 	"polytope_52_3_3"
+}; *)
+
+shapes = {
+	(* "test", *)
+	"polytope_4_3_3",
+	"polytope_3_3_4",
+	"polytope_3_4_3"
 };
 
 (* shape = "polytope_3_52_5"; *)
@@ -81,6 +88,8 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 
 		cellShape = shapeTokens[[2]] <> "_" <> shapeTokens[[3]];
 		colors = <|
+			"4_3" -> Red,
+			"3_4" -> Green,
 			"3_3" -> Cyan,
 			"5_3" -> Red,
 			"3_5" -> Green,
@@ -104,7 +113,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 				Opacity[1], FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectTo3d, vertices]]
 			}
 		},
-		ViewPoint -> {3, -3, 5}*3,
+		ViewPoint -> {3, -4, 5}*3,
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		Lighting -> lighting
 	];

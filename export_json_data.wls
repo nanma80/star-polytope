@@ -18,11 +18,13 @@ shapes = {
 };
 
 dataFolder = "data";
-(*
+
 shapes = {
-	"test"
+	"polytope_3_3_4",
+	"polytope_4_3_3",
+	"polytope_3_4_3"
 };
-*)
+
 projectTo3d[vertex4d_] := {vertex4d[[1]], vertex4d[[2]], vertex4d[[3]]};
 reflect[point_, mirror_] := FullSimplify[point - 2 * (point.mirror)/(mirror.mirror)*mirror];
 doubleReflect[point_, mirror1_, mirror2_] := reflect[reflect[point, mirror1], mirror2];

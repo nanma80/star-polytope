@@ -12,7 +12,7 @@ python -m SimpleHTTPServer 8000
 
 (* global config *)
 
-shapes = {
+(* shapes = {
 	(* "test", *)
 	"polytope_5_3_3_cell120",
 	"polytope_3_3_5_cell600",
@@ -27,10 +27,10 @@ shapes = {
 	"polytope_3_3_52",
 	"polytope_52_3_3"
 };
-
-(* shapes = {
-	"polytope_52_5_52"
-}; *)
+ *)
+shapes = {
+	"polytope_3_4_3"
+};
 
 exportToPov = True;
 dataFolder = "data";
@@ -42,6 +42,8 @@ imageSizes = <|
 |>;
 
 allColors = <|
+	"4_3" -> Red,
+	"3_4" -> Green,
 	"3_3" -> Cyan,
 	"5_3" -> Red,
 	"3_5" -> Green,
@@ -124,6 +126,7 @@ exportImage[shape_, explosionFactor_, serialNumber_] := Module[
 
 	(* Only keep adjacent cells *)
 	activeCells = Select[cells, Length[Intersection[Flatten[#,1], { centeredVertex }, SameTest -> sameVertex ]] > 0 &];
+	(* activeCells = cells; *)
 	activeFaces = Flatten[activeCells, 1];
 	activeVertices = Union[ Flatten[activeFaces,1], SameTest -> sameVertex];
 
