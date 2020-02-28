@@ -21,8 +21,8 @@
 shapes = {
 	(* "test", *)
 	(* "polytope_3_3_4" *)
-	"polytope_3_4_3"
-	(* "polytope_3_3_5_cell600" *)
+	(* "polytope_3_4_3" *)
+	"polytope_3_3_5_cell600"
 };
 
 (* shape = "polytope_3_52_5"; *)
@@ -34,7 +34,7 @@ phi = GoldenRatio;
 targetInnerProds = {Sqrt[(1 + Sqrt[(5 + 2*Sqrt[5])/15])/2], Sqrt[(5 + 2*Sqrt[5])/15]};
 
 (* for 4{4}3 *)
-targetInnerProds = {Cos[ArcSec[Sqrt[3]]/2], Cos[ArcSec[Sqrt[3]]]};
+(* targetInnerProds = {Cos[ArcSec[Sqrt[3]]/2], Cos[ArcSec[Sqrt[3]]]}; *)
 
 Print[targetInnerProds//N];
 (* epsilon = 0.2; *)
@@ -104,16 +104,24 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	edge1 = nEdges[[1]];
 	cell1 = nCells[[1]];
 
-	compare1 = {vertex1, face1, edge1, cell1}//Simplify;
-	compare2 = Join[nVertices, nFaces, nEdges, nCells];
+	rawFaceCenter1 = {(3 + Sqrt[5])/3, 0, 2/3, 0};
+	rawEdgeCenter1 = {(5 + Sqrt[5])/4, (1 + Sqrt[5])^(-1), -1/2, 0};
+	faceCenter1 = rawFaceCenter1/Norm[rawFaceCenter1];
+	edgeCenter1 = rawEdgeCenter1/Norm[rawEdgeCenter1];
+
+	(* compare1 = {vertex1, face1, edge1, cell1}//Simplify; *)
+	(* compare2 = Join[nVertices, nFaces, nEdges, nCells]; *)
 
 	(* compare1 = {vertex1}; *)
 	(* compare2 = nEdges; *)
 
-
 	(* compare1 = {face1}; *)
-	(* compare2 = nCells; *)
+	(* compare1 = {faceCenter1}; *)
+	(* compare2 = nEdges; *)
 
+	compare1 = {edgeCenter1};
+	compare2 = nFaces;
+	
 	(* compare1 = {edge1}; *)
 	(* compare2 = nVertices; *)
 
@@ -130,7 +138,13 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 				If[
 					Abs[inner - targetInnerProds[[targetIndex]]] < epsilon,
 					hitCount ++;
-					Print[{shape, N[inner - targetInnerProds[[targetIndex]]], i1, i2, targetIndex, compare1[[i1]], compare2[[i2]]}];
+					Print[{
+							shape, 
+							N[inner - targetInnerProds[[targetIndex]]], 
+							i1, i2, targetIndex, 
+							N[compare1[[i1]]],
+							N[compare2[[i2]]]
+						}];
 				];
 			];
 		];
