@@ -31,8 +31,9 @@ dataFolder = "data";
 
 phi = GoldenRatio;
 (* for 600 cell, 5{4}3 *)
-targetInnerProds = {Sqrt[(1 + Sqrt[(5 + 2*Sqrt[5])/15])/2], Sqrt[(5 + 2*Sqrt[5])/15]};
-
+(* targetInnerProds = {Sqrt[(1 + Sqrt[(5 + 2*Sqrt[5])/15])/2], Sqrt[(5 + 2*Sqrt[5])/15]}; *)
+targetInnerProds = {0.45529649865501276, 0.7366852097826335};
+(* targetInnerProds = {0.5228511020787892, 0.6338497452485641, 0.7328667969030407, 0.766360424875417, 0.8142632253284559, 0.8459908542188238, 0.9265733799181644, 0.9290548650362505, 0.9472735804116371, 0.9781476007338055}; *)
 (* for 4{4}3 *)
 (* targetInnerProds = {Cos[ArcSec[Sqrt[3]]/2], Cos[ArcSec[Sqrt[3]]]}; *)
 
@@ -109,8 +110,8 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	faceCenter1 = rawFaceCenter1/Norm[rawFaceCenter1];
 	edgeCenter1 = rawEdgeCenter1/Norm[rawEdgeCenter1];
 
-	(* compare1 = {vertex1, face1, edge1, cell1}//Simplify; *)
-	(* compare2 = Join[nVertices, nFaces, nEdges, nCells]; *)
+	compare1 = {vertex1, face1, edge1, cell1}//Simplify;
+	compare2 = Join[nVertices, nFaces, nEdges, nCells];
 
 	(* compare1 = {vertex1}; *)
 	(* compare2 = nEdges; *)
@@ -119,8 +120,8 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	(* compare1 = {faceCenter1}; *)
 	(* compare2 = nEdges; *)
 
-	compare1 = {edgeCenter1};
-	compare2 = nFaces;
+	(* compare1 = {edgeCenter1}; *)
+	(* compare2 = nFaces; *)
 	
 	(* compare1 = {edge1}; *)
 	(* compare2 = nVertices; *)
@@ -140,7 +141,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 					hitCount ++;
 					Print[{
 							shape, 
-							N[inner - targetInnerProds[[targetIndex]]], 
+							N[inner],
 							i1, i2, targetIndex, 
 							N[compare1[[i1]]],
 							N[compare2[[i2]]]
