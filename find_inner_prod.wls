@@ -32,8 +32,12 @@ dataFolder = "data";
 phi = GoldenRatio;
 (* for 600 cell, 5{4}3 *)
 (* targetInnerProds = {Sqrt[(1 + Sqrt[(5 + 2*Sqrt[5])/15])/2], Sqrt[(5 + 2*Sqrt[5])/15]}; *)
-targetInnerProds = {0.45529649865501276, 0.7366852097826335};
+(* targetInnerProds = {0.45529649865501276, 0.7366852097826335}; *)
 (* targetInnerProds = {0.5228511020787892, 0.6338497452485641, 0.7328667969030407, 0.766360424875417, 0.8142632253284559, 0.8459908542188238, 0.9265733799181644, 0.9290548650362505, 0.9472735804116371, 0.9781476007338055}; *)
+(* targetInnerProds = {0.35486738103039833, 0.4999999999999972, 0.5490927356975517, 0.574187484005847, 0.6338497452485632, 0.6942253546671512, 0.73286679690304, 0.7663604248754161, 0.7684128386730007, 0.7839222460666511, 0.8090169943749458, 0.814263225328455, 0.8459908542188233, 0.8884507093343049, 0.9265733799181641, 0.92905486503625, 0.9472735804116368, 0.9781476007338054}; *)
+targetInnerProds = {0.5490927356975517, 0.8884507093343049};
+targetInnerProds = {0.5490927356975517};
+
 (* for 4{4}3 *)
 (* targetInnerProds = {Cos[ArcSec[Sqrt[3]]/2], Cos[ArcSec[Sqrt[3]]]}; *)
 
@@ -110,15 +114,15 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	faceCenter1 = rawFaceCenter1/Norm[rawFaceCenter1];
 	edgeCenter1 = rawEdgeCenter1/Norm[rawEdgeCenter1];
 
-	compare1 = {vertex1, face1, edge1, cell1}//Simplify;
-	compare2 = Join[nVertices, nFaces, nEdges, nCells];
+	(* compare1 = {vertex1, face1, edge1, cell1}//Simplify; *)
+	(* compare2 = Join[nVertices, nFaces, nEdges, nCells]; *)
 
 	(* compare1 = {vertex1}; *)
 	(* compare2 = nEdges; *)
 
 	(* compare1 = {face1}; *)
-	(* compare1 = {faceCenter1}; *)
-	(* compare2 = nEdges; *)
+	compare1 = {faceCenter1};
+	compare2 = nEdges;
 
 	(* compare1 = {edgeCenter1}; *)
 	(* compare2 = nFaces; *)
@@ -131,6 +135,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 
 
 	Print[{Length[compare1], Length[compare2]}];
+	targetIndices = {};
 	hitCount = 0;
 	For[i1 = 1, i1 <= Length[compare1], i1++,
 		For[i2 = 1, i2 <= Length[compare2], i2++,
@@ -139,6 +144,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 				If[
 					Abs[inner - targetInnerProds[[targetIndex]]] < epsilon,
 					hitCount ++;
+					AppendTo[targetIndices, targetIndex];
 					Print[{
 							shape, 
 							N[inner],
@@ -152,6 +158,9 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	];
 	Print["hit count: " <> IntegerString[hitCount]];
 ];
+uniqueTargetIndices = Union[targetIndices];
+Print[uniqueTargetIndices];
+Print[Map[targetInnerProds[[#]]&, uniqueTargetIndices]];
 
 (* 
 For 600-cell, for the second target (cos 2 sigma) 
