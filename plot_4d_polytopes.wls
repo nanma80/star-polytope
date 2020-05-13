@@ -19,9 +19,10 @@
 
 shapes = {
 	(* "test", *)
-	"polytope_4_3_3",
-	"polytope_3_3_4",
-	"polytope_3_4_3"
+	(* "polytope_4_3_3", *)
+	(* "polytope_3_3_4", *)
+	(* "polytope_3_4_3" *)
+	"polytope_3_3_3"
 };
 
 (* shape = "polytope_3_52_5"; *)

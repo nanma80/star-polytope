@@ -38,9 +38,9 @@ shapes = {
 shapes = Reverse[shapes];
 
 shapes = {
-	"polytope_4_3_3",
+(* 	"polytope_4_3_3",
 	"polytope_3_3_4",
-	"polytope_3_4_3"
+ *)	"polytope_3_3_3"
 };
 
 
@@ -111,6 +111,7 @@ explosionConfigs = <|
 
 	"polytope_3_4_3" -> {1.0, 30},
 
+	"polytope_3_3_3" -> {1.0, 30},
 
 	"test" -> {1.0, 7}
 |>

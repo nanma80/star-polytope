@@ -29,7 +29,7 @@ python -m SimpleHTTPServer 8000
 };
  *)
 shapes = {
-	"polytope_3_4_3"
+	"polytope_3_3_3"
 };
 
 exportToPov = True;
