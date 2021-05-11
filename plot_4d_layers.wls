@@ -12,7 +12,7 @@ python -m SimpleHTTPServer 8000
 
 (* global config *)
 
-shapes = {
+(* shapes = {
 	"test",
 	"polytope_5_3_3_cell120",
 	"polytope_3_3_5_cell600",
@@ -27,8 +27,13 @@ shapes = {
 	"polytope_3_3_52",
 	"polytope_52_3_3"
 }
-
+ *)
 (*shape = "test";*)
+shapes = {
+	(* "test", *)
+	"polytope_4_3_3"
+};
+
 
 exportToPov = True;
 dataFolder = "data";
@@ -40,6 +45,8 @@ imageSizes = <|
 |>;
 
 allColors = <|
+	"4_3" -> Red,
+	"3_4" -> Green,
 	"3_3" -> Cyan,
 	"5_3" -> Red,
 	"3_5" -> Green,
@@ -86,6 +93,12 @@ explosionConfigs = <|
 
 	(* Great grand stellated 120-cell. cell: great stellated dodecahedron *)
 	"polytope_52_3_3" -> {2.0, 30},
+
+	"polytope_4_3_3" -> {2.0, 30},
+
+	"polytope_3_3_4" -> {2.0, 30},
+
+	"polytope_3_4_3" -> {2.0, 30},
 
 	"test" -> {2.0, 3}
 |>
@@ -212,7 +225,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 				FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectTo3d, activeVertices]]
 			}
 		},
-		ViewPoint -> {3, -3, 5}*3,
+		ViewPoint -> {3, -4, 5}*3,
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		Lighting -> lighting
 	];
@@ -277,7 +290,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	If[
 		StringContainsQ[shape, "polytope_3_3_"],
 		activeLayerMin = 1; activeLayerMax = 8,
-		activeLayerMin = 2; activeLayerMax = 5
+		activeLayerMin = 2; activeLayerMax = 2
 	];
 	For[activeLayer = activeLayerMin, activeLayer <= activeLayerMax, activeLayer ++, 
 		exportAnimation[shape, activeLayer, activeLayer];

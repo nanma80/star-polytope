@@ -15,14 +15,14 @@
 	"polytope_3_52_5",
 	"polytope_3_3_52",
 	"polytope_52_3_3"
-}; *)
+};
+ *)
 
 shapes = {
 	(* "test", *)
-	(* "polytope_4_3_3", *)
-	(* "polytope_3_3_4", *)
+	(* "polytope_3_3_5_cell600" *)
+	"polytope_3_3_4"
 	(* "polytope_3_4_3" *)
-	"polytope_3_3_3"
 };
 
 (* shape = "polytope_3_52_5"; *)
@@ -37,6 +37,8 @@ plotAllCells = True;
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
 
+getProjectionMatrix[direction_] := Simplify[Orthogonalize[{direction, {2, -1.4, 0.3, 0.9}, {0, 1, 2.3, 0.8}, {0.5, 0.3, 1, 0.1}}]][[2;;4]];
+projectToDirection[vertex4d_, projectionMatrix_] := projectionMatrix.vertex4d;
 projectTo3d[vertex4d_] := {vertex4d[[1]], vertex4d[[2]], vertex4d[[3]]};
 reflect[point_, mirror_] := FullSimplify[point - 2 * (point.mirror)/(mirror.mirror)*mirror];
 doubleReflect[point_, mirror1_, mirror2_] := reflect[reflect[point, mirror1], mirror2];
@@ -46,6 +48,7 @@ sameVertex[point1_, point2_] := point1 == point2;
 sameCenter[edge1_, edge2_] := Total[edge1] == Total[edge2];
 sameCellCenter[cell1_, cell2_] := getCellCenter[cell1] == getCellCenter[cell2];
 getCellCenter[cell_] := Total[Flatten[cell, 1]];
+NormalizedDot[a_, b_] := FullSimplify[Dot[a, b]/Norm[a]/Norm[b]];
 
 
 For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
@@ -53,7 +56,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}];
 	Print["Reading data for " <> shape <> " from " <> dataFileName];
 
-	outputFileName = "whole_" <> shape <> ".png";
+	outputFileName = "partition_face_centers_" <> shape <> ".png";
 	imageFolder = "output";
 	If[exportToPov, outputFileName = "pov_" <> outputFileName ];
 	outputFileName = FileNameJoin[{imageFolder, shape, outputFileName}];
@@ -68,20 +71,50 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 		cells = Select[cells, (getCellCenter[#][[1]] == 0 && getCellCenter[#][[2]] == 0 && getCellCenter[#][[3]] == 0 && getCellCenter[#][[4]] >= 0)&];
 	];
 
+	Print["Original shape: " <> ToString[shape]];
 	Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
 	faces = Union[ Flatten[cells, 1], SameTest -> sameCenter];
-	edges = Union[ Flatten[Map[getEdgesFromFace, faces], 1], SameTest -> sameCenter];
+	(* edges = Union[ Flatten[Map[getEdgesFromFace, faces], 1], SameTest -> sameCenter]; *)
 	vertices = Union[ Flatten[faces,1], SameTest -> sameVertex];
 
 	Print["There are " <> IntegerString[Length[faces]] <> " faces in total."];
-	Print["There are " <> IntegerString[Length[edges]] <> " edges in total."];
+	(* Print["There are " <> IntegerString[Length[edges]] <> " edges in total."]; *)
 	Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."];
 
+
+	edges = getEdgesFromFace[faces[[1]]];
+	edgeLength = Norm[edges[[1]][[1]] - edges[[1]][[2]]]//Simplify;
+	Print["Original edge length = " <> ToString[edgeLength] ];
+
+	vertexNorm = Norm[edges[[1]][[1]]]//Simplify;
+	Print["Original vertex norm = " <> ToString[vertexNorm]];
+
+	rawFaceCenters = Map[Total, faces];
+	rawFaceCenterNorm = Norm[rawFaceCenters[[1]]]//FullSimplify;
+	faceCenters = rawFaceCenters / rawFaceCenterNorm * vertexNorm//Simplify;
+	prettyFactor = Sqrt[3];
+	prettyFactor = 1;
+	faceCenters = faceCenters * prettyFactor//Simplify;
+	(* Print[faceCenters]; *)
+	Print["All face center count: " <> ToString[faceCenters//Length]];
+
+	epsilon = 0.00001;
+	targetEdgeLength = edgeLength * prettyFactor;
+	Print["target edge length: " <> ToString[targetEdgeLength]];
+	faceCentersTally = Tally[faceCenters, Abs[N[Norm[#1 - #2] - targetEdgeLength]] < epsilon&];
+	Print["Tally groups: " <> ToString[faceCentersTally//Length]];
+	(* Print[faceCentersTally]; *)
+	Print[Map[#[[2]]&, faceCentersTally]];
+
+(* 
 	thickness = Norm[cells[[1]][[1]][[1]]] * 0.008;
 	lighting = {{"Point", White, {10, -10, 10}}};
 	rangeFactor = 0.8;
 	range = Norm[cells[[1]][[1]][[1]]] * rangeFactor;
+
+	centeredVertex = {0, 0, 0, 1};
+	projectionMatrix = getProjectionMatrix[centeredVertex];
 
 	shapeTokens = StringSplit[shape, "_"];
 	If[Length[shapeTokens] < 3,
@@ -89,8 +122,6 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 
 		cellShape = shapeTokens[[2]] <> "_" <> shapeTokens[[3]];
 		colors = <|
-			"4_3" -> Red,
-			"3_4" -> Green,
 			"3_3" -> Cyan,
 			"5_3" -> Red,
 			"3_5" -> Green,
@@ -101,20 +132,24 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 		|>;
 		color = colors[cellShape];
 	];
+ *)
 
-	graph = Graphics3D[
+(* 	graph = Graphics3D[
 		{
 			{
-				Opacity[0.5], FaceForm[color], Map[Polygon, Map[projectTo3d, faces, {2}]]
+				Opacity[0.5], FaceForm[color], Map[Polygon, Map[projectToDirection[#, projectionMatrix]&, faces, {2}]]
 			},
 			{
-				Opacity[1], FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectTo3d, edges, {2}]]
+				Opacity[1], FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectToDirection[#, projectionMatrix]&, edges, {2}]]
 			},
 			{
-				Opacity[1], FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectTo3d, vertices]]
+				Opacity[1], FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectToDirection[#, projectionMatrix]&, vertices]]
+			},
+			{
+				Opacity[1], FaceForm[Blue], Map[Sphere[#, thickness * 4]&, Map[projectToDirection[#, projectionMatrix]&, selectedVertices]]
 			}
 		},
-		ViewPoint -> {3, -4, 5}*3,
+		ViewPoint -> {3, -3, 5}*3,
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		Lighting -> lighting
 	];
@@ -127,5 +162,5 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 		,
 		Export[outputFileName, graph]
 	];
-	Print["Saved the image to " <> outputFileName];
+	Print["Saved the image to " <> outputFileName]; *)
 ];

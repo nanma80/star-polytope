@@ -37,10 +37,12 @@ shapes = {
 
 shapes = Reverse[shapes];
 
-(* shapes = {
-	"polytope_5_52_5"
+shapes = {
+(* 	"polytope_4_3_3",
+	"polytope_3_3_4",
+ *)	"polytope_3_3_3"
 };
- *)
+
 
 (* shape = "polytope_52_3_3"; *)
 
@@ -54,6 +56,8 @@ imageSizes = <|
 |>;
 
 allColors = <|
+	"4_3" -> Red,
+	"3_4" -> Green,
 	"3_3" -> Cyan,
 	"5_3" -> Red,
 	"3_5" -> Green,
@@ -100,6 +104,14 @@ explosionConfigs = <|
 
 	(* Great grand stellated 120-cell. cell: great stellated dodecahedron *)
 	"polytope_52_3_3" -> {0.25, 30},
+
+	"polytope_4_3_3" -> {1.0, 30},
+
+	"polytope_3_3_4" -> {1.0, 30},
+
+	"polytope_3_4_3" -> {1.0, 30},
+
+	"polytope_3_3_3" -> {1.0, 30},
 
 	"test" -> {1.0, 7}
 |>
@@ -214,7 +226,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 	Print[projectionMatrix//N];
 	viewPoint = projectToDirection[edge[[2]]-edge[[1]], projectionMatrix];
 	If[{1, -1, 1}.viewPoint < 0, viewPoint = -viewPoint];
-	viewPoint = viewPoint + {0, 0, 0.15};
+	viewPoint = viewPoint + {0.1, 0, 0.15};
 
 	Print[viewPoint//N];
 	lighting = {{"Point", White, viewPoint * 10}};

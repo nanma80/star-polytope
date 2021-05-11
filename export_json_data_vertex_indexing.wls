@@ -2,7 +2,7 @@
 
 
 shapes = {
-	"test",
+	(* "test", *)
 	"polytope_5_3_3_cell120",
 	"polytope_3_3_5_cell600",
 	"polytope_3_5_52",
@@ -74,9 +74,9 @@ getMap[list_] := Association[Table[{list[[k]] -> k}, {k, 1, Length[list]}]];
 
 For[i=1,i<=Length[shapes],i++,
 	shape = shapes[[i]];
-	outputFileName = shape <> ".json";
+	outputFileName = shape <> "_vertex_indexing.json";
 	dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}];
-	outputFileName = FileNameJoin[{dataFolder, outputFileName}];
+	outputFileName = FileNameJoin[{dataFolder, "json_vertex_indexing", outputFileName}];
 
 	Print["Reading data for " <> shape <> " from " <> dataFileName];
 
@@ -92,11 +92,13 @@ For[i=1,i<=Length[shapes],i++,
 	edgesPerFace = Map[getEdgesFromFace, faces];
 	edges = Union[Flatten[edgesPerFace,1], SameTest -> sameCenter];
 	edgeIndices = Map[Sort[Map[verticesMap, #]]&, edges];
-	edgeCenters = Map[Total, edges];
+(* 	edgeCenters = Map[Total, edges];
 	edgeCentersMap = getMap[edgeCenters];
 	edgeCenterPerFace = Map[getCenter, edgesPerFace, {2}];
+ *)
+	faceByVertexIndices = Map[Map[verticesMap, #]&, faces];
 
-	faceIndices = Map[Sort[Map[edgeCentersMap, #]]&, edgeCenterPerFace];
+	(* faceIndices = Map[Sort[Map[edgeCentersMap, #]]&, edgeCenterPerFace]; *)
 	faceCenters = Map[Total, faces];
 	faceCentersMap = getMap[faceCenters];
 
@@ -106,7 +108,7 @@ For[i=1,i<=Length[shapes],i++,
 	polytopeData = <|
 		"vertices" -> vertices,
 		"edges" -> edgeIndices - 1,
-		"faces" -> faceIndices - 1,
+		"faces" -> faceByVertexIndices - 1,
 		"cells" -> cellIndices - 1
 	|>;
 
