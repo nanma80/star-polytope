@@ -29,7 +29,7 @@ shapes = {
 };
 
 shapes = {
-	"polytope_5_3_3_cell120"
+	"polytope_3_3_5_cell600"
 };
 (*shape = "test";*)
 
@@ -59,7 +59,7 @@ explosionConfigs = <|
 	"polytope_5_3_3_cell120" -> {1.3, 100},
 
 	(* 600-cell *)
-	"polytope_3_3_5_cell600" -> {2.0, 30},
+	"polytope_3_3_5_cell600" -> {3.0, 3},
 
 	(* Icosahedral 120-cell. cell: icosahedron *)
 	"polytope_3_5_52" -> {2.0, 30},
@@ -94,7 +94,7 @@ explosionConfigs = <|
 	"test" -> {2.0, 3}
 |>
 
-rangeFactor = 2.0;
+rangeFactor = 3.0;
 originalProjectionMatrixH4 = {
     {0.00, 0, 2 Sin[2 Pi/15], (1 + Sqrt[5]) Sin[Pi/15]},
     {1, -(1 + Sqrt[5]) Sin[Pi/30], 0, 0.00},
@@ -222,7 +222,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 			Table[{
 					Opacity[1.0],
 					(* FaceForm[ Hue[ normalizedAngle[activeCellsCenters[[Floor[(k - 1)/12] + 1]], {1, -1, 1} ] ]],  *)
-					FaceForm[ Hue[ Arg[activeCellsCenters[[Floor[(k - 1)/12] + 1]].perpViewPoints[[1]] + I activeCellsCenters[[Floor[(k - 1)/12] + 1]].perpViewPoints[[2]]] / 2 / Pi + 0.5 ]],
+					FaceForm[ Hue[ Arg[activeCellsCenters[[Floor[(k - 1)/4] + 1]].perpViewPoints[[1]] + I activeCellsCenters[[Floor[(k - 1)/4] + 1]].perpViewPoints[[2]]] / 2 / Pi + 0.5 ]],
 					Polygon[ projectedActiveFaces[[k]] ]
 				}, {k, 1, Length[activeFaces]}
 			]
@@ -311,7 +311,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	shape = shapes[[shapeIndex]];	
 	If[
 		StringContainsQ[shape, "polytope_3_3_"],
-		activeLayerMin = 1; activeLayerMax = 8,
+		activeLayerMin = 1; activeLayerMax = 15,
 		(* activeLayerMin = 2; activeLayerMax = 5 *)
 		activeLayerMin = 1; activeLayerMax = 9
 	];
