@@ -29,7 +29,7 @@ shapes = {
 };
 
 shapes = {
-	"polytope_3_3_5_cell600"
+	"polytope_3_4_3"
 };
 (*shape = "test";*)
 
@@ -50,16 +50,18 @@ allColors = <|
 	"52_5" -> Blue,
 	"5_52" -> Yellow,
 	"52_3" -> Magenta,
-	"3_52" -> Orange
+	"3_52" -> Orange,
+	"3_4" -> Green
 |>;
 
 (* shape -> {maxExplosionFactor, frameCount}*)
 explosionConfigs = <|
+	"polytope_3_4_3" -> {3.0, 150},
 	(* 120-cell *)
 	"polytope_5_3_3_cell120" -> {1.3, 100},
 
 	(* 600-cell *)
-	"polytope_3_3_5_cell600" -> {3.0, 3},
+	"polytope_3_3_5_cell600" -> {3.0, 150},
 
 	(* Icosahedral 120-cell. cell: icosahedron *)
 	"polytope_3_5_52" -> {2.0, 30},
@@ -102,12 +104,21 @@ originalProjectionMatrixH4 = {
     {0, 0, 0, 1}
 } * 1.0;
 
+originalProjectionMatrixF4 = {
+	{1, 1, Sqrt[3] - 1, 0},
+	{1, -1, 0, Sqrt[3] - 1},
+    {1, 3, 4, 1},
+    {0, 0, 0, 1}
+} * 1.0;
+
+
 viewPoint = {1, -1, 1}/Sqrt[3];
 matrix3D = {viewPoint, {0, 1, 0}, {0, 0, 1}};
 perpViewPoints = Orthogonalize[matrix3D][[2;;3]];
 
 rotation3D = RotationMatrix[{{0, 0, 1}, viewPoint}];
-projectionMatrix = rotation3D.Orthogonalize[originalProjectionMatrixH4][[1;;3]];
+(* projectionMatrix = rotation3D.Orthogonalize[originalProjectionMatrixH4][[1;;3]]; *)
+projectionMatrix = rotation3D.Orthogonalize[originalProjectionMatrixF4][[1;;3]];
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -222,7 +233,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 			Table[{
 					Opacity[1.0],
 					(* FaceForm[ Hue[ normalizedAngle[activeCellsCenters[[Floor[(k - 1)/12] + 1]], {1, -1, 1} ] ]],  *)
-					FaceForm[ Hue[ Arg[activeCellsCenters[[Floor[(k - 1)/4] + 1]].perpViewPoints[[1]] + I activeCellsCenters[[Floor[(k - 1)/4] + 1]].perpViewPoints[[2]]] / 2 / Pi + 0.5 ]],
+					FaceForm[ Hue[ Arg[activeCellsCenters[[Floor[(k - 1)/8] + 1]].perpViewPoints[[1]] + I activeCellsCenters[[Floor[(k - 1)/8] + 1]].perpViewPoints[[2]]] / 2 / Pi + 0.5 ]],
 					Polygon[ projectedActiveFaces[[k]] ]
 				}, {k, 1, Length[activeFaces]}
 			]
@@ -288,7 +299,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 		exportImage[shape, activeLayerMin, activeLayerMax, explosionFactor, frameIndex];
 	];
 
-	gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay " <> IntegerString[Floor[200/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
+	gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay " <> IntegerString[Floor[300/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
 	Run[gifCommand];
@@ -313,7 +324,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 		StringContainsQ[shape, "polytope_3_3_"],
 		activeLayerMin = 1; activeLayerMax = 15,
 		(* activeLayerMin = 2; activeLayerMax = 5 *)
-		activeLayerMin = 1; activeLayerMax = 9
+		activeLayerMin = 1; activeLayerMax = 5
 	];
 
 	(* exportImage[shape, activeLayerMin, activeLayerMax, 1.0, 0]; *)
