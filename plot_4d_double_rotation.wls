@@ -160,7 +160,11 @@ mapHopfFibration[v4d_] := Module[
 ];
 getHue[v3d_] := If[Norm[v3d[[{1, 2}]]] < 0.001, 
 						If[v3d[[3]] > 0, Darker[Blue, 0.8], Lighter[Red, 0.8]],
-						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]] , 1]]
+						(* If[v3d[[3]] > 0,
+							Darker[Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1]], 0.3],
+							Lighter[Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1]], 0.3]
+						] *)
+						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1] * 0.9]
 ];
 
 

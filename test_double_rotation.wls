@@ -245,15 +245,6 @@ Select[centers, Norm[{#[[1]], #[[2]]}] < 0.01&]
 rotatedActiveCellsCenters = Map[fullProjectionMatrix.#&, activeCellsCenters];
 
 roundPrecision = 0.000001;
-mapHopfFibration[v4d_] := Module[
-	{z0, z1},
-	z0 = v4d[[1]] + I v4d[[2]];
-	z1 = v4d[[3]] + I v4d[[4]];
-	x1 = Re[(2 z0 Conjugate[z1])];
-	x2 = Im[(2 z0 Conjugate[z1])];
-	x3 = Re[z0 Conjugate[z0] - z1 Conjugate[z1]];
-	Round[{x1, x2, x3}, roundPrecision]
-];
 
 
 hopf3dCenters = Map[mapHopfFibration, rotatedActiveCellsCenters];
@@ -269,10 +260,20 @@ Out[342]= {{{-111.072, 0., -55.5358}, 10}, {{-89.8588, -65.2863, 55.5358}, 10}, 
  *)
 distinctCenters3d = hopf3dCenters//Union//Sort;
 
-getHue[v3d_] := If[Norm[v3d[[{1, 2}]]] < 0.001, 
-						If[v3d[[3]] > 0, Red, Blue],
-						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]] , 1]]
+mapHopfFibration[v4d_] := Module[
+	{z0, z1},
+	z0 = v4d[[1]] + I v4d[[2]];
+	z1 = v4d[[3]] + I v4d[[4]];
+	x1 = Re[(2 z0 Conjugate[z1])];
+	x2 = Im[(2 z0 Conjugate[z1])];
+	x3 = Re[z0 Conjugate[z0] - z1 Conjugate[z1]];
+	Round[{x1, x2, x3}, roundPrecision]
 ];
+getHue[v3d_] := If[Norm[v3d[[{1, 2}]]] < 0.001, 
+						If[v3d[[3]] > 0, Darker[Blue, 0.8], Lighter[Red, 0.8]],
+						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1]]
+];
+
 Map[getHue, distinctCenters3d]
 Map[getHue[mapHopfFibration[#]]&, rotatedActiveCellsCenters]
 
