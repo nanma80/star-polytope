@@ -29,8 +29,8 @@ shapes = {
 };
 
 shapes = {
-	(* "polytope_3_4_3" *)
-	"polytope_5_3_3_cell120"
+	"polytope_3_4_3"
+	(* "polytope_5_3_3_cell120" *)
 };
 (*shape = "test";*)
 
@@ -115,6 +115,7 @@ originalProjectionMatrixF4 = {
 roundPrecision = 0.000001;
 phi = (1 + Sqrt[5])/2;
 viewPoint = {0.5, -1.5, 0.5};
+
 (* viewPoint = {0.1, 0.2, 1}; *)
 (* viewPoint = {1.0, 0.0, 0.0}; *)
 (* matrix3D = {viewPoint, {0, 1, 0}, {0, 0, 1}}; *)
@@ -164,7 +165,9 @@ getHue[v3d_] := If[Norm[v3d[[{1, 2}]]] < 0.001,
 							Darker[Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1]], 0.3],
 							Lighter[Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1]], 0.3]
 						] *)
-						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1] * 0.9]
+						(* *0.9 to avoid to similar colors of purple *)
+						(* Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1] * 0.9] *)
+						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1]]
 ];
 
 
@@ -257,10 +260,11 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 
     wDistance = Max[Flatten[activeFaces]] * 1.05;
     Print[wDistance];
-    (* fullProjectionMatrix = IdentityMatrix[4]; *)
-    (* rotation3D = RotationMatrix[{{0, 0, 1}, {1, 0, phi}}]; *)
-    (* rotation3D = RotationMatrix[{{1, 0, phi}, {0, 0, 1}}]; *)
-    rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}];
+
+    rotation3D = IdentityMatrix[3];
+    If[shape == "polytope_5_3_3_cell120", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
+    If[shape == "polytope_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
+    
     fullProjectionMatrix = ArrayFlatten[
     	{{rotation3D, 0}, {0, 1}}
 	];
@@ -273,6 +277,9 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
  *)
     projectedActiveFaces = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, activeFaces, {2}];
     range = Max[Flatten[activeFaces]] * 2.0;
+    If[shape == "polytope_3_4_3", range = Max[Flatten[activeFaces]] * 1.75];
+	If[shape == "polytope_3_4_3", viewPoint = {1.2, -0.7, 0.5}];
+
 	rotatedActiveCellsCenters = Map[fullProjectionMatrix.#&, activeCellsCenters];
 
     (* edges3D = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, edgeSegments, {2}]; *)
@@ -307,17 +314,20 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     thickness = range/200.;
     Print[thickness];
     (* thickness = 1.0; *)
+    (* Print[Map[getHue[mapHopfFibration[#]]&, rotatedActiveCellsCenters]//Tally]; *)
 
     graphEdges = {};
     For[centerIndex = 1, centerIndex <= Length[activeCellsCenters], centerIndex++,
     	(* Print[{centerIndex}]; *)
     	center = activeCellsCenters[[centerIndex]];
 
-    	rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}];
+    	(* rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]; *)
 	    projectionMatrix4D = ArrayFlatten[{{rotation3D, 0}, {0, 1}}];
 	    
-	    deltaTheta = Pi/5/20;
-	    For[theta1 = 0, theta1 <= Pi/5 - deltaTheta, theta1+=deltaTheta,
+	    angleSpan = Pi/5;
+	    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/6];
+	    deltaTheta = angleSpan/20;
+	    For[theta1 = 0, theta1 <= angleSpan - deltaTheta, theta1+=deltaTheta,
 	    	theta2 = theta1 + deltaTheta;
 			fullProjectionMatrix1 = doubleRotationMatrix[theta1].projectionMatrix4D;
 			fullProjectionMatrix2 = doubleRotationMatrix[theta2].projectionMatrix4D;
@@ -332,15 +342,6 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     ];
 
     AppendTo[graphElements, graphEdges];
-
-(* 			{
-				FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectTo3d, activeEdges, {2}]]
-			},
-			{
-				FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectTo3d, activeVertices]]
-			}
- *)
-
 
 	graph = Graphics3D[
 		graphElements,
@@ -388,8 +389,12 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	explodeStep = maxExplosionFactor/frameCount;
 
 	frameCount = 100;
+    If[shape == "polytope_3_4_3", frameCount = 150];
 	explosionFactor = 2.9;
-    thetas = Table[(k - 1) * Pi/5 / frameCount, {k, 1, frameCount}];
+	angleSpan = Pi/5;
+    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/6];
+	    
+    thetas = Table[(k - 1) * angleSpan / frameCount, {k, 1, frameCount}];
 
     For[ frameIndex = 1, frameIndex <= Length[thetas] , frameIndex++,
         theta = thetas[[frameIndex]] * 1.0;
@@ -417,8 +422,6 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
     Print["Saved the video to " <> gifFolder <> "\\" <> gifFileName <> ".mp4"];
 ]
 
-
-
 For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	shape = shapes[[shapeIndex]];	
 	If[
@@ -426,11 +429,12 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 		activeLayerMin = 1; activeLayerMax = 15,
 		activeLayerMin = 1; activeLayerMax = 9
 	];
-
+	If[shape == "polytope_3_4_3", activeLayerMax = 5];
+    
 	exportAnimation[shape, activeLayerMin, activeLayerMax];
 ];
 
-(* exportImage[shape, 1, 9, 2.9, Pi/5 * 24/100., 1]; *)
+(* exportImage[shape, 1, activeLayerMax, 2.9, Pi/5 * 0/100., 1]; *)
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)

@@ -17,8 +17,8 @@ shapes = {
 };
 
 shapes = {
-	(* "polytope_3_4_3" *)
-	"polytope_5_3_3_cell120"
+	"polytope_3_4_3"
+	(* "polytope_5_3_3_cell120" *)
 };
 
 exportToPov = True;
@@ -149,10 +149,10 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 
 deltaTheta = Pi/240;
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
-exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10];
+(* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
 
 activeLayerMin = 1;
-activeLayerMax = 9;
+activeLayerMax = 5;
 
 explosionFactor = 2.9;
 serialNumber = 6;
@@ -218,6 +218,9 @@ activeCellsCenters = Map[Total[#, 2]/Length[activeCells[[1]]]/Length[activeCells
  (* rotation3D = RotationMatrix[{{0, 0, 1}, {1, 0, phi}}]; *)
  (* rotation3D = RotationMatrix[{{1, 0, phi}, {0, 0, 1}}]; *)
  rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}];
+ rotation3D = RotationMatrix[{{1, 1, 1}, {0, 1, 0}}];
+ rotation3D = RotationMatrix[ArcTan[1/Sqrt[2]], {0, 1, 0}].RotationMatrix[Pi/4, {0, 0, 1}];
+
  fullProjectionMatrix = ArrayFlatten[
  	{{rotation3D, 0}, {0, 1}}
 ];
@@ -242,7 +245,15 @@ Select[centers, Norm[{#[[1]], #[[2]]}] < 0.01&]
  faceCellRatio = Length[activeFaces]/Length[activeCellsCenters];
  grayArea = 0.1;
 
+ rotation3D = RotationMatrix[Pi/4, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}];
+ (* rotation3D = RotationMatrix[Pi/4, {0, 0, 1}]; *)
+
+ fullProjectionMatrix = ArrayFlatten[
+ 	{{rotation3D, 0}, {0, 1}}
+];
+
 rotatedActiveCellsCenters = Map[fullProjectionMatrix.#&, activeCellsCenters];
+Select[rotatedActiveCellsCenters, Norm[#[[{1,2}]]] < 0.001&]
 
 roundPrecision = 0.000001;
 
