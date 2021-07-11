@@ -112,22 +112,24 @@ originalProjectionMatrixF4 = {
     {0, 0, 0, 1}
 } * 1.0;
 
-
-viewPoint = {0.9, -1, 0.75}/Sqrt[3];
-matrix3D = {viewPoint, {0, 1, 0}, {0, 0, 1}};
-perpViewPoints = Orthogonalize[matrix3D][[2;;3]];
-
+roundPrecision = 0.000001;
+phi = (1 + Sqrt[5])/2;
+viewPoint = {0.5, -1.5, 0.5};
+(* viewPoint = {0.1, 0.2, 1}; *)
+(* viewPoint = {1.0, 0.0, 0.0}; *)
+(* matrix3D = {viewPoint, {0, 1, 0}, {0, 0, 1}}; *)
+(* perpViewPoints = Orthogonalize[matrix3D][[2;;3]]; *)
 (* rotation3D = RotationMatrix[{{0, 0, 1}, viewPoint}]; *)
-rotation3D = IdentityMatrix[3];
+(* rotation3D = IdentityMatrix[3]; *)
 (* projectionMatrix = rotation3D.Orthogonalize[originalProjectionMatrixH4][[1;;3]]; *)
 (* projectionMatrix = rotation3D.Orthogonalize[originalProjectionMatrixF4][[1;;3]]; *)
-projectionMatrix = rotation3D.IdentityMatrix[4][[1;;3]];
+(* projectionMatrix = rotation3D.IdentityMatrix[4][[1;;3]]; *)
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
 
 (* projectTo3d[vertex4d_] := {vertex4d[[1]], vertex4d[[2]], vertex4d[[3]]}; *)
-projectTo3d[vertex4d_] := projectionMatrix.vertex4d;
+(* projectTo3d[vertex4d_] := projectionMatrix.vertex4d; *)
 reflect[point_, mirror_] := FullSimplify[point - 2 * (point.mirror)/(mirror.mirror)*mirror];
 doubleReflect[point_, mirror1_, mirror2_] := reflect[reflect[point, mirror1], mirror2];
 getEdgesFromFace[face_] := Table[{face[[i+1]], face[[Mod[i+1, Length[face]] + 1]]}, {i, 0, Length[face] - 1}];
@@ -142,10 +144,26 @@ explodedCell[cell_, explosionFactor_] := Map[
 	(# + Mean[Map[Mean,cell]]*(Norm[First[First[cell]]//N]/Norm[Mean[Map[Mean,cell]]//N])^1.5 * explosionFactor)&, 
 	cell, {2}];
 normalizedAngle[u_, v_] := ArcSin[u.v/Norm[u]/Norm[v]]/Pi + 0.5;
-projectToDirection[vertex4d_, projectionMatrix_] := projectionMatrix.vertex4d;
+projectToDirection[vertex4d_, projectionMatrix_] := vertex4d.Transpose[projectionMatrix];
 perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance);
+normalizedInner[u_, v_] := u.v/Norm[u]/Norm[v];
 
-exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNumber_] := Module[
+mapHopfFibration[v4d_] := Module[
+	{z0, z1},
+	z0 = v4d[[1]] + I v4d[[2]];
+	z1 = v4d[[3]] + I v4d[[4]];
+	x1 = Re[(2 z0 Conjugate[z1])];
+	x2 = Im[(2 z0 Conjugate[z1])];
+	x3 = Re[z0 Conjugate[z0] - z1 Conjugate[z1]];
+	Round[{x1, x2, x3}, roundPrecision]
+];
+getHue[v3d_] := If[Norm[v3d[[{1, 2}]]] < 0.001, 
+						If[v3d[[3]] > 0, Darker[Blue, 0.8], Lighter[Red, 0.8]],
+						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]] , 1]]
+];
+
+
+exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, serialNumber_] := Module[
 	{
 		dataFileName,
 		shapeTokens,
@@ -228,25 +246,54 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
 
 	(* range = range /2; *)
 	(* projectedActiveFaces = Map[projectTo3d, activeFaces, {2}]; *)
-	activeCellsCenters = Map[Total[#, 2]&, activeCells];
+	activeCellsCenters = Map[Total[#, 2]/Length[activeCells[[1]]]/Length[activeCells[[1]][[1]]]&, activeCells];
 	(* activeCellsCenters = Map[projectTo3d, activeCellsCenters]; *)
 	(* activeCellsCenters = activeCellsCenters/Norm[activeCellsCenters[[1]]]; *)
 
-    wDistance = Max[Flatten[activeFaces]] * 0.9;
+    wDistance = Max[Flatten[activeFaces]] * 1.05;
     Print[wDistance];
-    fullProjectionMatrix = IdentityMatrix[4];
+    (* fullProjectionMatrix = IdentityMatrix[4]; *)
+    (* rotation3D = RotationMatrix[{{0, 0, 1}, {1, 0, phi}}]; *)
+    (* rotation3D = RotationMatrix[{{1, 0, phi}, {0, 0, 1}}]; *)
+    rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}];
+    fullProjectionMatrix = ArrayFlatten[
+    	{{rotation3D, 0}, {0, 1}}
+	];
+
+	doubleRotation = ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
+	(* fullProjectionMatrix = fullProjectionMatrix . doubleRotation; *)
+	fullProjectionMatrix = doubleRotation.fullProjectionMatrix;
+
+(* 	perspectiveProjection[activeCellsCenters[[11]], fullProjectionMatrix, wDistance]
+	centers = Table[ perspectiveProjection[activeCellsCenters[[k]], fullProjectionMatrix, wDistance], {k, 120}]
+	Select[centers, Norm[{#[[1]], #[[2]]}] < 0.01&]
+ *)
     projectedActiveFaces = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, activeFaces, {2}];
-    range = wDistance * 2;
+    range = Max[Flatten[activeFaces]] * 2.0;
+	rotatedActiveCellsCenters = Map[fullProjectionMatrix.#&, activeCellsCenters];
 
     (* edges3D = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, edgeSegments, {2}]; *)
     (* vertices3D = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, selectedEdgeEnds]; *)
     (* otherVertices3D = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, selectedVertices]; *)
 
+    faceCellRatio = Length[activeFaces]/Length[activeCellsCenters];
+    grayArea = 0.05;
 	graph = Graphics3D[
 		{
 			Table[{
-					Opacity[1.0],
-					FaceForm[Blue],
+					(* Opacity[1.0], *)
+					Opacity[
+						If[
+						normalizedInner[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]], (rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] + {0, 0, 0, wDistance})] < 0,
+						0,
+						If[
+							normalizedInner[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]], (rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] + {0, 0, 0, wDistance})] < grayArea,
+							normalizedInner[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]], (rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] + {0, 0, 0, wDistance})]/grayArea,
+							1
+						]]
+					],
+					(* FaceForm[Blue], *)
+					FaceForm[getHue[mapHopfFibration[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] ]]],
 					(* FaceForm[ Hue[ normalizedAngle[activeCellsCenters[[Floor[(k - 1)/12] + 1]], {1, -1, 1} ] ]],  *)
 					(* FaceForm[ Hue[ Arg[activeCellsCenters[[Floor[(k - 1)/8] + 1]].perpViewPoints[[1]] + I activeCellsCenters[[Floor[(k - 1)/8] + 1]].perpViewPoints[[2]]] / 2 / Pi + 0.5 ]], *)
 					Polygon[ projectedActiveFaces[[k]] ]
@@ -262,7 +309,8 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, serialNu
  *)
 		},
 
-		ViewPoint -> viewPoint * 3000,
+		ViewPoint -> viewPoint * 100,
+		ViewVertical -> {0, 0, 1},
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		Lighting -> lighting
 	];
@@ -304,16 +352,20 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	frameCount = explosionConfig[[2]];
 	explodeStep = maxExplosionFactor/frameCount;
 
-	epsilon = 0.001;
-	explosionFactors = Join[Table[epsilon, {k, Floor[frameCount / 12]}], Table[k, {k, epsilon, maxExplosionFactor + epsilon, explodeStep}]];
-	(* explosionFactors = Table[k, {k, epsilon, maxExplosionFactor + epsilon, explodeStep}]; *)
-	For[ frameIndex = 1, frameIndex <= Length[explosionFactors] , frameIndex++,
-		Print["activeLayers: " <> IntegerString[activeLayerMin] <> "-" <> IntegerString[activeLayerMax] <> ". Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[explosionFactors]]];
-		explosionFactor = explosionFactors[[frameIndex]];
-		exportImage[shape, activeLayerMin, activeLayerMax, explosionFactor, frameIndex];
-	];
+	frameCount = 100;
+	explosionFactor = 2.9;
+    thetas = Table[(k - 1) * Pi/5 / frameCount, {k, 1, frameCount}];
 
-	gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay " <> IntegerString[Floor[300/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
+    For[ frameIndex = 1, frameIndex <= Length[thetas] , frameIndex++,
+        theta = thetas[[frameIndex]] * 1.0;
+        Print["Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[thetas]] 
+            <> " ; theta: " <> ToString[theta, InputForm]];
+		exportImage[shape, activeLayerMin, activeLayerMax, explosionFactor, theta, frameIndex];
+    ];
+
+    (* gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*) *)
+    gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *)
+		<> IntegerString[Floor[300/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
 	Run[gifCommand];
@@ -337,15 +389,18 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	If[
 		StringContainsQ[shape, "polytope_3_3_"],
 		activeLayerMin = 1; activeLayerMax = 15,
-		(* activeLayerMin = 2; activeLayerMax = 5 *)
-		activeLayerMin = 1; activeLayerMax = 5
+		activeLayerMin = 1; activeLayerMax = 9
 	];
-
-	(* exportImage[shape, activeLayerMin, activeLayerMax, 1.0, 0]; *)
 
 	(* exportAnimation[shape, activeLayerMin, activeLayerMax]; *)
 ];
 
-exportImage[shape, 1, 9, 2.9, 1];
-
+exportImage[shape, 1, 9, 2.9, Pi/5 * 24/100., 1];
+(* deltaTheta = Pi/240; *)
+(* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
+(* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
+(* exportImage[shape, 1, 9, 2.9, 1 deltaTheta, 11]; *)
+(* exportImage[shape, 1, 9, 2.9, 2 deltaTheta, 12]; *)
+(* exportImage[shape, 1, 9, 2.9, 3 deltaTheta, 13]; *)
+(* exportImage[shape, 1, 9, 2.9, 4 deltaTheta, 14]; *)
 

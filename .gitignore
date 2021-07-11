@@ -8,6 +8,7 @@ tmp*
 output/*test*.png
 output/*test*/**
 output/*layer*/**
+output/*double_rotation*/**
 output/*vertex_explode/**
 output/*images*/**
 output/polytope_3_5_52/*explore*.png
