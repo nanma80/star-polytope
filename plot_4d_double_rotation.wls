@@ -147,6 +147,7 @@ normalizedAngle[u_, v_] := ArcSin[u.v/Norm[u]/Norm[v]]/Pi + 0.5;
 projectToDirection[vertex4d_, projectionMatrix_] := vertex4d.Transpose[projectionMatrix];
 perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance);
 normalizedInner[u_, v_] := u.v/Norm[u]/Norm[v];
+doubleRotationMatrix[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
 
 mapHopfFibration[v4d_] := Module[
 	{z0, z1},
@@ -260,9 +261,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     	{{rotation3D, 0}, {0, 1}}
 	];
 
-	doubleRotation = ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
-	(* fullProjectionMatrix = fullProjectionMatrix . doubleRotation; *)
-	fullProjectionMatrix = doubleRotation.fullProjectionMatrix;
+	fullProjectionMatrix = doubleRotationMatrix[theta].fullProjectionMatrix;
 
 (* 	perspectiveProjection[activeCellsCenters[[11]], fullProjectionMatrix, wDistance]
 	centers = Table[ perspectiveProjection[activeCellsCenters[[k]], fullProjectionMatrix, wDistance], {k, 120}]
@@ -278,9 +277,9 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 
     faceCellRatio = Length[activeFaces]/Length[activeCellsCenters];
     grayArea = 0.05;
-	graph = Graphics3D[
-		{
-			Table[{
+    graphElements = {};
+
+    graphFaces = Table[{
 					(* Opacity[1.0], *)
 					Opacity[
 						If[
@@ -298,7 +297,37 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 					(* FaceForm[ Hue[ Arg[activeCellsCenters[[Floor[(k - 1)/8] + 1]].perpViewPoints[[1]] + I activeCellsCenters[[Floor[(k - 1)/8] + 1]].perpViewPoints[[2]]] / 2 / Pi + 0.5 ]], *)
 					Polygon[ projectedActiveFaces[[k]] ]
 				}, {k, 1, Length[activeFaces]}
-			]
+			];
+
+    AppendTo[graphElements, graphFaces];
+    thickness = range/200.;
+    Print[thickness];
+    (* thickness = 1.0; *)
+
+    graphEdges = {};
+    For[centerIndex = 1, centerIndex <= Length[activeCellsCenters], centerIndex++,
+    	(* Print[{centerIndex}]; *)
+    	center = activeCellsCenters[[centerIndex]];
+
+    	rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}];
+	    projectionMatrix4D = ArrayFlatten[{{rotation3D, 0}, {0, 1}}];
+	    
+	    deltaTheta = Pi/5/20;
+	    For[theta1 = 0, theta1 <= Pi/5 - deltaTheta, theta1+=deltaTheta,
+	    	theta2 = theta1 + deltaTheta;
+			fullProjectionMatrix1 = doubleRotationMatrix[theta1].projectionMatrix4D;
+			fullProjectionMatrix2 = doubleRotationMatrix[theta2].projectionMatrix4D;
+
+			start = perspectiveProjection[center, fullProjectionMatrix1, wDistance];
+			end = perspectiveProjection[center, fullProjectionMatrix2, wDistance];
+			(* Print[{centerIndex, start, end}]; *)
+			AppendTo[graphEdges, {
+				FaceForm[getHue[mapHopfFibration[fullProjectionMatrix.center]]], Cylinder[{start, end}, thickness]
+			}];
+	    ];
+    ];
+
+    AppendTo[graphElements, graphEdges];
 
 (* 			{
 				FaceForm[White], Map[Cylinder[#, thickness]&, Map[projectTo3d, activeEdges, {2}]]
@@ -307,8 +336,10 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 				FaceForm[White], Map[Sphere[#, thickness * 2]&, Map[projectTo3d, activeVertices]]
 			}
  *)
-		},
 
+
+	graph = Graphics3D[
+		graphElements,
 		ViewPoint -> viewPoint * 100,
 		ViewVertical -> {0, 0, 1},
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
@@ -392,10 +423,10 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 		activeLayerMin = 1; activeLayerMax = 9
 	];
 
-	(* exportAnimation[shape, activeLayerMin, activeLayerMax]; *)
+	exportAnimation[shape, activeLayerMin, activeLayerMax];
 ];
 
-exportImage[shape, 1, 9, 2.9, Pi/5 * 24/100., 1];
+(* exportImage[shape, 1, 9, 2.9, Pi/5 * 24/100., 1]; *)
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)

@@ -272,8 +272,10 @@ distinctCenters3d = hopf3dCenters//Union//Sort;
 getHue[v3d_] := If[Norm[v3d[[{1, 2}]]] < 0.001, 
 						If[v3d[[3]] > 0, Red, Blue],
 						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]] , 1]]
-	0 ];
+];
 Map[getHue, distinctCenters3d]
+Map[getHue[mapHopfFibration[#]]&, rotatedActiveCellsCenters]
+
 
 Select[rotatedActiveCellsCenters, Norm[#[[{1,2}]]] < 0.001&]
 (* only 4?? should be ten *)
