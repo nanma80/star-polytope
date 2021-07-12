@@ -17,8 +17,9 @@ shapes = {
 };
 
 shapes = {
-	"polytope_3_4_3"
+	(* "polytope_3_4_3" *)
 	(* "polytope_5_3_3_cell120" *)
+	"polytope_3_3_5_cell600"
 };
 
 exportToPov = True;
@@ -152,9 +153,9 @@ deltaTheta = Pi/240;
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
 
 activeLayerMin = 1;
-activeLayerMax = 5;
+activeLayerMax = 15;
 
-explosionFactor = 2.9;
+explosionFactor = 0;
 serialNumber = 6;
 
 dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}];
@@ -220,6 +221,16 @@ activeCellsCenters = Map[Total[#, 2]/Length[activeCells[[1]]]/Length[activeCells
  rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}];
  rotation3D = RotationMatrix[{{1, 1, 1}, {0, 1, 0}}];
  rotation3D = RotationMatrix[ArcTan[1/Sqrt[2]], {0, 1, 0}].RotationMatrix[Pi/4, {0, 0, 1}];
+ centeredVertex = {0, 0, 1, 1};
+ projectionMatrix = Simplify[Orthogonalize[{centeredVertex, {2, -1.4, 0.3, 0.9}, {0, 1, 2.3, 0.8}, {0.5, 0.3, 1, 0.1}}]][[{2, 3, 4, 1}]];
+
+projectionMatrix = ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}].ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}];
+
+Map[#[[4]]&, activeCellsCenters.projectionMatrix*4/phi^2]//Sort
+Select[activeCellsCenters.projectionMatrix*4/phi^2, #[[4]]>2.725 &]
+Select[activeCellsCenters.projectionMatrix*4/phi^2, #[[4]]>2.725 &]*phi
+
+ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].{0., -1., 0.707107, 4.40957}
 
  fullProjectionMatrix = ArrayFlatten[
  	{{rotation3D, 0}, {0, 1}}
@@ -252,24 +263,13 @@ Select[centers, Norm[{#[[1]], #[[2]]}] < 0.01&]
  	{{rotation3D, 0}, {0, 1}}
 ];
 
+fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}];
+
 rotatedActiveCellsCenters = Map[fullProjectionMatrix.#&, activeCellsCenters];
 Select[rotatedActiveCellsCenters, Norm[#[[{1,2}]]] < 0.001&]
 
 roundPrecision = 0.000001;
 
-
-hopf3dCenters = Map[mapHopfFibration, rotatedActiveCellsCenters];
-hopf3dCenters//Tally//Sort
-(* 
-Out[342]= {{{-111.072, 0., -55.5358}, 10}, {{-89.8588, -65.2863, 55.5358}, 10}, {{-89.8588, 65.2863, 55.5358}, 10},
-
->    {{-34.323, -105.635, -55.5358}, 10}, {{-34.323, 105.635, -55.5358}, 10}, {{0., 0., -124.182}, 10}, {{0., 0., 124.182}, 10},
-
->    {{34.323, -105.635, 55.5358}, 10}, {{34.323, 105.635, 55.5358}, 10}, {{89.8588, -65.2863, -55.5358}, 10},
-
->    {{89.8588, 65.2863, -55.5358}, 10}, {{111.072, 0., 55.5358}, 10}}
- *)
-distinctCenters3d = hopf3dCenters//Union//Sort;
 
 mapHopfFibration[v4d_] := Module[
 	{z0, z1},
@@ -284,6 +284,22 @@ getHue[v3d_] := If[Norm[v3d[[{1, 2}]]] < 0.001,
 						If[v3d[[3]] > 0, Darker[Blue, 0.8], Lighter[Red, 0.8]],
 						Hue[Mod[Arg[v3d[[1]] + I v3d[[2]]]/2/Pi , 1]]
 ];
+hopf3dCenters = Map[mapHopfFibration, rotatedActiveCellsCenters];
+hopf3dCenters//Tally//Sort
+(* 
+Out[342]= {{{-111.072, 0., -55.5358}, 10}, {{-89.8588, -65.2863, 55.5358}, 10}, {{-89.8588, 65.2863, 55.5358}, 10},
+
+>    {{-34.323, -105.635, -55.5358}, 10}, {{-34.323, 105.635, -55.5358}, 10}, {{0., 0., -124.182}, 10}, {{0., 0., 124.182}, 10},
+
+>    {{34.323, -105.635, 55.5358}, 10}, {{34.323, 105.635, 55.5358}, 10}, {{89.8588, -65.2863, -55.5358}, 10},
+
+>    {{89.8588, 65.2863, -55.5358}, 10}, {{111.072, 0., 55.5358}, 10}}
+ *)
+ Map[#[[2]]&, hopf3dCenters//Tally//Sort]
+ Map[#[[2]]&, hopf3dCenters//Tally//Sort]//Tally
+ (* for 600 vertices of the 120-cell (cell centers of 600-cell), there are 20 rings of 12 per ring + 60 rings of 6 per ring. *)
+distinctCenters3d = hopf3dCenters//Union//Sort;
+
 
 Map[getHue, distinctCenters3d]
 Map[getHue[mapHopfFibration[#]]&, rotatedActiveCellsCenters]

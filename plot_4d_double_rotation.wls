@@ -31,6 +31,7 @@ shapes = {
 shapes = {
 	"polytope_3_4_3"
 	(* "polytope_5_3_3_cell120" *)
+	(* "polytope_3_3_5_cell600" *)
 };
 (*shape = "test";*)
 
@@ -149,6 +150,7 @@ projectToDirection[vertex4d_, projectionMatrix_] := vertex4d.Transpose[projectio
 perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance);
 normalizedInner[u_, v_] := u.v/Norm[u]/Norm[v];
 doubleRotationMatrix[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
+getProjectionMatrix[direction_] := Simplify[Orthogonalize[{direction, {2, -1.4, 0.3, 0.9}, {0, 1, 2.3, 0.8}, {0.5, 0.3, 1, 0.1}}]][[2;;4]];
 
 mapHopfFibration[v4d_] := Module[
 	{z0, z1},
@@ -264,10 +266,12 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     rotation3D = IdentityMatrix[3];
     If[shape == "polytope_5_3_3_cell120", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
     If[shape == "polytope_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
-    
+
     fullProjectionMatrix = ArrayFlatten[
     	{{rotation3D, 0}, {0, 1}}
 	];
+
+	If[shape == "polytope_3_3_5_cell600", fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}] ];
 
 	fullProjectionMatrix = doubleRotationMatrix[theta].fullProjectionMatrix;
 
@@ -277,8 +281,13 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
  *)
     projectedActiveFaces = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, activeFaces, {2}];
     range = Max[Flatten[activeFaces]] * 2.0;
-    If[shape == "polytope_3_4_3", range = Max[Flatten[activeFaces]] * 1.75];
-	If[shape == "polytope_3_4_3", viewPoint = {1.2, -0.7, 0.5}];
+    If[shape == "polytope_3_4_3", 
+    	range = Max[Flatten[activeFaces]] * 1.75;
+    	viewPoint = {1.2, -0.7, 0.5}];
+    If[shape == "polytope_3_3_5_cell600", 
+    	range = Max[Flatten[activeFaces]] * 0.75;
+    	viewPoint = {1.2, -0.7, 0.5}];
+    Print[range];
 
 	rotatedActiveCellsCenters = Map[fullProjectionMatrix.#&, activeCellsCenters];
 
@@ -431,10 +440,10 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	];
 	If[shape == "polytope_3_4_3", activeLayerMax = 5];
     
-	exportAnimation[shape, activeLayerMin, activeLayerMax];
+	(* exportAnimation[shape, activeLayerMin, activeLayerMax]; *)
 ];
 
-(* exportImage[shape, 1, activeLayerMax, 2.9, Pi/5 * 0/100., 1]; *)
+exportImage[shape, 1, activeLayerMax, 2.9, Pi/5 * 0/100., 1];
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
