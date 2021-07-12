@@ -402,9 +402,9 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	frameCount = explosionConfig[[2]];
 	explodeStep = maxExplosionFactor/frameCount;
 
-	frameCount = 100;
+	frameCount = 150;
     If[shape == "polytope_3_4_3", frameCount = 150];
-	explosionFactor = 2.9;
+	explosionFactor = 2.9 * If[shape == "polytope_3_3_5_cell600", 5, 1];
 	angleSpan = Pi/5;
     If[shape == "polytope_3_4_3", angleSpan = 2 Pi/6];
 	    
@@ -419,7 +419,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 
     (* gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*) *)
     gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *)
-		<> IntegerString[Floor[300/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
+		<> IntegerString[Floor[450/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
 	Run[gifCommand];
@@ -445,10 +445,10 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	];
 	If[shape == "polytope_3_4_3", activeLayerMax = 5];
     
-	(* exportAnimation[shape, activeLayerMin, activeLayerMax]; *)
+	exportAnimation[shape, activeLayerMin, activeLayerMax];
 ];
 
-exportImage[shape, 1, activeLayerMax, 2.9 * 5, Pi/5 * 0/100., 1];
+(* exportImage[shape, 1, activeLayerMax, 2.9 * 5, Pi/5 * 0/100., 1]; *)
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
