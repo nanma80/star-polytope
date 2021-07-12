@@ -29,9 +29,9 @@ shapes = {
 };
 
 shapes = {
-	"polytope_3_4_3"
+	(* "polytope_3_4_3" *)
 	(* "polytope_5_3_3_cell120" *)
-	(* "polytope_3_3_5_cell600" *)
+	"polytope_3_3_5_cell600"
 };
 (*shape = "test";*)
 
@@ -264,14 +264,15 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     Print[wDistance];
 
     rotation3D = IdentityMatrix[3];
-    If[shape == "polytope_5_3_3_cell120", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
+    (* for 600 cell, the following will lead to 60 rings. Each ring has 10 cells *)
+    If[shape == "polytope_5_3_3_cell120" || shape == "polytope_3_3_5_cell600", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
     If[shape == "polytope_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
 
     fullProjectionMatrix = ArrayFlatten[
     	{{rotation3D, 0}, {0, 1}}
 	];
 
-	If[shape == "polytope_3_3_5_cell600", fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}] ];
+	(* If[shape == "polytope_3_3_5_cell600", fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}] ]; *)
 
 	fullProjectionMatrix = doubleRotationMatrix[theta].fullProjectionMatrix;
 
@@ -285,7 +286,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     	range = Max[Flatten[activeFaces]] * 1.75;
     	viewPoint = {1.2, -0.7, 0.5}];
     If[shape == "polytope_3_3_5_cell600", 
-    	range = Max[Flatten[activeFaces]] * 0.75;
+    	range = Max[Flatten[activeFaces]] * 8;
     	viewPoint = {1.2, -0.7, 0.5}];
     Print[range];
 
@@ -320,10 +321,14 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 			];
 
     AppendTo[graphElements, graphFaces];
-    thickness = range/200.;
+    thickness = range/400.;
     Print[thickness];
     (* thickness = 1.0; *)
     (* Print[Map[getHue[mapHopfFibration[#]]&, rotatedActiveCellsCenters]//Tally]; *)
+
+	hopf3dCenters = Map[mapHopfFibration, rotatedActiveCellsCenters];
+	(* Print[hopf3dCenters//Tally//Sort]; *)
+	Print[Map[#[[2]]&, hopf3dCenters//Tally//Sort]//Tally];
 
     graphEdges = {};
     For[centerIndex = 1, centerIndex <= Length[activeCellsCenters], centerIndex++,
@@ -335,7 +340,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 	    
 	    angleSpan = Pi/5;
 	    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/6];
-	    deltaTheta = angleSpan/20;
+	    deltaTheta = angleSpan/40;
 	    For[theta1 = 0, theta1 <= angleSpan - deltaTheta, theta1+=deltaTheta,
 	    	theta2 = theta1 + deltaTheta;
 			fullProjectionMatrix1 = doubleRotationMatrix[theta1].projectionMatrix4D;
@@ -443,7 +448,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	(* exportAnimation[shape, activeLayerMin, activeLayerMax]; *)
 ];
 
-exportImage[shape, 1, activeLayerMax, 2.9, Pi/5 * 0/100., 1];
+exportImage[shape, 1, activeLayerMax, 2.9 * 5, Pi/5 * 0/100., 1];
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
