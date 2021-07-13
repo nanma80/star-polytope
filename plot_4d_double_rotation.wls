@@ -30,8 +30,8 @@ shapes = {
 
 shapes = {
 	(* "polytope_3_4_3" *)
-	(* "polytope_5_3_3_cell120" *)
-	"polytope_3_3_5_cell600"
+	"polytope_5_3_3_cell120"
+	(* "polytope_3_3_5_cell600" *)
 };
 (*shape = "test";*)
 
@@ -117,7 +117,7 @@ roundPrecision = 0.000001;
 phi = (1 + Sqrt[5])/2;
 viewPoint = {0.5, -1.5, 0.5};
 
-(* viewPoint = {0.1, 0.2, 1}; *)
+viewPoint = {0.15, 0.0, 1};
 (* viewPoint = {1.0, 0.0, 0.0}; *)
 (* matrix3D = {viewPoint, {0, 1, 0}, {0, 0, 1}}; *)
 (* perpViewPoints = Orthogonalize[matrix3D][[2;;3]]; *)
@@ -281,7 +281,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 	Select[centers, Norm[{#[[1]], #[[2]]}] < 0.01&]
  *)
     projectedActiveFaces = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, activeFaces, {2}];
-    range = Max[Flatten[activeFaces]] * 2.0;
+    range = Max[Flatten[activeFaces]] * 2.3;
     If[shape == "polytope_3_4_3", 
     	range = Max[Flatten[activeFaces]] * 1.75;
     	viewPoint = {1.2, -0.7, 0.5}];
@@ -393,7 +393,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	outputFolder = shape <> "_double_rotation";
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
-	gifFileName = shape <> "_double_rotation";
+	gifFileName = shape <> "_double_rotation_top";
 	gifFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
@@ -402,7 +402,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	frameCount = explosionConfig[[2]];
 	explodeStep = maxExplosionFactor/frameCount;
 
-	frameCount = 150;
+	frameCount = 100;
     If[shape == "polytope_3_4_3", frameCount = 150];
 	explosionFactor = 2.9 * If[shape == "polytope_3_3_5_cell600", 5, 1];
 	angleSpan = Pi/5;
@@ -419,7 +419,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 
     (* gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*) *)
     gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *)
-		<> IntegerString[Floor[450/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
+		<> IntegerString[Floor[300/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
 	Run[gifCommand];
@@ -448,7 +448,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	exportAnimation[shape, activeLayerMin, activeLayerMax];
 ];
 
-(* exportImage[shape, 1, activeLayerMax, 2.9 * 5, Pi/5 * 0/100., 1]; *)
+(* exportImage[shape, 1, activeLayerMax, 2.9, Pi/5 * 0/100., 1]; *)
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
