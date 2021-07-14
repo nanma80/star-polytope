@@ -29,8 +29,8 @@ shapes = {
 };
 
 shapes = {
-	(* "polytope_3_4_3" *)
-	"polytope_5_3_3_cell120"
+	"polytope_3_4_3"
+	(* "polytope_5_3_3_cell120" *)
 	(* "polytope_3_3_5_cell600" *)
 };
 (*shape = "test";*)
@@ -267,6 +267,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     (* for 600 cell, the following will lead to 60 rings. Each ring has 10 cells *)
     If[shape == "polytope_5_3_3_cell120" || shape == "polytope_3_3_5_cell600", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
     If[shape == "polytope_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
+    rotation3D = IdentityMatrix[3];
 
     fullProjectionMatrix = ArrayFlatten[
     	{{rotation3D, 0}, {0, 1}}
@@ -284,7 +285,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     range = Max[Flatten[activeFaces]] * 2.3;
     If[shape == "polytope_3_4_3", 
     	range = Max[Flatten[activeFaces]] * 1.75;
-    	viewPoint = {1.2, -0.7, 0.5}];
+    	viewPoint = {1.0, -0.9, 0.5}];
     If[shape == "polytope_3_3_5_cell600", 
     	range = Max[Flatten[activeFaces]] * 8;
     	viewPoint = {1.2, -0.7, 0.5}];
@@ -339,7 +340,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 	    projectionMatrix4D = ArrayFlatten[{{rotation3D, 0}, {0, 1}}];
 	    
 	    angleSpan = Pi/5;
-	    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/6];
+	    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/4];
 	    deltaTheta = angleSpan/40;
 	    For[theta1 = 0, theta1 <= angleSpan - deltaTheta, theta1+=deltaTheta,
 	    	theta2 = theta1 + deltaTheta;
@@ -393,7 +394,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	outputFolder = shape <> "_double_rotation";
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
-	gifFileName = shape <> "_double_rotation_top";
+	gifFileName = shape <> "_double_rotation_alt";
 	gifFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
@@ -402,8 +403,8 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	frameCount = explosionConfig[[2]];
 	explodeStep = maxExplosionFactor/frameCount;
 
-	frameCount = 100;
-    If[shape == "polytope_3_4_3", frameCount = 150];
+	frameCount = 10;
+    If[shape == "polytope_3_4_3", frameCount = 200];
 	explosionFactor = 2.9 * If[shape == "polytope_3_3_5_cell600", 5, 1];
 	angleSpan = Pi/5;
     If[shape == "polytope_3_4_3", angleSpan = 2 Pi/6];
@@ -419,7 +420,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 
     (* gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*) *)
     gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *)
-		<> IntegerString[Floor[300/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
+		<> IntegerString[Floor[600/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
 	Run[gifCommand];
@@ -448,7 +449,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	exportAnimation[shape, activeLayerMin, activeLayerMax];
 ];
 
-(* exportImage[shape, 1, activeLayerMax, 2.9, Pi/5 * 0/100., 1]; *)
+(* exportImage[shape, 1, activeLayerMax, 2.9, Pi/5 * 24/100., 1]; *)
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
