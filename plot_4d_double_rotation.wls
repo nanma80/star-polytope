@@ -301,25 +301,24 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     grayArea = 0.05;
     graphElements = {};
 
-    graphFaces = Table[{
-					(* Opacity[1.0], *)
+    graphFaces = {};
+    For[k = 1, k <= Length[activeFaces], k++,
+    	normInner = normalizedInner[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]], (rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] + {0, 0, 0, wDistance})];
+    	If[normInner >= 0,
+    		AppendTo[graphFaces,
+    			{
 					Opacity[
-						If[
-						normalizedInner[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]], (rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] + {0, 0, 0, wDistance})] < 0,
-						0,
-						If[
-							normalizedInner[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]], (rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] + {0, 0, 0, wDistance})] < grayArea,
-							normalizedInner[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]], (rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] + {0, 0, 0, wDistance})]/grayArea,
+						If[normInner < grayArea,
+							normInner/grayArea,
 							1
-						]]
+						]
 					],
-					(* FaceForm[Blue], *)
 					FaceForm[getHue[mapHopfFibration[rotatedActiveCellsCenters[[Floor[(k - 1)/faceCellRatio] + 1]] ]]],
-					(* FaceForm[ Hue[ normalizedAngle[activeCellsCenters[[Floor[(k - 1)/12] + 1]], {1, -1, 1} ] ]],  *)
-					(* FaceForm[ Hue[ Arg[activeCellsCenters[[Floor[(k - 1)/8] + 1]].perpViewPoints[[1]] + I activeCellsCenters[[Floor[(k - 1)/8] + 1]].perpViewPoints[[2]]] / 2 / Pi + 0.5 ]], *)
 					Polygon[ projectedActiveFaces[[k]] ]
-				}, {k, 1, Length[activeFaces]}
-			];
+				}
+    		];
+    	];
+    ];
 
     AppendTo[graphElements, graphFaces];
     thickness = range/400.;
@@ -407,7 +406,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
     If[shape == "polytope_3_4_3", frameCount = 200];
 	explosionFactor = 2.9 * If[shape == "polytope_3_3_5_cell600", 5, 1];
 	angleSpan = Pi/5;
-    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/6];
+    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/4];
 	    
     thetas = Table[(k - 1) * angleSpan / frameCount, {k, 1, frameCount}];
 
@@ -449,7 +448,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	exportAnimation[shape, activeLayerMin, activeLayerMax];
 ];
 
-(* exportImage[shape, 1, activeLayerMax, 2.9, Pi/5 * 24/100., 1]; *)
+(* exportImage[shape, 1, activeLayerMax, 2.9, Pi/4 * 10/100., 1]; *)
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
