@@ -412,8 +412,12 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
     If[shape == "polytope_3_4_3", frameCount = 200];
 	explosionFactor = 2.9 * If[shape == "polytope_3_3_5_cell600", 5, 1];
 	angleSpan = Pi/5;
-    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/4];
-    If[shape == "bitruncated_3_4_3", angleSpan = 2 Pi/8];
+    If[shape == "polytope_3_4_3", 
+    	frameCount = 200;
+    	angleSpan = 2 Pi/4];
+    If[shape == "bitruncated_3_4_3", 
+    	frameCount = 100;
+    	angleSpan = 2 Pi/8];
 	    
     thetas = Table[(k - 1) * angleSpan / frameCount, {k, 1, frameCount}];
 
@@ -424,9 +428,11 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 		exportImage[shape, activeLayerMin, activeLayerMax, explosionFactor, theta, frameIndex];
     ];
 
+    delay = If[frameCount > 30, 3, 50];
+
     (* gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*) *)
     gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *)
-		<> IntegerString[Floor[600/frameCount]] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
+		<> IntegerString[delay] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
 	Run[gifCommand];
@@ -453,10 +459,10 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	If[shape == "polytope_3_4_3", activeLayerMax = 5];
 	If[shape == "bitruncated_3_4_3", activeLayerMax = 7];
     
-	(* exportAnimation[shape, activeLayerMin, activeLayerMax]; *)
+	exportAnimation[shape, activeLayerMin, activeLayerMax];
 ];
 
-exportImage[shape, 1, activeLayerMax, 2.9, Pi/4 * 10/100., 1];
+(* exportImage[shape, 1, activeLayerMax, 2.9, Pi/4 * 10/100., 1]; *)
 (* deltaTheta = Pi/240; *)
 (* exportImage[shape, 1, 9, 2.9, 48 deltaTheta, 9]; *)
 (* exportImage[shape, 1, 9, 2.9, 0 deltaTheta, 10]; *)
