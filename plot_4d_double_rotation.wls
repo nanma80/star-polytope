@@ -269,7 +269,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     rotation3D = IdentityMatrix[3];
     (* for 600 cell, the following will lead to 60 rings. Each ring has 10 cells *)
     If[shape == "polytope_5_3_3_cell120" || shape == "polytope_3_3_5_cell600", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
-    If[shape == "polytope_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
+    If[shape == "polytope_3_4_3" || shape == "bitruncated_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
 
     fullProjectionMatrix = ArrayFlatten[
     	{{rotation3D, 0}, {0, 1}}
@@ -345,7 +345,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 	    
 	    angleSpan = Pi/5;
 	    If[shape == "polytope_3_4_3", angleSpan = 2 Pi/4];
-	    If[shape == "bitruncated_3_4_3", angleSpan = 2 Pi/8];
+	    If[shape == "bitruncated_3_4_3", angleSpan = 2 Pi/6];
 	    deltaTheta = angleSpan/40;
 	    For[theta1 = 0, theta1 <= angleSpan - deltaTheta, theta1+=deltaTheta,
 	    	theta2 = theta1 + deltaTheta;
@@ -399,7 +399,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	outputFolder = shape <> "_double_rotation";
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
-	gifFileName = shape <> "_double_rotation_alt";
+	gifFileName = shape <> "_double_rotation";
 	gifFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
@@ -416,8 +416,8 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
     	frameCount = 200;
     	angleSpan = 2 Pi/4];
     If[shape == "bitruncated_3_4_3", 
-    	frameCount = 100;
-    	angleSpan = 2 Pi/8];
+    	frameCount = 135;
+    	angleSpan = 2 Pi/6];
 	    
     thetas = Table[(k - 1) * angleSpan / frameCount, {k, 1, frameCount}];
 
