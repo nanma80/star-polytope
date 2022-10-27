@@ -29,7 +29,7 @@ shapes = {
 };
 
 shapes = {
-	(* "polytope_3_4_3" *)
+	"polytope_3_4_3",
 	(* "polytope_5_3_3_cell120" *)
 	"polytope_3_3_5_cell600"
 	(* "bitruncated_3_4_3" *)
@@ -288,16 +288,16 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
  *)
     projectedActiveFaces = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, activeFaces, {2}];
     range = Max[Flatten[activeFaces]] * 2.3;
+    range = Max[Flatten[activeFaces]] * 1.4; (* 120-cell *)
     If[shape == "polytope_3_4_3", 
-    	range = Max[Flatten[activeFaces]] * 1.75;
+    	range = Max[Flatten[activeFaces]] * 2.2;
     	viewPoint = {1.0, -0.9, 0.5}];
     If[shape == "polytope_3_3_5_cell600", 
-    	range = Max[Flatten[activeFaces]] * 8;
+    	range = Max[Flatten[activeFaces]] * 1.5;
     	viewPoint = {1.2, -0.7, 0.5}];
 	If[shape == "bitruncated_3_4_3", 
-    	range = Max[Flatten[activeFaces]] * 1.9;
+    	range = Max[Flatten[activeFaces]] * 1.1;
     	viewPoint = {1.2, -0.7, 0.5}];
-    range = Max[Flatten[activeFaces]] * 1.4;
     Print[range];
 
 	rotatedActiveCellsCenters = Map[fullProjectionMatrix.#&, activeCellsCenters];
@@ -405,18 +405,20 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 	explodeStep = maxExplosionFactor/frameCount;
 
 	frameCount = 200;
-    If[shape == "polytope_3_4_3", frameCount = 200];
 	explosionFactor = 2.9 * If[shape == "polytope_3_3_5_cell600", 5, 1];
-	explosionFactor = 0.4;
+	explosionFactor = 0.4; (* 120-cell *)
+	If[shape == "polytope_3_3_5_cell600", explosionFactor = 0.7];
+	If[shape == "polytope_3_4_3", explosionFactor = 0.4];
+
 	angleSpan = Pi/5;
     If[shape == "polytope_3_4_3", 
     	frameCount = 200;
-    	angleSpan = 2 Pi/4];
+    	angleSpan = 2 Pi/6];
     If[shape == "bitruncated_3_4_3", 
     	frameCount = 135;
     	angleSpan = 2 Pi/6];
     (* frameCount = 20; *)
-	    
+
     thetas = Table[(k - 1) * angleSpan / (frameCount), {k, 1, frameCount}];
 
     For[ frameIndex = 1, frameIndex <= Length[thetas] , frameIndex++,
