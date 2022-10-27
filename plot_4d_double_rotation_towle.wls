@@ -30,8 +30,8 @@ shapes = {
 
 shapes = {
 	(* "polytope_3_4_3" *)
-	"polytope_5_3_3_cell120"
-	(* "polytope_3_3_5_cell600" *)
+	(* "polytope_5_3_3_cell120" *)
+	"polytope_3_3_5_cell600"
 	(* "bitruncated_3_4_3" *)
 };
 (*shape = "test";*)
@@ -116,8 +116,8 @@ originalProjectionMatrixF4 = {
 
 roundPrecision = 0.000001;
 phi = (1 + Sqrt[5])/2;
-viewPoint = {0.75, -1.5, 0.5};
-(* viewPoint = {0.15, -0.5, 1}; *)
+viewPoint = {0.75, 1.5, 0.5};
+(* viewPoint = {1, -0.5, 0.15}; *)
 
 (* viewPoint = {1.0, 0.0, 0.0}; *)
 (* matrix3D = {viewPoint, {0, 1, 0}, {0, 0, 1}}; *)
@@ -204,9 +204,11 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
 		activeEdges,
 		activeVertices,
 		graph,
-		imageSize
+		imageSize,
+		faceTemp,faceNormalVector,faceCenter,projectedFaceCenter,faceVisible
 	},
 
+	(* If[serialNumber != 1 && serialNumber != 20, Return[]]; *)
 	dataFileName = FileNameJoin[{dataFolder, shape <> ".wl"}];
 	Print["Reading data for " <> shape <> " from " <> dataFileName];
 	shapeTokens = StringSplit[shape, "_"];
@@ -276,9 +278,6 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     	{{rotation3D, 0}, {0, 1}}
 	];
 
-	(* random rotation to avoid flat cells *)
-	(* fullProjectionMatrix = RotationMatrix[{{0, 0, 0, 1}, {0.1, 0.12, 0.31, 1}}].fullProjectionMatrix; *)
-
 	(* If[shape == "polytope_3_3_5_cell600", fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}] ]; *)
 
 	fullProjectionMatrix = doubleRotationMatrix[theta].fullProjectionMatrix;
@@ -311,32 +310,52 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     grayArea = 0.05;
     graphElements = {};
     thickness = 0.001;
-    Print[thickness];
 
     graphFaces = {};
+
+    rotatedActiveFaces = Map[projectToDirection[#, fullProjectionMatrix]&, activeFaces, {2}];
+
+(*     Print[projectedActiveFaces[[1]][[1]]];
+    Print[rotatedActiveFaces[[1]][[1]]];
+    Exit[]; *)
+
     For[k = 1, k <= Length[activeFaces], k++,
     	cellId = Floor[(k - 1)/faceCellRatio] + 1;
+    	(* If[cellId < 27 || cellId > 27, Continue[]]; *)
+    	faceIdInCell = Mod[(k - 1), faceCellRatio] + 1;
+    	(* Print[faceIdInCell]; *)
     	normInner = normalizedInner[rotatedActiveCellsCenters[[cellId]], ( {0, 0, 0, wDistance})];
-    	opacityStart = 0.03;
+    	opacityStart = -0.0;
 		opacityEnd = 0.1;
-		opacity = If[normInner > opacityEnd, 1, (normInner - opacityStart)*(opacityEnd - opacityStart)];
-    	If[normInner >= opacityStart,
+		opacity = If[normInner > opacityEnd, 1, If[normInner < opacityStart, 0, (normInner - opacityStart)/(opacityEnd - opacityStart)]];
+		faceTemp = projectedActiveFaces[[k]];
+		faceNormalVector = Cross[faceTemp[[2]] - faceTemp[[1]], faceTemp[[3]] - faceTemp[[2]]];
+		faceCenter = Mean[faceTemp];
+		cellCenter4d = rotatedActiveCellsCenters[[cellId]];
+		
+		faceCenter4d = Mean[rotatedActiveFaces[[k]]];
+		projectedFaceCenter = (faceCenter4d - cellCenter4d)[[{1,2,3}]];
+
+		faceVisible = (Dot[faceNormalVector, viewPoint] * Dot[faceNormalVector, projectedFaceCenter] > - roundPrecision);
+		(* faceVisible = True; *)
+
+    	If[opacity > roundPrecision && faceVisible,
     		AppendTo[graphFaces,
     			{
     				Opacity[opacity],
-    				If[opacity > 0.8, EdgeForm[Thin], EdgeForm[]],
+    				If[normInner > opacityEnd, EdgeForm[Thin], EdgeForm[]],
 					Polygon[ projectedActiveFaces[[k]] ]
 				}
     		];
     	];
     ];
-
+    Print["draw face count: " <> IntegerString[Length[graphFaces]]];
     AppendTo[graphElements, graphFaces];
     (* thickness = 1.0; *)
     (* Print[Map[getHue[mapHopfFibration[#]]&, rotatedActiveCellsCenters]//Tally]; *)
 
 	hopf3dCenters = Map[mapHopfFibration, rotatedActiveCellsCenters];
-	Print[Map[#[[2]]&, hopf3dCenters//Tally//Sort]//Tally];
+	(* Print[Map[#[[2]]&, hopf3dCenters//Tally//Sort]//Tally]; *)
 
 	graph = Graphics3D[
 		graphElements,
@@ -373,7 +392,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
 		gifCommand
 	},
 
-	outputFolder = shape <> "_double_rotation_towle";
+	outputFolder = shape <> "_double_rotation";
 	outputFolder = FileNameJoin[{imageFolder, outputFolder}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
 	gifFileName = shape <> "_double_rotation_towle";
@@ -398,7 +417,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
     	angleSpan = 2 Pi/6];
     (* frameCount = 20; *)
 	    
-    thetas = Table[(k - 1) * angleSpan / frameCount, {k, 1, frameCount}];
+    thetas = Table[(k - 1) * angleSpan / (frameCount), {k, 1, frameCount}];
 
     For[ frameIndex = 1, frameIndex <= Length[thetas] , frameIndex++,
         theta = thetas[[frameIndex]] * 1.0;
