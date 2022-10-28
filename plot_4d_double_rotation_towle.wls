@@ -31,8 +31,8 @@ shapes = {
 shapes = {
 	"polytope_3_4_3",
 	(* "polytope_5_3_3_cell120" *)
-	"polytope_3_3_5_cell600"
-	(* "bitruncated_3_4_3" *)
+	"polytope_3_3_5_cell600",
+	"bitruncated_3_4_3"
 };
 (*shape = "test";*)
 
@@ -327,7 +327,14 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     	normInner = normalizedInner[rotatedActiveCellsCenters[[cellId]], ( {0, 0, 0, wDistance})];
     	opacityStart = -0.0;
 		opacityEnd = 0.1;
-		opacity = If[normInner > opacityEnd, 1, If[normInner < opacityStart, 0, (normInner - opacityStart)/(opacityEnd - opacityStart)]];
+		(* linear opacity transition *)
+		(* opacity = If[normInner > opacityEnd, 1, If[normInner < opacityStart, 0, (normInner - opacityStart)/(opacityEnd - opacityStart)]]; *)
+
+		(* quadratic transition *)
+		opacity = If[normInner > opacityEnd, 1, 
+					  If[normInner < opacityStart, 0, 
+					   1 - ((normInner - opacityEnd)/(opacityEnd - opacityStart))^2]];
+
 		faceTemp = projectedActiveFaces[[k]];
 		faceNormalVector = Cross[faceTemp[[2]] - faceTemp[[1]], faceTemp[[3]] - faceTemp[[2]]];
 		faceCenter = Mean[faceTemp];
@@ -343,7 +350,7 @@ exportImage[shape_, activeLayerMin_, activeLayerMax_, explosionFactor_, theta_, 
     		AppendTo[graphFaces,
     			{
     				Opacity[opacity],
-    				If[normInner > opacityEnd, EdgeForm[Thin], EdgeForm[]],
+    				If[opacity > 0.85, EdgeForm[Thin], EdgeForm[]],
 					Polygon[ projectedActiveFaces[[k]] ]
 				}
     		];
@@ -415,7 +422,7 @@ exportAnimation[shape_, activeLayerMin_, activeLayerMax_] := Module[
     	frameCount = 200;
     	angleSpan = 2 Pi/6];
     If[shape == "bitruncated_3_4_3", 
-    	frameCount = 135;
+    	frameCount = 200;
     	angleSpan = 2 Pi/6];
     (* frameCount = 20; *)
 
