@@ -43,8 +43,7 @@ If[Length[argv] >= 3,
 	r = 1; (* default *)
 ];
 
-splitEdgeParts = r * 8;
-If[projectionRatio < 0.11, splitEdgeParts = r * 8 * 3];
+splitEdgeParts = 2;
 
 colorGroup = {Red, Blue, Green, Yellow, Magenta, Cyan, Brown, Orange};
 colors = Join[colorGroup, Map[Darker[#, 0.5]&, colorGroup], Map[Lighter[#, 0.5]&, colorGroup]];
@@ -59,7 +58,7 @@ shape = "unfold_polyhedron_" <> ToString[p, InputForm] <> "_" <> ToString[q, Inp
 
 
 norm = 1.0;
-imageFolder = "images";
+imageFolder = "output";
 
 Needs["POVRayRender`"];
 ConfigurePOVRayRender["POVRayPath" -> "C:\\Program Files\\POV-Ray\\v3.7\\bin\\pvengine64.exe"];
@@ -381,50 +380,16 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_] := Module[
 		Lighting -> lighting
 	];
 
-	surfaces = {};
-	For[fid = 1, fid <=Length[edgeGroups], fid++,
-		face = edgeGroups[[fid]];
-		faceCenter = faceCenters[[fid]];
-		oppositeCenter = -faceCenter;
-		oppositeCenter = oppositeCenter/Norm[oppositeCenter]*Norm[face[[1]][[1]] ];
-		triangles = splitFaceToTriangles[face, faceCenter];
-		(* Print[{fid, faceCenter, Length[triangles]}]; *)
-		opacity = If[fid == highlightedFaceId || stellateAllFaces || stereographicProjection, 1, stellationLevel * 0.2 + (1 - stellationLevel) * 1];
-
-		For[triangleIndex = 1, triangleIndex <= Length[triangles], triangleIndex++,
-			triangle = triangles[[triangleIndex]];
-			(* norm = Norm[triangle[[1]]]; *)
-			planarPoints[l1_, l2_] := 
-				l2 (l1 triangle[[3]] + (1 - l1) triangle[[1]]) +
-				(1 - l2) (l1 triangle[[3]] + (1 - l1) triangle[[2]]);
-			normalizedPoints[l1_, l2_] := normalize[planarPoints[l1, l2], norm];
-
-			projectedPoints[l1_, l2_] := If[fid == highlightedFaceId || stellateAllFaces,
-				partialProjection[ normalizedPoints[l1, l2], oppositeCenter, norm, ratio ],
-				normalizedPoints[l1, l2]];
-
-			surface = ParametricPlot3D[
-				projectedPoints[l1, l2], {l1, 0., 1}, {l2, 0., 1},
-				PlotStyle -> {colors[[fid]], Opacity[opacity]}, Mesh -> None,
-				PlotPoints -> splitEdgeParts,
-				MaxRecursion -> 2
-			];
-			AppendTo[surfaces, surface];
-		];
-	];
-
-	graph = Apply[Show, Join[{graph}, surfaces]];
-
 	graph
 ];
 
 exportFrame[faces_, stellationLevel_, spinAngle_, frameIndex_, outputFolderName_] := Module[
 	{},
 
-	Return[];
+	(* Return[]; *)
 	(* If[frameIndex <= 248, Return[]]; *)
 	(* If[EvenQ[frameIndex] == True, Return[]]; *)
-	If[EvenQ[frameIndex] == False, Return[]];
+	(* If[EvenQ[frameIndex] == False, Return[]]; *)
 	graph = elements3D[faces, stellationLevel, spinAngle, -1];
 	testing = (outputFolderName == "test");
 
@@ -519,16 +484,29 @@ Print[adjMatrix];
 graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
 spanningTree = FindSpanningTree[DirectedGraph[graph]];
 tree = GraphTree[spanningTree];
-Print[TreeData[tree]];
-Print[TreeChildren[tree]];
 
-Print[TreeChildren[tree][[1]]//TreeData ];
-Print[TreeChildren[tree][[1]]//TreeChildren ];
+rotationSchedule = {};
+buildSchedule[t_, schedule_, level_] := 
+  Module[{subtrees, subtreeId, newSchedule},
+   newSchedule = schedule;
+   subtrees = TreeChildren[t];
+   For[subtreeId = 1, subtreeId <= Length[subtrees], subtreeId++,
+    subtree = subtrees[[subtreeId]];
+    subtreeAllData = Map[#[[1]] &, VertexList[TreeGraph[subtree]]];
+    newSchedule = 
+     Append[newSchedule, {TreeData[t], TreeData[subtree], level, 
+       subtreeAllData}];
+    newSchedule = buildSchedule[subtree, newSchedule, level + 1];
+    ];
+   newSchedule
+   ];
+
+rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
+Print[rotationSchedule];
 
 
 
-
-(* exportFrame[faces, 1, 0, 1, "test"]; *)
+exportFrame[faces, 1, 0, 1, "test"];
 
 (* exportAnimation[]; *)
 
