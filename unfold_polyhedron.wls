@@ -10,7 +10,7 @@ showEdges = True;
 (* showEdges = False; *)
 
 stellateAllFaces = True;
-(* stellateAllFaces = False; *)
+stellateAllFaces = False;
 
 stereographicProjection = True;
 stereographicProjection = False;
@@ -305,76 +305,36 @@ stellateFace[halfEdges_, r_, level_] := Module[
 elements3D[faces_, stellationLevel_, spinAngle_, sig_] := Module[
 	{allEdges, edges, allVertices, vertices, ratio, selectedFaces, edgeGroups},
 
-	rotation = RotationMatrix[spinAngle, {0, 0, 1}];
+	staticOrientation = RotationMatrix[{-rootFaceCenter, - lightSource}];
+	rotation = RotationMatrix[spinAngle, {0, 0, 1}].staticOrientation;
 	selectedFaces = Map[(#.rotation) &, faces, {2}];
-	nonRotatingFaceCenters = Map[Mean, faces];
-	faceCenters = Map[Mean, selectedFaces];
-	selectedFaces = Map[doubleFaces, selectedFaces];
-	ratio = projectionRatio;
-	If[stellateAllFaces, ratio = projectionRatio (1 - stellationLevel) + stellationLevel * maxProjectionRatio ];
-
-	(* highlightDirection = lightSource; *)
-	highlightDirection = {0.2, -0.2, 1};
-
-	inners = Map[N[#.highlightDirection] &, nonRotatingFaceCenters];
-
-	edgeGroups = Map[getEdgesFromFace, selectedFaces];
-	highlightedFaceId = Ordering[inners, -1][[1]];
-	
-	If[stellateAllFaces,
-		edgeGroups = Map[stellateFace[#, r, stellationLevel]&, edgeGroups],
-		edgeGroups[[highlightedFaceId]] = stellateFace[edgeGroups[[highlightedFaceId]], r, stellationLevel];
-	];
-
-	displayEdges = {};
-	For[fid = 1, fid <= Length[edgeGroups], fid++,
-		face = edgeGroups[[fid]];
-		faceCenter = faceCenters[[fid]];
-		oppositeCenter = -faceCenter;
-		oppositeCenter = oppositeCenter/Norm[oppositeCenter]*Norm[face[[1]][[1]] ];
-
-		splitEdges = Flatten[ Map[splitEdge[#, splitEdgeParts]&, face], 1];
-		splitEdges = Map[normalize[#, norm]&, splitEdges, {2}];
-		If[fid == highlightedFaceId || stellateAllFaces,
-			splitEdges = Map[partialProjection[#, oppositeCenter, norm, ratio ]&, splitEdges, {2}];
-		];
-		displayEdges = Join[displayEdges, splitEdges];
-	];
-
-(* 	allEdges = Flatten[edgeGroups, 1];
+	allEdges = Flatten[Map[getEdgesFromFace, selectedFaces], 1];
 	edges = Union[allEdges , SameTest -> sameEdge];
 
-	splitEdges = Flatten[ Map[splitEdge[#, splitEdgeParts]&, edges], 1];
-	splitEdges = Map[normalize[#, norm]&, splitEdges, {2}];
-
-
-	displayEdges = splitEdges;
- *)
-	allVertices = Round[Flatten[displayEdges, 1], epsilon];
+	allVertices = Flatten[edges, 1];
 	vertices = Union[allVertices , SameTest -> ApproxSamePoint];
-	verticesTally = Tally[allVertices];
-	verticesTallyCounts = Map[#[[2]]&, verticesTally];
-	tallyTally = Tally[verticesTallyCounts];
-	(* Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."]; *)
-	Print[Map[Length, {faces, allEdges, edges, allVertices, vertices}]];
-	Print[tallyTally];
 
-	range = If[stereographicProjection, 4.5, 1];
-	(* range = (1 + projectionRatio); *)
-	thickness = 0.01;
+	range = 2;
 	viewCenter = {0, 0, 0};
+	thickness = 0.01 * range;
+	opacity = 1;
+	color = Blue;
 
-	elements = {};
-
-	If[showEdges,
-		AppendTo[elements, {
-			Opacity[1], FaceForm[White], Map[Cylinder[#, thickness]&, displayEdges]
-		}];
-	];
+	elements = {
+			{
+				Opacity[opacity], FaceForm[color], Map[Polygon, selectedFaces]
+			},
+			{
+				Opacity[1], FaceForm[White], Map[Cylinder[#, thickness]&, edges]
+			},
+			{
+				Opacity[1], FaceForm[White], Map[Sphere[#[[1]], thickness * rangeZoom]&, vertices]
+			}
+	};
 
 	graph = Graphics3D[
 		elements,
-		ViewPoint -> If[stereographicProjection, faceCenters[[highlightedFaceId]] * 100, {50, -50, 20}],
+		ViewPoint -> {50, -50, -10},
 		ViewVertical -> {0, 0, 1},
 		PlotRange -> {{viewCenter[[1]]-range, viewCenter[[1]]+range}, {viewCenter[[2]]-range, viewCenter[[2]]+range}, {viewCenter[[3]]-range, viewCenter[[3]]+range}},
 		Lighting -> lighting
@@ -484,6 +444,8 @@ Print[adjMatrix];
 graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
 spanningTree = FindSpanningTree[DirectedGraph[graph]];
 tree = GraphTree[spanningTree];
+rootFaceId = TreeData[tree];
+rootFaceCenter = Mean[faces[[rootFaceId]]];
 
 rotationSchedule = {};
 buildSchedule[t_, schedule_, level_] := 
@@ -504,9 +466,54 @@ buildSchedule[t_, schedule_, level_] :=
 rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
 Print[rotationSchedule];
 
+originalDihedralAngle = 0;
 
+rotatedFaces = faces;
+For[scheduleId = 1, scheduleId <= Length[rotationSchedule],scheduleId++,
+	schedule = rotationSchedule[[scheduleId]];
+	level = schedule[[3]];
+	If[level >= 1,
+		Print[schedule];
+		face1Id = schedule[[1]];
+		face2Id = schedule[[2]];
+		rotatedFaceIds = schedule[[4]];
+		face1 = rotatedFaces[[face1Id]];
+		face2 = rotatedFaces[[face2Id]];
+		pivot = Intersection[face1, face2, SameTest -> ApproxSamePoint];
+		If[Length[pivot] != 2,
+			Print["Unexpected error. Cannot find correct pivot"];
+			Print[schedule];
+			Print[pivot];
+			Exit[];
+		];
 
-exportFrame[faces, 1, 0, 1, "test"];
+		faceCenter1 = Mean[face1];
+		faceCenter2 = Mean[face2];
+		pivotCenter = Mean[pivot];
+		relativeFace1 = faceCenter1 - pivotCenter;
+		relativeFace2 = faceCenter2 - pivotCenter;
+
+		originalDihedralAngle = ArcCos[ Dot[relativeFace1, relativeFace2]/Norm[relativeFace1]/Norm[relativeFace2] ];
+		(* Print[originalDihedralAngle / Pi * 180]; *)
+
+		angleToFlat = Pi - originalDihedralAngle;
+
+		rotMatrix = RotationMatrix[angleToFlat / 100.0 * If[level >= 3, 100, If[level == 2, 50, 10]], {relativeFace2, relativeFace1}];
+		(* Print[rotMatrix]; *)
+
+		(* Print[{ scheduleId, ApproxSamePoint[relativeFace2.rotMatrix + relativeFace1, {0, 0, 0}] }]; *)
+		For[fid = 1, fid <= Length[rotatedFaceIds], fid++,
+			faceId = rotatedFaceIds[[fid]];
+			Print["rotating face " <> IntegerString[faceId]];
+			rotatedFace = rotatedFaces[[faceId]];
+			rotatedFace = Map[((# - pivotCenter).rotMatrix + pivotCenter)&, rotatedFace];
+			rotatedFaces[[faceId]] = rotatedFace;
+		];
+	];
+];
+
+exportFrame[rotatedFaces, 1, 0, 1, "test"];
+(* exportFrame[faces[[ {1,2,3,4,5,6,7,8,9,10,12} ]], 1, 0, 2, "test"]; *)
 
 (* exportAnimation[]; *)
 
