@@ -29,8 +29,15 @@ imageSize = {4, 3} * 720 / 3;
 lightSource = {50,-50,50};
 lighting = {{"Point", White, lightSource}};
 
+allColors = <|
+	3 -> Green,
+	4 -> Red,
+	5 -> Blue
+|>;
+
+
 (* frameCount = 10; *)
-frameCount = 300;
+frameCount = 200;
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -42,6 +49,8 @@ If[Length[argv] >= 3,
 	r = ToExpression[argv[[3]]],
 	r = 1; (* default *)
 ];
+
+faceColor = allColors[p];
 
 splitEdgeParts = 2;
 
@@ -150,7 +159,7 @@ partialProjection[p_, center_, norm_, projectionRatio_] := If[stereographicProje
 (p - center)/Norm[(p - center)] * (Norm[(p - center)] (1 - projectionRatio) + projectionRatio * (4*norm*norm/Norm[(p - center)] ) )  + center,
 ArcCos[Dot[p, -center]/Norm[p]/Norm[center]]/Pi*projectionRatio * p + p];
 
-shapeWithParams = shape <> If[topView, "_top", ""] <> If[showEdges, "_show_edges", ""] <> If[stellateAllFaces, "_all_star", ""] <> If[stereographicProjection, "_stereo", ""] <> "_" <> IntegerString[ Round[projectionRatio * 100], 10, 3 ] <> "_" <> IntegerString[ Round[stellationLevel * 100], 10, 3 ];
+shapeWithParams = shape <> "_" <> IntegerString[frameCount];
 
 getGenerator[p_, q_] := Module[
 	{inner01, inner02, inner12, signature, p0, p1, p2, otherp2, ch2psi},
@@ -313,22 +322,22 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_] := Module[
 
 	allVertices = Flatten[edges, 1];
 	vertices = Union[allVertices , SameTest -> ApproxSamePoint];
+	Print[vertices//Length];
 
 	range = 2;
 	viewCenter = {0, 0, 0};
 	thickness = 0.01 * range;
 	opacity = 1;
-	color = Blue;
 
 	elements = {
 			{
-				Opacity[opacity], FaceForm[color], Map[Polygon, selectedFaces]
+				Opacity[opacity], FaceForm[faceColor], Map[Polygon, selectedFaces]
 			},
 			{
 				Opacity[1], FaceForm[White], Map[Cylinder[#, thickness]&, edges]
 			},
 			{
-				Opacity[1], FaceForm[White], Map[Sphere[#[[1]], thickness * rangeZoom]&, vertices]
+				Opacity[1], FaceForm[White], Map[Sphere[#, thickness * 1.5]&, vertices]
 			}
 	};
 
@@ -343,14 +352,65 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_] := Module[
 	graph
 ];
 
-exportFrame[faces_, stellationLevel_, spinAngle_, frameIndex_, outputFolderName_] := Module[
+foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
+	{originalDihedralAngle, rotatedFaces, scheduleId, level, schedule, face1Id, face2Id, rotatedFaceIds},
+	originalDihedralAngle = 0;
+	rotatedFaces = faces;
+
+	For[scheduleId = 1, scheduleId <= Length[rotationSchedule],scheduleId++,
+		schedule = rotationSchedule[[scheduleId]];
+		level = schedule[[3]];
+		If[level >= 1,
+			Print[schedule];
+			face1Id = schedule[[1]];
+			face2Id = schedule[[2]];
+			rotatedFaceIds = schedule[[4]];
+			face1 = rotatedFaces[[face1Id]];
+			face2 = rotatedFaces[[face2Id]];
+			pivot = Intersection[face1, face2, SameTest -> ApproxSamePoint];
+			If[Length[pivot] != 2,
+				Print["Unexpected error. Cannot find correct pivot"];
+				Print[schedule];
+				Print[pivot];
+				Exit[];
+			];
+
+			faceCenter1 = Mean[face1];
+			faceCenter2 = Mean[face2];
+			pivotCenter = Mean[pivot];
+			relativeFace1 = faceCenter1 - pivotCenter;
+			relativeFace2 = faceCenter2 - pivotCenter;
+
+			originalDihedralAngle = ArcCos[ Dot[relativeFace1, relativeFace2]/Norm[relativeFace1]/Norm[relativeFace2] ];
+			(* Print[originalDihedralAngle / Pi * 180]; *)
+			angleToFlat = Pi - originalDihedralAngle;
+			rotMatrix = RotationMatrix[angleToFlat * foldPercents[[level]], {relativeFace2, relativeFace1}];
+			(* Print[rotMatrix]; *)
+
+			(* Print[{ scheduleId, ApproxSamePoint[relativeFace2.rotMatrix + relativeFace1, {0, 0, 0}] }]; *)
+			For[fid = 1, fid <= Length[rotatedFaceIds], fid++,
+				faceId = rotatedFaceIds[[fid]];
+				(* Print["rotating face " <> IntegerString[faceId]]; *)
+				rotatedFace = rotatedFaces[[faceId]];
+				rotatedFace = Map[((# - pivotCenter).rotMatrix + pivotCenter)&, rotatedFace];
+				rotatedFaces[[faceId]] = rotatedFace;
+			];
+		];
+	];
+
+	rotatedFaces
+];
+
+exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngle_, frameIndex_, outputFolderName_] := Module[
 	{},
 
 	(* Return[]; *)
 	(* If[frameIndex <= 248, Return[]]; *)
 	(* If[EvenQ[frameIndex] == True, Return[]]; *)
 	(* If[EvenQ[frameIndex] == False, Return[]]; *)
-	graph = elements3D[faces, stellationLevel, spinAngle, -1];
+
+	rotatedFaces = foldFaces[faces, rotationSchedule, foldPercents];
+	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, -1];
 	testing = (outputFolderName == "test");
 
 	outputFolder = FileNameJoin[{imageFolder, outputFolderName}];
@@ -372,6 +432,23 @@ exportFrame[faces_, stellationLevel_, spinAngle_, frameIndex_, outputFolderName_
 	Print["Saved an image to " <> outputFileName];
 
 ];
+
+adjacentFaces[f1_,f2_] := Length[Intersection[f1, f2, SameTest -> ApproxSamePoint]] == 2;
+adjacentFacesIndex[faces_, id1_, id2_] := adjacentFaces[faces[[id1]], faces[[id2]]];
+
+buildSchedule[t_, schedule_, level_] := Module[
+	{subtrees, subtreeId, newSchedule},
+	newSchedule = schedule;
+	subtrees = TreeChildren[t];
+	For[subtreeId = 1, subtreeId <= Length[subtrees], subtreeId++,
+		subtree = subtrees[[subtreeId]];
+		subtreeAllData = Map[#[[1]] &, VertexList[TreeGraph[subtree]]];
+		newSchedule = Append[newSchedule, {TreeData[t], TreeData[subtree], level, subtreeAllData}];
+		newSchedule = buildSchedule[subtree, newSchedule, level + 1];
+	];
+	newSchedule
+];
+
 
 exportAnimation[] := Module[
 	{
@@ -396,23 +473,32 @@ exportAnimation[] := Module[
 	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
 	faces = generateFaces[p, q];
+	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
+	Print[adjMatrix];
 
-	stellationLevels = Table[k/(frameCount-1), {k, 0, frameCount-1}];
-	If[stellateAllFaces==False,
-		stellationLevels = Join[stellationLevels, Reverse[stellationLevels]],
-		stellationLevels = Join[stellationLevels, Table[1, {k, Length[stellationLevels]}]];
+	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
+	spanningTree = FindSpanningTree[DirectedGraph[graph]];
+	tree = GraphTree[spanningTree];
+	rootFaceId = TreeData[tree];
+	rootFaceCenter = Mean[faces[[rootFaceId]]];
+
+	rotationSchedule = {};
+
+	rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
+	Print[rotationSchedule];
+
+	unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}];
+
+	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
+		unfoldPercent = unfoldPercents[[frameIndex]];
+		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
+		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
+		exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, 10}], 1, 0, frameIndex, outputFolderName];
 	];
 
-	For[frameIndex = 1, frameIndex <= Length[stellationLevels], frameIndex++,
-		spinAngle = (frameIndex-1)/(Length[stellationLevels]-1) * 2 * Pi;
-		stellationLevel = stellationLevels[[frameIndex]];
-		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[stellationLevels]] ];
-		exportFrame[faces, stellationLevel, spinAngle, frameIndex, outputFolderName];
-	];
+	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
-	delay = If[Length[stellationLevels] >= 50, 3, Floor[500/Length[stellationLevels]]];
-
-	loopBack = False;
+	loopBack = True;
 
   gifCommand = If[loopBack, 
   	"magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay ",
@@ -434,10 +520,8 @@ exportAnimation[] := Module[
   Print["Saved the video to " <> gifFolder <> "\\" <> gifFileName <> ".mp4"];
 ];
 
-faces = generateFaces[p, q];
+(* faces = generateFaces[p, q];
 
-adjacentFaces[f1_,f2_] := Length[Intersection[f1, f2, SameTest -> ApproxSamePoint]] == 2;
-adjacentFacesIndex[faces_, id1_, id2_] := adjacentFaces[faces[[id1]], faces[[id2]]];
 adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
 Print[adjMatrix];
 
@@ -448,74 +532,14 @@ rootFaceId = TreeData[tree];
 rootFaceCenter = Mean[faces[[rootFaceId]]];
 
 rotationSchedule = {};
-buildSchedule[t_, schedule_, level_] := 
-  Module[{subtrees, subtreeId, newSchedule},
-   newSchedule = schedule;
-   subtrees = TreeChildren[t];
-   For[subtreeId = 1, subtreeId <= Length[subtrees], subtreeId++,
-    subtree = subtrees[[subtreeId]];
-    subtreeAllData = Map[#[[1]] &, VertexList[TreeGraph[subtree]]];
-    newSchedule = 
-     Append[newSchedule, {TreeData[t], TreeData[subtree], level, 
-       subtreeAllData}];
-    newSchedule = buildSchedule[subtree, newSchedule, level + 1];
-    ];
-   newSchedule
-   ];
 
 rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
 Print[rotationSchedule];
-
-originalDihedralAngle = 0;
-
-rotatedFaces = faces;
-For[scheduleId = 1, scheduleId <= Length[rotationSchedule],scheduleId++,
-	schedule = rotationSchedule[[scheduleId]];
-	level = schedule[[3]];
-	If[level >= 1,
-		Print[schedule];
-		face1Id = schedule[[1]];
-		face2Id = schedule[[2]];
-		rotatedFaceIds = schedule[[4]];
-		face1 = rotatedFaces[[face1Id]];
-		face2 = rotatedFaces[[face2Id]];
-		pivot = Intersection[face1, face2, SameTest -> ApproxSamePoint];
-		If[Length[pivot] != 2,
-			Print["Unexpected error. Cannot find correct pivot"];
-			Print[schedule];
-			Print[pivot];
-			Exit[];
-		];
-
-		faceCenter1 = Mean[face1];
-		faceCenter2 = Mean[face2];
-		pivotCenter = Mean[pivot];
-		relativeFace1 = faceCenter1 - pivotCenter;
-		relativeFace2 = faceCenter2 - pivotCenter;
-
-		originalDihedralAngle = ArcCos[ Dot[relativeFace1, relativeFace2]/Norm[relativeFace1]/Norm[relativeFace2] ];
-		(* Print[originalDihedralAngle / Pi * 180]; *)
-
-		angleToFlat = Pi - originalDihedralAngle;
-
-		rotMatrix = RotationMatrix[angleToFlat / 100.0 * If[level >= 3, 100, If[level == 2, 50, 10]], {relativeFace2, relativeFace1}];
-		(* Print[rotMatrix]; *)
-
-		(* Print[{ scheduleId, ApproxSamePoint[relativeFace2.rotMatrix + relativeFace1, {0, 0, 0}] }]; *)
-		For[fid = 1, fid <= Length[rotatedFaceIds], fid++,
-			faceId = rotatedFaceIds[[fid]];
-			Print["rotating face " <> IntegerString[faceId]];
-			rotatedFace = rotatedFaces[[faceId]];
-			rotatedFace = Map[((# - pivotCenter).rotMatrix + pivotCenter)&, rotatedFace];
-			rotatedFaces[[faceId]] = rotatedFace;
-		];
-	];
-];
-
-exportFrame[rotatedFaces, 1, 0, 1, "test"];
+ *)
+(* exportFrame[faces, rotationSchedule, {10, 50, 100}, 1, 0, 1, "test"]; *)
 (* exportFrame[faces[[ {1,2,3,4,5,6,7,8,9,10,12} ]], 1, 0, 2, "test"]; *)
 
-(* exportAnimation[]; *)
+exportAnimation[];
 
 
 (* 
