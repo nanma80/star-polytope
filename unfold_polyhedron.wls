@@ -37,7 +37,8 @@ allColors = <|
 
 
 (* frameCount = 10; *)
-frameCount = 200;
+frameCount = 12;
+(* frameCount = 200; *)
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -314,7 +315,7 @@ stellateFace[halfEdges_, r_, level_] := Module[
 elements3D[faces_, stellationLevel_, spinAngle_, sig_] := Module[
 	{allEdges, edges, allVertices, vertices, ratio, selectedFaces, edgeGroups},
 
-	staticOrientation = RotationMatrix[{-rootFaceCenter, - lightSource}];
+	staticOrientation = RotationMatrix[{-rootFaceCenter, lightSource}];
 	rotation = RotationMatrix[spinAngle, {0, 0, 1}].staticOrientation;
 	selectedFaces = Map[(#.rotation) &, faces, {2}];
 	allEdges = Flatten[Map[getEdgesFromFace, selectedFaces], 1];
@@ -345,7 +346,7 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_] := Module[
 		elements,
 		ViewPoint -> {50, -50, -10},
 		ViewVertical -> {0, 0, 1},
-		PlotRange -> {{viewCenter[[1]]-range, viewCenter[[1]]+range}, {viewCenter[[2]]-range, viewCenter[[2]]+range}, {viewCenter[[3]]-range, viewCenter[[3]]+range}},
+		(* PlotRange -> {{viewCenter[[1]]-range, viewCenter[[1]]+range}, {viewCenter[[2]]-range, viewCenter[[2]]+range}, {viewCenter[[3]]-range, viewCenter[[3]]+range}}, *)
 		Lighting -> lighting
 	];
 
@@ -384,7 +385,12 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			originalDihedralAngle = ArcCos[ Dot[relativeFace1, relativeFace2]/Norm[relativeFace1]/Norm[relativeFace2] ];
 			(* Print[originalDihedralAngle / Pi * 180]; *)
 			angleToFlat = Pi - originalDihedralAngle;
-			rotMatrix = RotationMatrix[angleToFlat * foldPercents[[level]], {relativeFace2, relativeFace1}];
+			angleToStellate = -2 * originalDihedralAngle + Pi;
+
+			(* angleToTarget = angleToFlat; *)
+			angleToTarget = angleToStellate;
+
+			rotMatrix = RotationMatrix[angleToTarget * foldPercents[[level]], {relativeFace2, relativeFace1}];
 			(* Print[rotMatrix]; *)
 
 			(* Print[{ scheduleId, ApproxSamePoint[relativeFace2.rotMatrix + relativeFace1, {0, 0, 0}] }]; *)
@@ -410,6 +416,11 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	(* If[EvenQ[frameIndex] == False, Return[]]; *)
 
 	rotatedFaces = foldFaces[faces, rotationSchedule, foldPercents];
+	rotatedFaceCenters = Map[Mean, rotatedFaces];
+	rotatedFaceCentersTally = Tally[rotatedFaceCenters, ApproxSamePoint[#1, #2]&];
+	tallyCounts = Sort[Map[#[[2]]&, rotatedFaceCentersTally], Greater];
+	Print[tallyCounts];
+
 	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, -1];
 	testing = (outputFolderName == "test");
 
@@ -479,6 +490,10 @@ exportAnimation[] := Module[
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
 	spanningTree = FindSpanningTree[DirectedGraph[graph]];
 	tree = GraphTree[spanningTree];
+
+	(* manually constructed for {5,3} *)
+	tree = Tree[1, {Tree[2, {Tree[4, {Tree[11, {9, 5, 10, 12}]}]}], 3, 6, 7, 8}];
+
 	rootFaceId = TreeData[tree];
 	rootFaceCenter = Mean[faces[[rootFaceId]]];
 
