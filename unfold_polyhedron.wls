@@ -35,9 +35,9 @@ allColors = <|
 	5 -> Blue
 |>;
 
-
+frameCount = 2;
 (* frameCount = 10; *)
-frameCount = 12;
+(* frameCount = 12; *)
 (* frameCount = 200; *)
 
 argv = Rest @ $ScriptCommandLine;
@@ -418,8 +418,17 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	rotatedFaces = foldFaces[faces, rotationSchedule, foldPercents];
 	rotatedFaceCenters = Map[Mean, rotatedFaces];
 	rotatedFaceCentersTally = Tally[rotatedFaceCenters, ApproxSamePoint[#1, #2]&];
-	tallyCounts = Sort[Map[#[[2]]&, rotatedFaceCentersTally], Greater];
-	Print[tallyCounts];
+	faceTallyCounts = Sort[Map[#[[2]]&, rotatedFaceCentersTally], Greater];
+	Print["tallies"];
+	Print[faceTallyCounts];
+	Print[faceTallyCounts//Length];
+
+	rotatedEdges = Flatten[Map[getEdgesFromFace, rotatedFaces], 1];
+	rotatedEdgeCenters = Map[Mean, rotatedEdges];
+	rotatedEdgeCentersTally = Tally[rotatedEdgeCenters, ApproxSamePoint[#1, #2]&];
+	edgeTallyCounts = Sort[Map[#[[2]]&, rotatedEdgeCentersTally], Greater];
+	Print[edgeTallyCounts];
+	Print[edgeTallyCounts//Length];
 
 	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, -1];
 	testing = (outputFolderName == "test");
@@ -492,7 +501,7 @@ exportAnimation[] := Module[
 	tree = GraphTree[spanningTree];
 
 	(* manually constructed for {5,3} *)
-	tree = Tree[1, {Tree[2, {Tree[4, {Tree[11, {9, 5, 10, 12}]}]}], 3, 6, 7, 8}];
+	(* tree = Tree[1, {Tree[2, {Tree[4, {Tree[11, {9, 5, 10, 12}]}]}], 3, 6, 7, 8}]; *)
 
 	rootFaceId = TreeData[tree];
 	rootFaceCenter = Mean[faces[[rootFaceId]]];
@@ -511,6 +520,8 @@ exportAnimation[] := Module[
 		exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, 10}], 1, 0, frameIndex, outputFolderName];
 	];
 
+	Exit[];
+	
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
 	loopBack = True;
