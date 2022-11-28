@@ -35,8 +35,7 @@ allColors = <|
 	5 -> Blue
 |>;
 
-(* frameCount = 2; *)
-frameCount = 3;
+frameCount = 1;
 (* frameCount = 10; *)
 (* frameCount = 12; *)
 (* frameCount = 200; *)
@@ -345,7 +344,7 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_] := Module[
 
 	graph = Graphics3D[
 		elements,
-		ViewPoint -> {50, -50, -10},
+		ViewPoint -> {50, -50, 10},
 		ViewVertical -> {0, 0, 1},
 		(* PlotRange -> {{viewCenter[[1]]-range, viewCenter[[1]]+range}, {viewCenter[[2]]-range, viewCenter[[2]]+range}, {viewCenter[[3]]-range, viewCenter[[3]]+range}}, *)
 		Lighting -> lighting
@@ -388,8 +387,8 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = -2 * originalDihedralAngle + Pi;
 
-			angleToTarget = angleToFlat;
-			(* angleToTarget = angleToStellate; *)
+			(* angleToTarget = angleToFlat; *)
+			angleToTarget = angleToStellate;
 
 			rotMatrix = RotationMatrix[angleToTarget * foldPercents[[level]], {relativeFace2, relativeFace1}];
 			(* Print[rotMatrix]; *)
@@ -431,6 +430,13 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	Print[edgeTallyCounts];
 	Print[edgeTallyCounts//Length];
 
+	If[Length[faceTallyCounts] == 12,
+		Print["Found a good net"];
+		Print[Map[{#[[1]], #[[2]] }&, rotationSchedule]];
+		Exit[];
+	];
+
+	Return[];
 	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, -1];
 	testing = (outputFolderName == "test");
 
@@ -498,36 +504,43 @@ exportAnimation[] := Module[
 	Print[adjMatrix];
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
-	spanningTree = FindSpanningTree[DirectedGraph[graph]];
+	treesTopN = 100000 * 10;
+	trees = Select[TreeGraphQ[Graph@#] &]@Select[VertexCount@# == VertexCount[graph] &]@Subsets[EdgeList[graph], {VertexCount[graph] - 1}, treesTopN];
+	Print["Found trees as candidates: " <> IntegerString[Length[trees]]];
+	(* Exit[]; *)
+
+	For[treeId = 1, treeId <=Length[trees], treeId++,
+		Print["treeId: " <> IntegerString[treeId]];
+		tree = GraphTree[FindSpanningTree[DirectedGraph[trees[[treeId]]]]];
+
+		rootFaceId = TreeData[tree];
+		rootFaceCenter = Mean[faces[[rootFaceId]]];
+
+		rotationSchedule = {};
+
+		rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
+		Print[rotationSchedule];
+
+		(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
+		unfoldPercents = {1.0};
+
+		For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
+			unfoldPercent = unfoldPercents[[frameIndex]];
+			Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
+			(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
+			exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, 10}], 1, 0, frameIndex, outputFolderName];
+		];
+	];
+
+(* 	spanningTree = FindSpanningTree[DirectedGraph[graph]];
 	tree = GraphTree[spanningTree];
 
-	If[p == 5 && q == 3,
-		(* manually constructed for {5,3} by Rinus Roelofs. Two cups *)
-		(* tree = Tree[1, {Tree[2, {Tree[4, {Tree[11, {9, 5, 10, 12}]}]}], 3, 6, 7, 8}]; *)
+	(* manually constructed for {5,3} *)
+	tree = Tree[1, {Tree[2, {Tree[4, {Tree[11, {9, 5, 10, 12}]}]}], 3, 6, 7, 8}]; *)
 
-		(* Found by my script. Should be a good net *)
-		tree = Tree[1, {Tree[2, {Tree[9, {Tree[11, {Tree[4, {5}], Tree[10, {12}]}]}]}], Tree[3, {8}], 6, 7}];
-	];
-
-	rootFaceId = TreeData[tree];
-	rootFaceCenter = Mean[faces[[rootFaceId]]];
-
-	rotationSchedule = {};
-
-	rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
-	Print[rotationSchedule];
-
-	unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}];
-
-	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
-		unfoldPercent = unfoldPercents[[frameIndex]];
-		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
-		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-		exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, 10}], 1, 0, frameIndex, outputFolderName];
-	];
-
+	Print["cannot find any good net with treesTopN = " <> IntegerString[treesTopN]];
 	Exit[];
-
+	
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
 	loopBack = True;
@@ -579,3 +592,13 @@ exportAnimation[];
 for ($num = 69 ; $num -le 99 ; $num++) { cp spinning_frame_0068.png "spinning_frame_00$num.png" }
 
  *)
+
+
+
+(* 
+Found a good net:
+
+{{1, 2}, {2, 9}, {9, 11}, {11, 4}, {4, 5}, {11, 10}, {10, 12}, {1, 3}, {3, 8}, {1, 6}, {1, 7}} 
+
+
+*)
