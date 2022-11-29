@@ -32,10 +32,10 @@ lighting = {{"Point", White, lightSource}};
 stageCount = 2;
 
 (* frameCount = 2; *)
-frameCount = 5;
+(* frameCount = 5; *)
 (* frameCount = 10; *)
 (* frameCount = 12; *)
-(* frameCount = 150; *)
+frameCount = 150;
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -530,25 +530,27 @@ exportAnimation[] := Module[
 		unfoldPercents = Join[unfoldPercents, Map[Reverse , unfoldPercents - 1] ];
 	];
 	
+	unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]];
+
 	If[r > 1,
 		unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
 	];
 
 	Print[unfoldPercents];
-	(* Exit[]; *)
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-		exportFrame[faces, rotationSchedule, unfoldPercent, 1, -Pi/2-Pi/4, frameIndex, outputFolderName];
+		spinAngle = -Pi/2 - If[p == 4, Pi/6, Pi/4] - frameIndex/Length[unfoldPercents] * 2 * Pi;
+		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
 	(* Exit[]; *)
 
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
-	loopBack = True;
+	loopBack = False;
 
   gifCommand = If[loopBack, 
   	"magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay ",
