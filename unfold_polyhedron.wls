@@ -22,7 +22,6 @@ projectionRatio = .01;
 (* projectionRatio = 0.12; *)
 maxProjectionRatio = 0.1;
 
-(* stellationLevel = 0, no stellation. Original spherical polygon. = 1: full stellation *)
 stellationLevel = 1;
 
 imageSize = {4, 3} * 720 / 3;
@@ -32,13 +31,11 @@ lighting = {{"Point", White, lightSource}};
 (* stageCount = 1; *)
 stageCount = 2;
 
-allColors = Join[{Lighter[Blue, 0.3], Lighter[Green, 0.4], Orange, Purple, Yellow, Cyan, Magenta, Brown, Pink, Red, Blue, Green}, RandomColor[100]];
-
 (* frameCount = 2; *)
-(* frameCount = 5; *)
+frameCount = 5;
 (* frameCount = 10; *)
 (* frameCount = 12; *)
-frameCount = 150;
+(* frameCount = 150; *)
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -50,6 +47,11 @@ If[Length[argv] >= 3,
 	r = ToExpression[argv[[3]]],
 	r = 1; (* default *)
 ];
+
+If[p <= 4, r = 1];
+If[p == 4, stageCount = 1];
+
+allColors = Join[{Lighter[Blue, 0.3], Lighter[Green, 0.4], Orange, Purple, Yellow, Cyan, Magenta, Brown, Pink, Red, Blue, Green}, RandomColor[100]];
 
 (* faceColor = allColors[p]; *)
 
@@ -132,8 +134,9 @@ splitFaceToTriangles[face_, faceCenter_] := Module[
 	output
 ];
 
-scaleFace[face_, ratio_, stellationLevel_] := Module[
-	{edges, edgeOrders},
+scaleFace[face_, stellationLevel_] := Module[
+	{ratio, edges, edgeOrders},
+	ratio = Tan[stellationLevel Pi/p]/Tan[Pi/p];
 	edges = Map[scale[#, ratio]&, getEdgesFromFace[face]];
 	edgeOrders = Table[Mod[stellationLevel * k, p]+1, {k, 0, p-1}];
 	(* edges[[edgeOrders]] *)
@@ -319,6 +322,7 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 	staticOrientation = RotationMatrix[{rootFaceCenter, {0, 0, -1}}];
 	rotation = RotationMatrix[spinAngle, {0, 0, 1}].staticOrientation;
 	selectedFaces = Map[(rotation.#) &, faces, {2}];
+	selectedFaces = Map[scaleFace[#, r]&, selectedFaces];
 	allEdges = Flatten[Map[getEdgesFromFace, selectedFaces], 1];
 	edges = Union[allEdges , SameTest -> sameEdge];
 
@@ -430,7 +434,8 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	Print[edgeTallyCounts];
 	Print[edgeTallyCounts//Length];
 
-	range = If[Max[foldPercents] > 0, Max[foldPercents] + 1, 1];
+	range = If[Max[foldPercents] > 0, Max[foldPercents] + 1, 1] + 0.4 (r - 1);
+
 	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, -1, range];
 	testing = (outputFolderName == "test");
 
@@ -489,7 +494,7 @@ exportAnimation[] := Module[
 	outputFolder = FileNameJoin[{imageFolder, outputFolderName}];
 	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
 
-	gifFileName = shapeWithParams <> "_stellating";
+	gifFileName = shapeWithParams;
 	gifFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
@@ -524,6 +529,11 @@ exportAnimation[] := Module[
 	If[stageCount == 2,
 		unfoldPercents = Join[unfoldPercents, Map[Reverse , unfoldPercents - 1] ];
 	];
+	
+	If[r > 1,
+		unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
+	];
+
 	Print[unfoldPercents];
 	(* Exit[]; *)
 
