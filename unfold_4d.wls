@@ -273,7 +273,8 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     projectedActiveFaces = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, activeFaces, {2}];
     range = Max[Flatten[activeFaces]] * 2.3;
     range = Max[Flatten[activeFaces]] * 1.4; (* 120-cell *)
-    range = 6.0;
+
+    range = If[negativeFold, 1.3, 6];
     viewPoint = {50, -50, 50};
 
     If[shape == "polytope_3_4_3", 
@@ -312,7 +313,6 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     ];
 
 
-
     Print["draw face count: " <> IntegerString[Length[graphFaces]]];
     AppendTo[graphElements, graphFaces];
     (* thickness = 1.0; *)
@@ -330,6 +330,7 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
 		Boxed -> False,
 		ViewAngle -> range/Norm[viewPoint]/100/6.7
 	];
+
 
 	If[exportToPov,
 		If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
@@ -531,9 +532,10 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			relativeCell2 = cellCenter2 - pivotCenter;
 			
 			originalDihedralAngle = ArcCos[ Dot[relativeCell1, relativeCell2]/Norm[relativeCell1]/Norm[relativeCell2] ];
-			(* Print[originalDihedralAngle / Pi * 180]; *)
+			(* Print[originalDihedralAngle / Pi * 180.]; *)
+			grand120CellDihedralAngle = 72/180 * Pi;
 			angleToFlat = Pi - originalDihedralAngle;
-			angleToStellate = -2 * originalDihedralAngle + Pi;
+			angleToStellate = grand120CellDihedralAngle - originalDihedralAngle;
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
 			rotMatrix = RotationMatrix[angleToTarget * Abs[perc], {relativeCell2, relativeCell1}];
@@ -547,13 +549,21 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
+	activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
+	activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
+	activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
+	Print["Element counts: cells, faces, edges, vertices:"];
+	Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
+	(* negative fold, random tree {120, 629, 707, 119} *)
 	rotatedCells
 ];
 
-For[frameId = 1, frameId <= 10, frameId ++,
-	foldPercents = Table[0.1 * frameId, {k, 5}];
+negativeFold = True;
+
+For[frameId = 10, frameId <= 10, frameId ++,
+	foldPercents = Table[If[negativeFold, -1, 1] * 0.1 * frameId, {k, 10}];
 	rotatedCells = foldCells[cells, rotationSchedule, foldPercents];
-	exportImage[shape, rotatedCells, 0.4, 0, frameId];
+	exportImage[shape, rotatedCells, 0.4, 0, frameId + If[negativeFold, 100, 0]];
 ];
 
 
