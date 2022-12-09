@@ -251,19 +251,11 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     wDistance = Max[Flatten[activeFaces]] * 1.05 * 1000000;
     (* Print[wDistance]; *)
 
-    rotation3D = IdentityMatrix[3];
-    (* for 600 cell, the following will lead to 60 rings. Each ring has 10 cells *)
-    If[shape == "polytope_5_3_3_cell120" || shape == "polytope_3_3_5_cell600", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
-    If[shape == "polytope_3_4_3" || shape == "bitruncated_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
 
-    fullProjectionMatrix = ArrayFlatten[
-    	{{rotation3D, 0}, {0, 1}}
-	];
-
-	fullProjectionMatrix = RotationMatrix[{rootCellCenter, {0, 0, 0, 1}}];
+	(* fullProjectionMatrix = RotationMatrix[{rootCellCenter, {0, 0, 0, 1}}]; *)
 	(* If[shape == "polytope_3_3_5_cell600", fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}] ]; *)
 
-	fullProjectionMatrix = doubleRotationMatrix[theta].fullProjectionMatrix;
+	fullProjectionMatrix = doubleRotationMatrix[theta];
 
 (* 	perspectiveProjection[activeCellsCenters[[11]], fullProjectionMatrix, wDistance]
 	centers = Table[ perspectiveProjection[activeCellsCenters[[k]], fullProjectionMatrix, wDistance], {k, 120}]
@@ -283,9 +275,13 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     If[shape == "polytope_3_3_5_cell600", 
     	range = Max[Flatten[activeFaces]] * 1.5;
     	viewPoint = {1.2, -0.7, 0.5}];
+    If[shape == "polytope_5_3_3_cell120", 
+    	range = Max[Flatten[activeFaces]] * 0.8;
+    	viewPoint = {1.2, -0.7, 0.5}];
 	If[shape == "bitruncated_3_4_3", 
     	range = Max[Flatten[activeFaces]] * 1.1;
     	viewPoint = {1.2, -0.7, 0.5}];
+    Print["range"];
     Print[range];
 
 	rotatedActiveCellsCenters = Map[fullProjectionMatrix.#&, activeCellsCenters];
@@ -302,6 +298,9 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     graphFaces = {};
 
     For[k = 1, k <= Length[activeFaces], k++,
+	    cellId = Floor[(k - 1)/faceCellRatio] + 1;
+	    color = cellColors[[cellId]];
+
 		AppendTo[graphFaces,
 			{
 				Opacity[1],
@@ -323,12 +322,12 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
 
 	graph = Graphics3D[
 		graphElements,
-		ViewPoint -> viewPoint,
+		ViewPoint -> viewPoint * 100,
 		ViewVertical -> {0, 0, 1},
 		PlotRange -> {{-range, range}, {-range, range}, {-range, range}},
 		(* Lighting -> lighting, *)
-		Boxed -> False,
-		ViewAngle -> range/Norm[viewPoint]/100/6.7
+		Boxed -> False
+		(* ViewAngle -> range/Norm[viewPoint]/100/6.7 *)
 	];
 
 
@@ -412,7 +411,7 @@ exportAnimation[shape_] := Module[
     Print[mp4Command];
     Run[mp4Command];
     Print["Saved the video to " <> gifFolder <> "\\" <> gifFileName <> ".mp4"];
-]
+];
 
 (* For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	shape = shapes[[shapeIndex]];	
@@ -491,16 +490,35 @@ getRotationSchedule[cells_] := Module[
 
 randomRotationSchedule = {{1,8,1,{24,50,56,57,58,101,69,11,23,26,64,67,103,9,114,68,18,43,7,20,91,47,21,42,6,104,48,25,110,8}},{8,9,2,{24,50,56,57,58,101,69,11,23,26,64,67,103,9}},{9,11,3,{24,50,56,57,58,101,69,11}},{11,24,4,{24}},{11,50,4,{50}},{11,56,4,{56}},{11,57,4,{57}},{11,58,4,{58}},{11,69,4,{101,69}},{69,101,5,{101}},{9,23,3,{23}},{9,26,3,{26}},{9,64,3,{64}},{9,67,3,{67}},{9,103,3,{103}},{8,18,2,{114,68,18}},{18,68,3,{114,68}},{68,114,4,{114}},{8,20,2,{43,7,20}},{20,7,3,{43,7}},{7,43,4,{43}},{8,21,2,{91,47,21}},{21,47,3,{91,47}},{47,91,4,{91}},{8,104,2,{42,6,104}},{104,6,3,{42,6}},{6,42,4,{42}},{8,110,2,{48,25,110}},{110,25,3,{48,25}},{25,48,4,{48}},{1,12,1,{66,15,31,84,60,3,46,111,13,33,116,38,16,78,81,112,27,99,85,28,95,83,51,12}},{12,3,2,{66,15,31,84,60,3}},{3,15,3,{66,15}},{15,66,4,{66}},{3,31,3,{31}},{3,60,3,{84,60}},{60,84,4,{84}},{12,13,2,{46,111,13}},{13,111,3,{46,111}},{111,46,4,{46}},{12,16,2,{33,116,38,16}},{16,33,3,{33}},{16,38,3,{116,38}},{38,116,4,{116}},{12,27,2,{78,81,112,27}},{27,78,3,{78}},{27,112,3,{81,112}},{112,81,4,{81}},{12,28,2,{99,85,28}},{28,85,3,{99,85}},{85,99,4,{99}},{12,51,2,{95,83,51}},{51,83,3,{95,83}},{83,95,4,{95}},{1,14,1,{94,40,4,49,22,17,14}},{14,4,2,{94,40,4}},{4,40,3,{94,40}},{40,94,4,{94}},{14,17,2,{49,22,17}},{17,22,3,{49,22}},{22,49,4,{49}},{1,19,1,{74,45,73,36,93,37,107,88,39,19}},{19,36,2,{74,45,73,36}},{36,45,3,{74,45}},{45,74,4,{74}},{36,73,3,{73}},{19,37,2,{93,37}},{37,93,3,{93}},{19,39,2,{107,88,39}},{39,88,3,{107,88}},{88,107,4,{107}},{1,29,1,{120,118,70,86,106,71,105,82,119,100,87,29}},{29,70,2,{120,118,70}},{70,118,3,{120,118}},{118,120,4,{120}},{29,71,2,{86,106,71}},{71,86,3,{86}},{71,106,3,{106}},{29,82,2,{105,82}},{82,105,3,{105}},{29,87,2,{119,100,87}},{87,100,3,{119,100}},{100,119,4,{119}},{1,52,1,{117,41,5,89,79,115,30,80,34,76,52}},{52,5,2,{117,41,5}},{5,41,3,{117,41}},{41,117,4,{117}},{52,30,2,{89,79,115,30}},{30,79,3,{89,79}},{79,89,4,{89}},{30,115,3,{115}},{52,34,2,{80,34}},{34,80,3,{80}},{52,76,2,{76}},{1,53,1,{90,72,32,53}},{53,32,2,{90,72,32}},{32,72,3,{90,72}},{72,90,4,{90}},{1,54,1,{62,108,109,113,54}},{54,62,2,{62}},{54,113,2,{108,109,113}},{113,109,3,{108,109}},{109,108,4,{108}},{1,59,1,{97,96,98,59}},{59,98,2,{97,96,98}},{98,96,3,{97,96}},{96,97,4,{97}},{1,61,1,{77,44,35,61}},{61,35,2,{77,44,35}},{35,44,3,{77,44}},{44,77,4,{77}},{1,65,1,{92,75,63,65}},{65,63,2,{92,75,63}},{63,75,3,{92,75}},{75,92,4,{92}},{1,102,1,{55,10,2,102}},{102,2,2,{55,10,2}},{2,10,3,{55,10}},{10,55,4,{55}}};
 rootCellId = 1;
-rotationSchedule = randomRotationSchedule;
 
-(* rotationSchedule = getRotationSchedule[cells]; *)
+manualRotationSchedule = {{41,31,1,{33,111,15,31}},{31,15,2,{33,111,15}},{15,111,3,{33,111}},{111,33,4,{33}},{41,80,1,{40,73,88,86,80}},{80,86,2,{40,73,88,86}},{86,88,3,{40,73,88}},{88,73,4,{40,73}},{73,40,5,{40}},{41,5,1,{43,22,25,2,94,100,106,113,34,99,118,82,54,61,90,49,24,103,8,9,104,5}},{5,2,2,{43,22,25,2}},{2,25,3,{43,22,25}},{25,22,4,{43,22}},{22,43,5,{43}},{5,34,2,{94,100,106,113,34}},{34,113,3,{94,100,106,113}},{113,106,4,{94,100,106}},{106,100,5,{94,100}},{100,94,6,{94}},{5,104,2,{99,118,82,54,61,90,49,24,103,8,9,104}},{104,61,3,{99,118,82,54,61}},{61,54,4,{99,118,82,54}},{54,82,5,{99,118,82}},{82,118,6,{99,118}},{118,99,7,{99}},{104,103,3,{90,49,24,103}},{103,24,4,{90,49,24}},{24,49,5,{90,49}},{49,90,6,{90}},{104,8,3,{8}},{104,9,3,{9}},{41,6,1,{72,46,48,10,93,87,71,62,35,85,116,81,55,70,29,65,18,67,11,69,56,6}},{6,10,2,{72,46,48,10}},{10,48,3,{72,46,48}},{48,46,4,{72,46}},{46,72,5,{72}},{6,35,2,{93,87,71,62,35}},{35,62,3,{93,87,71,62}},{62,71,4,{93,87,71}},{71,87,5,{93,87}},{87,93,6,{93}},{6,56,2,{85,116,81,55,70,29,65,18,67,11,69,56}},{56,55,3,{85,116,81,55}},{55,81,4,{85,116,81}},{81,116,5,{85,116}},{116,85,6,{85}},{56,67,3,{70,29,65,18,67}},{67,18,4,{70,29,65,18}},{18,65,5,{70,29,65}},{65,29,6,{70,29}},{29,70,7,{70}},{56,11,3,{11}},{56,69,3,{69}},{41,42,1,{37,39,63,68,44,32,38,112,66,19,21,64,58,77,53,28,78,84,101,97,89,42}},{42,44,2,{37,39,63,68,44}},{44,68,3,{37,39,63,68}},{68,63,4,{37,39,63}},{63,39,5,{37,39}},{39,37,6,{37}},{42,66,2,{32,38,112,66}},{66,112,3,{32,38,112}},{112,38,4,{32,38}},{38,32,5,{32}},{42,89,2,{19,21,64,58,77,53,28,78,84,101,97,89}},{89,77,3,{19,21,64,58,77}},{77,58,4,{19,21,64,58}},{58,64,5,{19,21,64}},{64,21,6,{19,21}},{21,19,7,{19}},{89,84,3,{53,28,78,84}},{84,78,4,{53,28,78}},{78,28,5,{53,28}},{28,53,6,{53}},{89,101,3,{101}},{89,97,3,{97}},{41,79,1,{4,16,27,60,36,47,75,114,117,20,14,12,51,23,50,92,108,95,98,96,83,79}},{79,60,2,{4,16,27,60}},{60,27,3,{4,16,27}},{27,16,4,{4,16}},{16,4,5,{4}},{79,117,2,{36,47,75,114,117}},{117,114,3,{36,47,75,114}},{114,75,4,{36,47,75}},{75,47,5,{36,47}},{47,36,6,{36}},{79,83,2,{20,14,12,51,23,50,92,108,95,98,96,83}},{83,51,3,{20,14,12,51}},{51,12,4,{20,14,12}},{12,14,5,{20,14}},{14,20,6,{20}},{83,95,3,{23,50,92,108,95}},{95,108,4,{23,50,92,108}},{108,92,5,{23,50,92}},{92,50,6,{23,50}},{50,23,7,{23}},{83,98,3,{98}},{83,96,3,{96}},{41,30,1,{7,17,13,3,45,91,107,109,115,74,119,120,105,76,57,26,110,102,1,59,52,30}},{30,3,2,{7,17,13,3}},{3,13,3,{7,17,13}},{13,17,4,{7,17}},{17,7,5,{7}},{30,115,2,{45,91,107,109,115}},{115,109,3,{45,91,107,109}},{109,107,4,{45,91,107}},{107,91,5,{45,91}},{91,45,6,{45}},{30,52,2,{74,119,120,105,76,57,26,110,102,1,59,52}},{52,76,3,{74,119,120,105,76}},{76,105,4,{74,119,120,105}},{105,120,5,{74,119,120}},{120,119,6,{74,119}},{119,74,7,{74}},{52,102,3,{57,26,110,102}},{102,110,4,{57,26,110}},{110,26,5,{57,26}},{26,57,6,{57}},{52,1,3,{1}},{52,59,3,{59}}};
+rootCellId = 41;
+(* rotationSchedule = randomRotationSchedule; *)
+rotationSchedule = manualRotationSchedule;
 
-rootCellCenter = getCellCenter[cells[[rootCellId]]];
+
+rotation3D = IdentityMatrix[3];
+(* for 600 cell, the following will lead to 60 rings. Each ring has 10 cells *)
+If[shape == "polytope_5_3_3_cell120" || shape == "polytope_3_3_5_cell600", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
+If[shape == "polytope_3_4_3" || shape == "bitruncated_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
+
+fullProjectionMatrix = ArrayFlatten[
+	{{rotation3D, 0}, {0, 1}}
+];
+
+(* fullProjectionMatrix = RotationMatrix[{rootCellCenter, {0, 0, 0, 1}}]; *)
+(* If[shape == "polytope_3_3_5_cell600", fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}] ]; *)
+
+cells = Map[#.Transpose[fullProjectionMatrix] &, cells, {2}];
+cellCenters = Map[getCellCenter, cells];
+cellColors = Map[getHue[mapHopfFibration[#]]&, cellCenters];
+
+(* rootCellCenter = getCellCenter[cells[[rootCellId]]]; *)
 (* Print[rootCellCenter//N]; *)
 (* Exit[]; *)
 
 maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
-Print[maxLevel];
+(* Print[maxLevel]; *)
 
 foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	{originalDihedralAngle, rotatedCells, scheduleId, level, schedule, cell1Id, cell2Id, rotatedCellIds},
@@ -549,21 +567,27 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
-	activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
-	activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
-	activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
-	Print["Element counts: cells, faces, edges, vertices:"];
-	Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
+	If[negativeFold && Mean[foldPercents] == -1 && False,
+		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
+		activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
+		activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
+		Print["Element counts: cells, faces, edges, vertices:"];
+		Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
+	];
+
 	(* negative fold, random tree {120, 629, 707, 119} *)
+	(* negative fold, manual tree {120, 530, 690, 120} *)
+	(* ideal case: {120, 720, 720, 120} *)
 	rotatedCells
 ];
 
 negativeFold = True;
+(* negativeFold = False; *)
 
-For[frameId = 10, frameId <= 10, frameId ++,
+For[frameId = 10, frameId <= 10, frameId += 1,
 	foldPercents = Table[If[negativeFold, -1, 1] * 0.1 * frameId, {k, 10}];
 	rotatedCells = foldCells[cells, rotationSchedule, foldPercents];
-	exportImage[shape, rotatedCells, 0.4, 0, frameId + If[negativeFold, 100, 0]];
+	exportImage[shape, rotatedCells, 0.01, 0, frameId + If[negativeFold, 100, 0]];
 ];
 
 
