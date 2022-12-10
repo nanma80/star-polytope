@@ -495,11 +495,12 @@ manualRotationSchedule = {{41,31,1,{33,111,15,31}},{31,15,2,{33,111,15}},{15,111
 
 manualRotationSchedule2 = {{41,31,1,{33,111,15,31}},{31,15,2,{33,111,15}},{15,111,3,{33,111}},{111,33,4,{33}},{41,80,1,{40,73,88,86,80}},{80,86,2,{40,73,88,86}},{86,88,3,{40,73,88}},{88,73,4,{40,73}},{73,40,5,{40}},{41,5,1,{43,22,25,2,94,100,106,113,34,99,118,82,54,61,90,49,24,103,104,5}},{5,2,2,{43,22,25,2}},{2,25,3,{43,22,25}},{25,22,4,{43,22}},{22,43,5,{43}},{5,34,2,{94,100,106,113,34}},{34,113,3,{94,100,106,113}},{113,106,4,{94,100,106}},{106,100,5,{94,100}},{100,94,6,{94}},{5,104,2,{99,118,82,54,61,90,49,24,103,104}},{104,61,3,{99,118,82,54,61}},{61,54,4,{99,118,82,54}},{54,82,5,{99,118,82}},{82,118,6,{99,118}},{118,99,7,{99}},{104,103,3,{90,49,24,103}},{103,24,4,{90,49,24}},{24,49,5,{90,49}},{49,90,6,{90}},{41,6,1,{72,46,48,10,93,87,71,62,35,85,116,81,55,70,29,65,18,67,56,6}},{6,10,2,{72,46,48,10}},{10,48,3,{72,46,48}},{48,46,4,{72,46}},{46,72,5,{72}},{6,35,2,{93,87,71,62,35}},{35,62,3,{93,87,71,62}},{62,71,4,{93,87,71}},{71,87,5,{93,87}},{87,93,6,{93}},{6,56,2,{85,116,81,55,70,29,65,18,67,56}},{56,55,3,{85,116,81,55}},{55,81,4,{85,116,81}},{81,116,5,{85,116}},{116,85,6,{85}},{56,67,3,{70,29,65,18,67}},{67,18,4,{70,29,65,18}},{18,65,5,{70,29,65}},{65,29,6,{70,29}},{29,70,7,{70}},{41,42,1,{37,39,63,68,44,32,38,112,66,19,21,64,58,77,53,28,78,84,89,42}},{42,44,2,{37,39,63,68,44}},{44,68,3,{37,39,63,68}},{68,63,4,{37,39,63}},{63,39,5,{37,39}},{39,37,6,{37}},{42,66,2,{32,38,112,66}},{66,112,3,{32,38,112}},{112,38,4,{32,38}},{38,32,5,{32}},{42,89,2,{19,21,64,58,77,53,28,78,84,89}},{89,77,3,{19,21,64,58,77}},{77,58,4,{19,21,64,58}},{58,64,5,{19,21,64}},{64,21,6,{19,21}},{21,19,7,{19}},{89,84,3,{53,28,78,84}},{84,78,4,{53,28,78}},{78,28,5,{53,28}},{28,53,6,{53}},{41,79,1,{4,16,27,60,36,47,75,114,117,20,14,12,51,23,50,92,108,95,83,79}},{79,60,2,{4,16,27,60}},{60,27,3,{4,16,27}},{27,16,4,{4,16}},{16,4,5,{4}},{79,117,2,{36,47,75,114,117}},{117,114,3,{36,47,75,114}},{114,75,4,{36,47,75}},{75,47,5,{36,47}},{47,36,6,{36}},{79,83,2,{20,14,12,51,23,50,92,108,95,83}},{83,51,3,{20,14,12,51}},{51,12,4,{20,14,12}},{12,14,5,{20,14}},{14,20,6,{20}},{83,95,3,{23,50,92,108,95}},{95,108,4,{23,50,92,108}},{108,92,5,{23,50,92}},{92,50,6,{23,50}},{50,23,7,{23}},{41,30,1,{7,17,13,3,45,91,107,109,115,74,119,120,105,76,57,26,110,102,11,9,8,1,69,101,97,96,98,59,52,30}},{30,3,2,{7,17,13,3}},{3,13,3,{7,17,13}},{13,17,4,{7,17}},{17,7,5,{7}},{30,115,2,{45,91,107,109,115}},{115,109,3,{45,91,107,109}},{109,107,4,{45,91,107}},{107,91,5,{45,91}},{91,45,6,{45}},{30,52,2,{74,119,120,105,76,57,26,110,102,11,9,8,1,69,101,97,96,98,59,52}},{52,76,3,{74,119,120,105,76}},{76,105,4,{74,119,120,105}},{105,120,5,{74,119,120}},{120,119,6,{74,119}},{119,74,7,{74}},{52,102,3,{57,26,110,102}},{102,110,4,{57,26,110}},{110,26,5,{57,26}},{26,57,6,{57}},{52,59,3,{11,9,8,1,69,101,97,96,98,59}},{59,1,4,{11,9,8,1}},{1,8,5,{11,9,8}},{8,9,6,{11,9}},{9,11,7,{11}},{59,98,4,{69,101,97,96,98}},{98,96,5,{69,101,97,96}},{96,97,6,{69,101,97}},{97,101,7,{69,101}},{101,69,8,{69}}};
 
+
+
 rootCellId = 41;
 (* rotationSchedule = randomRotationSchedule; *)
 (* rotationSchedule = manualRotationSchedule; *)
 rotationSchedule = manualRotationSchedule2;
-
 
 rotation3D = IdentityMatrix[3];
 (* for 600 cell, the following will lead to 60 rings. Each ring has 10 cells *)
@@ -530,10 +531,10 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	rotatedCells = cells;
 
 	For[scheduleId = 1, scheduleId <= Length[rotationSchedule], scheduleId++,
+		(* Print["scheduleId " <> IntegerString[scheduleId] <> " out of " <> IntegerString[Length[rotationSchedule]]]; *)
 		schedule = rotationSchedule[[scheduleId]];
 		level = schedule[[3]];
 		If[level >= 1,
-			(* Print[schedule]; *)
 			cell1Id = schedule[[1]];
 			cell2Id = schedule[[2]];
 			rotatedCellIds = schedule[[4]];
@@ -553,7 +554,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			relativeCell1 = cellCenter1 - pivotCenter;
 			relativeCell2 = cellCenter2 - pivotCenter;
 			
-			originalDihedralAngle = ArcCos[ Dot[relativeCell1, relativeCell2]/Norm[relativeCell1]/Norm[relativeCell2] ];
+			originalDihedralAngle = ArcCos[ Dot[relativeCell1//N, relativeCell2]/Norm[relativeCell1//N]/Norm[relativeCell2//N] ];
 			(* Print[originalDihedralAngle / Pi * 180.]; *)
 			grand120CellDihedralAngle = 72/180 * Pi;
 			angleToFlat = Pi - originalDihedralAngle;
@@ -561,7 +562,6 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
 			rotMatrix = RotationMatrix[angleToTarget * Abs[perc], {relativeCell2, relativeCell1}];
-
 			For[cid = 1, cid <= Length[rotatedCellIds], cid++,
 				cellId = rotatedCellIds[[cid]];
 				rotatedCell = rotatedCells[[cellId]];
@@ -571,13 +571,36 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
-	If[negativeFold && Mean[foldPercents] == -1,
-		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
+	activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
+	If[Length[activeFaces] == 720,
 		activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
-		activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
-		Print["Element counts: cells, faces, edges, vertices:"];
-		Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
+		If[Length[activeEdges] == 720,
+			activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
+			If[Length[activeVertices] == 120,
+				Print["Found a good net"];
+				Print["Element counts: cells, faces, edges, vertices:"];
+				Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
+				Print[rotationSchedule];
+				Exit[];
+			];
+		];
 	];
+
+	If[Length[activeFaces] > maxFaceCount,
+		maxFaceCount = Length[activeFaces];
+	];
+
+	If[Length[activeEdges] > maxEdgeCount,
+		maxEdgeCount = Length[activeEdges];
+	];
+
+	Print["Found a bad net"];
+	(* Print["Element counts: cells, faces, edges, vertices:"]; *)
+	Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
+	Print[{maxFaceCount, maxEdgeCount}];
+	(* Print[rotationSchedule]; *)
+
+	
 
 	(* negative fold, random tree {120, 629, 707, 119} *)
 	(* negative fold, manual tree {120, 530, 690, 120} *)
@@ -585,6 +608,103 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	(* ideal case: {120, 720, 720, 120} *)
 	rotatedCells
 ];
+
+orientedCellCenters = cellCenters;
+orientedCellCentersMap = <||>;
+For[cid = 1, cid <= Length[cellCenters], cid++,
+  cellCenter = cellCenters[[cid]];
+  orientedCellCentersMap[Round[cellCenter, epsilon]] = cid;
+  ];
+
+rotatedCids = 
+  Table[orientedCellCentersMap[
+    Round[cellCenters[[cid]].doubleRotationMatrix[k Pi/5], 
+     epsilon]], {cid, 1, 120}, {k, -4, 5}];
+orbits = Map[#[[1]] &, Tally[rotatedCids, Sort[#1] == Sort[#2] &]];
+
+objectiveDirection1 = {0, 0.000, 0.01, 1};
+objectiveDirection2 = {0.01, 1, 0, 0};
+subgraphIds = {};
+orbitSeeds = {};
+For[orbitId = 1, orbitId <= Length[orbits], orbitId++,
+  orbit = orbits[[orbitId]];
+  minW = Min[
+    Map[Min[orientedCellCenters[[#]] . objectiveDirection1, 
+       orientedCellCenters[[#]] . objectiveDirection2] &, orbit]];
+  minWIds = 
+   Select[orbit, 
+    Abs[Min[orientedCellCenters[[#]] . objectiveDirection1, 
+         orientedCellCenters[[#]] . objectiveDirection2] - minW] < 
+      epsilon &];
+  subgraphIds = Join[subgraphIds, minWIds];
+  AppendTo[orbitSeeds, minWIds];
+];
+
+edges = {};
+For[subId1 = 1, subId1 <= Length[subgraphIds] - 1, subId1++,
+  For[subId2 = subId1 + 1, subId2 <= Length[subgraphIds], subId2++,
+    id1 = subgraphIds[[subId1]];
+    id2 = subgraphIds[[subId2]];
+    If[adjacentCellsIndex[cells, id1, id2],
+     AppendTo[edges, id1 \[UndirectedEdge] id2];
+     ];
+    ];
+  ];
+
+subgraph = Graph[subgraphIds, edges, VertexLabels -> "Name"];
+
+edgesInOrbits = {};
+For[orbitId = 1, orbitId <= Length[orbitSeeds], orbitId++,
+  orbitSeed = orbitSeeds[[orbitId]];
+  If[Length[orbitSeed] > 1, Continue[]];
+  orbitIds = 
+   Table[orientedCellCentersMap[
+     Round[orientedCellCenters[[orbitSeed[[1]]]] . 
+       doubleRotationMatrix[k Pi/5], epsilon]], {k, -4, 5}];
+  orbitEdges = 
+   Table[UndirectedEdge[orbitIds[[k]], orbitIds[[k + 1]]], {k, 
+     Length[orbitIds] - 1}];
+  edgesInOrbits = Join[edgesInOrbits, orbitEdges];
+];
+
+
+(* topN = 1000; *)
+topN = 705432;
+treeCandidates = 
+  Select[TreeGraphQ[Graph@#] &]@
+   Select[VertexCount@# == VertexCount[subgraph] &]@
+    Subsets[EdgeList[subgraph], {VertexCount[subgraph] - 1}, topN];
+Print["Found trees as candidates: " <> IntegerString[Length[treeCandidates]]];
+
+maxFaceCount = -1;
+maxEdgeCount = -1;
+
+For[candidateId = 1, candidateId <= Length[treeCandidates], candidateId++,
+	If[candidateId <= 828, 
+		Continue[];
+	];
+
+	Print["candidateId = " <> IntegerString[candidateId]];
+	combinedGraph = Graph[Join[treeCandidates[[candidateId]], edgesInOrbits]];
+	If[TreeGraphQ[combinedGraph] == False,
+		Print["unexpected: combined graph is not a tree"];
+		Exit[];
+	];
+	combinedTree = GraphTree[combinedGraph, 41];
+	rotationSchedule = {};
+	rotationSchedule = buildSchedule[combinedTree, rotationSchedule, 1];
+	maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
+	foldPercents = Table[-1, {k, maxLevel}];
+	rotatedCells = foldCells[cells, rotationSchedule, foldPercents];
+];
+
+
+
+
+Exit[];
+
+
+
 
 (* negativeFold = True; *)
 negativeFold = False;
