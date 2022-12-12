@@ -571,33 +571,44 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
-	activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
-	If[Length[activeFaces] == 720,
-		activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
-		If[Length[activeEdges] == 720,
-			activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
-			If[Length[activeVertices] == 120,
-				Print["Found a good net"];
-				Print["Element counts: cells, faces, edges, vertices:"];
-				Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
-				Print[rotationSchedule];
-				Exit[];
+	uniqueCenters = Map[getCellCenter, rotatedCells];
+	uniqueCenters = Union[uniqueCenters, SameTest -> ApproxSamePoint];
+	If[Length[uniqueCenters] == 120 || True,
+		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
+		If[Length[activeFaces] == 720 || True,
+			activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
+			If[Length[activeEdges] == 720 || True,
+				activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
+				If[Length[activeVertices] == 120 || True,
+					Print["Found a good net"];
+					Print["Element counts: cells, faces, edges, vertices:"];
+					Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
+					Print[rotationSchedule];
+					Exit[];
+				];
 			];
 		];
 	];
 
+	If[Length[uniqueCenters] > maxCellCount,
+		maxCellCount = Length[uniqueCenters];
+		maxCellId = candidateId;
+	];
+
 	If[Length[activeFaces] > maxFaceCount,
 		maxFaceCount = Length[activeFaces];
+		maxFaceId = candidateId;
 	];
 
 	If[Length[activeEdges] > maxEdgeCount,
 		maxEdgeCount = Length[activeEdges];
+		maxEdgeId = candidateId;
 	];
 
 	Print["Found a bad net"];
 	(* Print["Element counts: cells, faces, edges, vertices:"]; *)
-	Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
-	Print[{maxFaceCount, maxEdgeCount}];
+	Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
+	Print[{maxCellCount, maxFaceCount, maxEdgeCount, maxCellId, maxFaceId, maxEdgeId}];
 	(* Print[rotationSchedule]; *)
 
 	
@@ -676,15 +687,23 @@ treeCandidates =
     Subsets[EdgeList[subgraph], {VertexCount[subgraph] - 1}, topN];
 Print["Found trees as candidates: " <> IntegerString[Length[treeCandidates]]];
 
+maxCellCount = -1;
 maxFaceCount = -1;
 maxEdgeCount = -1;
+maxCellId = -1;
+maxFaceId = -1;
+maxEdgeId = -1;
 
 For[candidateId = 1, candidateId <= Length[treeCandidates], candidateId++,
-	If[candidateId <= 828, 
+	If[candidateId != 22439,
+	(* If[candidateId < 14730, *)
+	 (* 14730: 92, 678 *)
+	 (* 22439: {94, 686, 720, 120} *)
+	 (* 34100: latest *)
 		Continue[];
 	];
 
-	Print["candidateId = " <> IntegerString[candidateId]];
+	Print[DateString["ISODateTime"] <> " candidateId = " <> IntegerString[candidateId]];
 	combinedGraph = Graph[Join[treeCandidates[[candidateId]], edgesInOrbits]];
 	If[TreeGraphQ[combinedGraph] == False,
 		Print["unexpected: combined graph is not a tree"];
