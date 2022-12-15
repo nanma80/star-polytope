@@ -571,15 +571,19 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
-	uniqueCenters = Map[getCellCenter, rotatedCells];
-	uniqueCenters = Union[uniqueCenters, SameTest -> ApproxSamePoint];
-	If[Length[uniqueCenters] == 120 || True,
-		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
-		If[Length[activeFaces] == 720 || True,
+	allCenters = Map[getCellCenter, rotatedCells];
+	cellIdGroups = Select[Values[GroupBy[highlightedCellIds, Round[ allCenters[[#]], epsilon ]&]], Length[#] > 1 &];
+	Print[cellIdGroups];
+
+	selectedCenters = allCenters[[highlightedCellIds]];
+	uniqueCenters = Union[selectedCenters, SameTest -> ApproxSamePoint];
+	If[Length[uniqueCenters] == 120,
+		activeFaces = Union[ Flatten[rotatedCells[[highlightedCellIds]], 1], SameTest -> sameCenter ];
+		If[Length[activeFaces] == 720,
 			activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
-			If[Length[activeEdges] == 720 || True,
+			If[Length[activeEdges] == 720,
 				activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
-				If[Length[activeVertices] == 120 || True,
+				If[Length[activeVertices] == 120,
 					Print["Found a good net"];
 					Print["Element counts: cells, faces, edges, vertices:"];
 					Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
@@ -650,6 +654,19 @@ For[orbitId = 1, orbitId <= Length[orbits], orbitId++,
   subgraphIds = Join[subgraphIds, minWIds];
   AppendTo[orbitSeeds, minWIds];
 ];
+Map[Print[{#, N[orientedCellCenters[[#]]]}]&, subgraphIds];
+(* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 & ]; *)
+(* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2.5 & ]; *)
+
+(* 3 orbits *)
+subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 && orientedCellCenters[[#]][[1]] < epsilon & ];
+
+(* 4 orbits *)
+(* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 && orientedCellCenters[[#]][[1]] > - epsilon & ]; *)
+
+(* subgraphIds = {41, 42, 30}; *)
+
+Print[subgraphIds];
 
 edges = {};
 For[subId1 = 1, subId1 <= Length[subgraphIds] - 1, subId1++,
@@ -678,14 +695,17 @@ For[orbitId = 1, orbitId <= Length[orbitSeeds], orbitId++,
   edgesInOrbits = Join[edgesInOrbits, orbitEdges];
 ];
 
-
+topN = 121;
 (* topN = 1000; *)
-topN = 705432;
+(* topN = 705432; *)
 treeCandidates = 
   Select[TreeGraphQ[Graph@#] &]@
    Select[VertexCount@# == VertexCount[subgraph] &]@
     Subsets[EdgeList[subgraph], {VertexCount[subgraph] - 1}, topN];
 Print["Found trees as candidates: " <> IntegerString[Length[treeCandidates]]];
+If[Length[treeCandidates] == 0,
+	treeCandidates = { {} };
+];
 
 maxCellCount = -1;
 maxFaceCount = -1;
@@ -695,16 +715,27 @@ maxFaceId = -1;
 maxEdgeId = -1;
 
 For[candidateId = 1, candidateId <= Length[treeCandidates], candidateId++,
-	If[candidateId != 22439,
+	(* If[candidateId != 22439, *)
 	(* If[candidateId < 14730, *)
 	 (* 14730: 92, 678 *)
 	 (* 22439: {94, 686, 720, 120} *)
 	 (* 34100: latest *)
-		Continue[];
-	];
+		(* Continue[]; *)
+	(* ]; *)
 
+	Print[];
 	Print[DateString["ISODateTime"] <> " candidateId = " <> IntegerString[candidateId]];
+	Print[treeCandidates[[candidateId]]];
 	combinedGraph = Graph[Join[treeCandidates[[candidateId]], edgesInOrbits]];
+	components = ConnectedGraphComponents[combinedGraph, {41}];
+	combinedGraph = components[[1]];
+
+	Print[VertexCount[combinedGraph]];
+	highlightedCellIds = VertexList[combinedGraph]//Sort;
+	(* Print[highlightedCellIds]; *)
+	
+	(* Exit[]; *)
+
 	If[TreeGraphQ[combinedGraph] == False,
 		Print["unexpected: combined graph is not a tree"];
 		Exit[];
@@ -746,4 +777,13 @@ For[frameId = 0, frameId <= 10, frameId += 1,
 
 	cells = Get[dataFileName];
 	Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
+ *)
+
+(* 
+- if we focus on only one orbit of 10 cells from 120-cell, they can be folded into 10 distinct cells in grand 120-cell
+- if we focus on 6 orbits, 60 cells in total, they can be founded to up to 52 cells.
+- 2 orbits, 41 and 79: 20 cells
+- 3 orbits, 41, 5, 6: 30 cells
+- 4 orbits, 41, 42, 30, 79: 38 cells. already conflicting
+
  *)
