@@ -576,6 +576,13 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	Print[cellIdGroups];
 
 	selectedCenters = allCenters[[highlightedCellIds]];
+	centerAfterFolding = Mean[selectedCenters];
+	selectedCenters = Map[# - centerAfterFolding &, selectedCenters];
+
+	fibrations = Map[mapHopfFibration, selectedCenters];
+	Print[Tally[fibrations]];
+	Map[Print[Round[#, epsilon]]&, selectedCenters];
+
 	uniqueCenters = Union[selectedCenters, SameTest -> ApproxSamePoint];
 	If[Length[uniqueCenters] == 120,
 		activeFaces = Union[ Flatten[rotatedCells[[highlightedCellIds]], 1], SameTest -> sameCenter ];
@@ -664,6 +671,7 @@ Map[Print[{#, N[orientedCellCenters[[#]]]}]&, subgraphIds];
 
 (* one orbit *)
 (* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2.5 & ]; *)
+(* subgraphIds = {41}; *)
 
 (* subgraphIds = {41, 79}; *)
 
@@ -676,20 +684,31 @@ Map[Print[{#, N[orientedCellCenters[[#]]]}]&, subgraphIds];
 (* 4 orbits *)
 (* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 && orientedCellCenters[[#]][[1]] > - epsilon & ]; *)
 
-subgraphIds = {41, 42, 89, 79};
+(* subgraphIds = {41, 42, 89, 79}; *)
 
 (* six orbits *)
 (* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 & ]; *)
+focusedOrbits = {7, 4};
+subgraphIds = Select[Range[Length[cells]], MemberQ[focusedOrbits, orbitMap[#]]& ];
 
 
+Print[subgraphIds];
 Print[subgraphIds//Length];
+(* Print[orbitMap]; *)
+(* Map[Print[{#,orbitMap[#]}]&, subgraphIds]; *)
+
+centersBeforeFolding = orientedCellCenters[[subgraphIds]];
+fibrationsBeforeFolding = Map[mapHopfFibration&, centersBeforeFolding];
+Print[Tally[fibrationsBeforeFolding]];
+
+(* Exit[]; *)
 
 edges = {};
 For[subId1 = 1, subId1 <= Length[subgraphIds] - 1, subId1++,
   For[subId2 = subId1 + 1, subId2 <= Length[subgraphIds], subId2++,
     id1 = subgraphIds[[subId1]];
     id2 = subgraphIds[[subId2]];
-    If[orbitMap[id1] == orbitMap[[id2]], Continue[]];
+    If[orbitMap[id1] == orbitMap[id2], Continue[]];
     If[adjacentCellsIndex[cells, id1, id2],
      AppendTo[edges, id1 \[UndirectedEdge] id2];
      ];
@@ -717,13 +736,13 @@ For[orbitId = 1, orbitId <= Length[orbitSeeds], orbitId++,
 (* topN = 1000; *)
 topN = 10 * 1000 * 1000;
 (* topN = 705432; *)
-treeCandidates = 
+(* treeCandidates = 
   Select[TreeGraphQ[Graph@#] &]@
    Select[VertexCount@# == VertexCount[subgraph] &]@
-    Subsets[EdgeList[subgraph], {VertexCount[subgraph] - 1}, topN];
+    Subsets[EdgeList[subgraph], {VertexCount[subgraph] - 1}, topN]; *)
 
 
-(* treeCandidates = Subsets[edges, {Length[orbits] - 1}, topN]; *)
+treeCandidates = Subsets[edges, {Length[focusedOrbits] - 1}, topN];
 
 
 Print["Found trees as candidates: " <> IntegerString[Length[treeCandidates]]];
@@ -817,4 +836,33 @@ For[frameId = 0, frameId <= 10, frameId += 1,
 - 3 orbits, 41, 5, 6: 30 cells
 - 4 orbits, 41, 42, 30, 79: 38 cells. already conflicting
 
+another attempt:
+orbit 7 from 120-cell folds into grand 120-cell as an orbit using the same Hopf fibration.
+
+orbit 4 from 120-cell doesn't fold into grand 120-cell as an orbit using the same Hopf fibration.
+
+Example. After shifting origin:
+orbit 7:
+{0., 0., 0.36327126, 0.5}
+{0., 0., -0.58778525, 0.19098301}
+{0., 0., -0.58778525, -0.19098301}
+{0., 0., 0., 0.61803399}
+{0., 0., 0., -0.61803399}
+{0., 0., 0.58778525, -0.19098301}
+{0., 0., 0.58778525, 0.19098301}
+{0., 0., -0.36327126, 0.5}
+{0., 0., -0.36327126, -0.5}
+{0., 0., 0.36327126, -0.5}
+
+orbit 4
+{-0.16245985000000002, 0.5, -0.32491970000000003, 0.}
+{-0.16245985000000002, -0.5, -0.32491970000000003, 0.}
+{0.26286556, -0.19098301, 0.5257311100000001, 0.}
+{0.26286556, 0.19098301, 0.5257311100000001, 0.}
+{0., -0.61803399, 0., 0.}
+{0., 0.61803399, 0., 0.}
+{-0.26286556, 0.19098301, -0.5257311100000001, 0.}
+{-0.26286556, -0.19098301, -0.5257311100000001, 0.}
+{0.16245985000000002, 0.5, 0.32491970000000003, 0.}
+{0.16245985000000002, -0.5, 0.32491970000000003, 0.}
  *)
