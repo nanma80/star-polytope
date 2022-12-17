@@ -636,6 +636,7 @@ rotatedCids =
     Round[cellCenters[[cid]].doubleRotationMatrix[k Pi/5], 
      epsilon]], {cid, 1, 120}, {k, -4, 5}];
 orbits = Map[#[[1]] &, Tally[rotatedCids, Sort[#1] == Sort[#2] &]];
+orbitMap = <||>;
 
 objectiveDirection1 = {0, 0.000, 0.01, 1};
 objectiveDirection2 = {0.01, 1, 0, 0};
@@ -643,6 +644,10 @@ subgraphIds = {};
 orbitSeeds = {};
 For[orbitId = 1, orbitId <= Length[orbits], orbitId++,
   orbit = orbits[[orbitId]];
+  For[cid = 1, cid <= Length[orbit], cid++,
+  	cell = orbit[[cid]];
+  	orbitMap[cell] = orbitId;
+  ];
   minW = Min[
     Map[Min[orientedCellCenters[[#]] . objectiveDirection1, 
        orientedCellCenters[[#]] . objectiveDirection2] &, orbit]];
@@ -654,33 +659,46 @@ For[orbitId = 1, orbitId <= Length[orbits], orbitId++,
   subgraphIds = Join[subgraphIds, minWIds];
   AppendTo[orbitSeeds, minWIds];
 ];
+
 Map[Print[{#, N[orientedCellCenters[[#]]]}]&, subgraphIds];
-(* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 & ]; *)
+
+(* one orbit *)
 (* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2.5 & ]; *)
 
+(* subgraphIds = {41, 79}; *)
+
 (* 3 orbits *)
-subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 && orientedCellCenters[[#]][[1]] < epsilon & ];
+(* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 && orientedCellCenters[[#]][[1]] < epsilon & ]; *)
+
+(* subgraphIds = {41, 79, 42}; *)
+(* subgraphIds = {41, 42, 89}; *)
 
 (* 4 orbits *)
 (* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 && orientedCellCenters[[#]][[1]] > - epsilon & ]; *)
 
-(* subgraphIds = {41, 42, 30}; *)
+subgraphIds = {41, 42, 89, 79};
 
-Print[subgraphIds];
+(* six orbits *)
+(* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 & ]; *)
+
+
+Print[subgraphIds//Length];
 
 edges = {};
 For[subId1 = 1, subId1 <= Length[subgraphIds] - 1, subId1++,
   For[subId2 = subId1 + 1, subId2 <= Length[subgraphIds], subId2++,
     id1 = subgraphIds[[subId1]];
     id2 = subgraphIds[[subId2]];
+    If[orbitMap[id1] == orbitMap[[id2]], Continue[]];
     If[adjacentCellsIndex[cells, id1, id2],
      AppendTo[edges, id1 \[UndirectedEdge] id2];
      ];
     ];
   ];
 
-subgraph = Graph[subgraphIds, edges, VertexLabels -> "Name"];
+Print["cross orbit edge count: " <> IntegerString[Length[edges]]];
 
+subgraph = Graph[subgraphIds, edges, VertexLabels -> "Name"];
 edgesInOrbits = {};
 For[orbitId = 1, orbitId <= Length[orbitSeeds], orbitId++,
   orbitSeed = orbitSeeds[[orbitId]];
@@ -695,13 +713,19 @@ For[orbitId = 1, orbitId <= Length[orbitSeeds], orbitId++,
   edgesInOrbits = Join[edgesInOrbits, orbitEdges];
 ];
 
-topN = 121;
+(* topN = 121; *)
 (* topN = 1000; *)
+topN = 10 * 1000 * 1000;
 (* topN = 705432; *)
 treeCandidates = 
   Select[TreeGraphQ[Graph@#] &]@
    Select[VertexCount@# == VertexCount[subgraph] &]@
     Subsets[EdgeList[subgraph], {VertexCount[subgraph] - 1}, topN];
+
+
+(* treeCandidates = Subsets[edges, {Length[orbits] - 1}, topN]; *)
+
+
 Print["Found trees as candidates: " <> IntegerString[Length[treeCandidates]]];
 If[Length[treeCandidates] == 0,
 	treeCandidates = { {} };
@@ -723,20 +747,27 @@ For[candidateId = 1, candidateId <= Length[treeCandidates], candidateId++,
 		(* Continue[]; *)
 	(* ]; *)
 
+
 	Print[];
-	Print[DateString["ISODateTime"] <> " candidateId = " <> IntegerString[candidateId]];
+	Print[DateString["ISODateTime"] <> " candidateId = " <> IntegerString[candidateId]
+		<> " out of " <> IntegerString[Length[treeCandidates]]
+	];
+
 	Print[treeCandidates[[candidateId]]];
 	combinedGraph = Graph[Join[treeCandidates[[candidateId]], edgesInOrbits]];
+	(* If[ConnectedGraphQ[combinedGraph] == False, Continue[]]; *)
+
 	components = ConnectedGraphComponents[combinedGraph, {41}];
 	combinedGraph = components[[1]];
 
-	Print[VertexCount[combinedGraph]];
+	(* Print[VertexCount[combinedGraph]]; *)
 	highlightedCellIds = VertexList[combinedGraph]//Sort;
 	(* Print[highlightedCellIds]; *)
 	
 	(* Exit[]; *)
 
 	If[TreeGraphQ[combinedGraph] == False,
+		Continue[];
 		Print["unexpected: combined graph is not a tree"];
 		Exit[];
 	];
