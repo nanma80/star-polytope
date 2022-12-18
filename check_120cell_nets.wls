@@ -164,6 +164,17 @@ mapHopfFibration[v4d_] := Module[
 	x3 = Re[z0 Conjugate[z0] - z1 Conjugate[z1]];
 	Round[{x1, x2, x3}, roundPrecision]
 ];
+
+mapHopfFibrationMirror[v4d_] := Module[
+	{z0, z1},
+	z0 = v4d[[1]] - I v4d[[2]];
+	z1 = v4d[[3]] - I v4d[[4]];
+	x1 = Re[(2 z0 Conjugate[z1])];
+	x2 = Im[(2 z0 Conjugate[z1])];
+	x3 = Re[z0 Conjugate[z0] - z1 Conjugate[z1]];
+	Round[{x1, x2, x3}, roundPrecision]
+];
+
 getHue[v3d_] := If[Norm[v3d[[{1, 2}]]] < 0.001, 
 						If[v3d[[3]] > 0, Darker[Blue, 0.8], Lighter[Red, 0.8]],
 						(* If[v3d[[3]] > 0,
@@ -579,9 +590,35 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	centerAfterFolding = Mean[selectedCenters];
 	selectedCenters = Map[# - centerAfterFolding &, selectedCenters];
 
-	fibrations = Map[mapHopfFibration, selectedCenters];
+	fibrations = Map[mapHopfFibrationMirror, selectedCenters];
 	Print[Tally[fibrations]];
-	Map[Print[Round[#, epsilon]]&, selectedCenters];
+	(* Map[Print[Round[#, epsilon]]&, selectedCenters]; *)
+	Map[Print[Round[# * 2 * phi, epsilon]]&, Select[selectedCenters, Norm[{#[[1]],#[[2]]} ] > epsilon & ]];
+
+	otherOrbit = Select[selectedCenters, Norm[{#[[1]],#[[2]]} ] > epsilon & ];
+	(* Print[otherOrbit//N]; *)
+	otherOrbitNorm = Cross[otherOrbit[[1]][[Range[3]]], otherOrbit[[2]][[Range[3]]]]//N;
+	If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
+	Print["otherOrbitNorm after folding"];
+	Print[otherOrbitNorm];
+	otherOrbitNorm = Cross[otherOrbit[[3]][[Range[3]]], otherOrbit[[4]][[Range[3]]]]//N;
+	If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
+	Print[otherOrbitNorm];
+	otherOrbitNorm = Cross[otherOrbit[[5]][[Range[3]]], otherOrbit[[6]][[Range[3]]]]//N;
+	If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
+	Print[otherOrbitNorm];
+	otherOrbitNorm = Cross[otherOrbit[[7]][[Range[3]]], otherOrbit[[8]][[Range[3]]]]//N;
+	If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
+	Print[otherOrbitNorm];
+
+	(* 
+{0.26286555605956635, -0.8090169943749479, 0.5257311121191329}
+{-0.6881909602355857, 0.5000000000000009, 0.5257311121191344}
+{0.26286555605956746, 0.8090169943749476, 0.5257311121191331}
+
+{0.425325404176021, -0.3090169943749453, 0.8506508083520401}
+{0.4253254041760195, 0.30901699437494584, 0.8506508083520408}
+	 *)
 
 	uniqueCenters = Union[selectedCenters, SameTest -> ApproxSamePoint];
 	If[Length[uniqueCenters] == 120,
@@ -698,9 +735,27 @@ Print[subgraphIds//Length];
 (* Map[Print[{#,orbitMap[#]}]&, subgraphIds]; *)
 
 centersBeforeFolding = orientedCellCenters[[subgraphIds]];
-fibrationsBeforeFolding = Map[mapHopfFibration&, centersBeforeFolding];
+fibrationsBeforeFolding = Map[mapHopfFibration, centersBeforeFolding];
 Print[Tally[fibrationsBeforeFolding]];
 
+otherOrbit = orientedCellCenters[[orbits[[4]]]];
+Map[Print[Round[#/phi^2*2, epsilon]]&, otherOrbit];
+
+otherOrbitNorm = Cross[otherOrbit[[1]][[Range[3]]], otherOrbit[[2]][[Range[3]]]]//N;
+If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
+Print["otherOrbitNorm before folding"];
+Print[otherOrbitNorm];
+otherOrbitNorm = Cross[otherOrbit[[3]][[Range[3]]], otherOrbit[[4]][[Range[3]]]]//N;
+If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
+Print[otherOrbitNorm];
+otherOrbitNorm = Cross[otherOrbit[[5]][[Range[3]]], otherOrbit[[6]][[Range[3]]]]//N;
+If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
+Print[otherOrbitNorm];
+otherOrbitNorm = Cross[otherOrbit[[7]][[Range[3]]], otherOrbit[[8]][[Range[3]]]]//N;
+If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
+Print[otherOrbitNorm];
+
+(* z-coordinate of otherOrbitNorm: 0.5257311121191337, 0.85065080835204, 1 *)
 (* Exit[]; *)
 
 edges = {};
@@ -865,4 +920,38 @@ orbit 4
 {-0.26286556, -0.19098301, -0.5257311100000001, 0.}
 {0.16245985000000002, 0.5, 0.32491970000000003, 0.}
 {0.16245985000000002, -0.5, 0.32491970000000003, 0.}
+
+
+Why orbits are messed up after folding?
+
+before folding:
+{0.32491970000000003, 1., 1.37638192, -1.}
+{-0.32491970000000003, 1., 1.70130162, 0.}
+{-0.85065081, 0.61803399, 1.37638192, 1.}
+{-1.0514622200000001, 0., 0.5257311100000001, 1.61803399}
+{-0.85065081, -0.61803399, -0.5257311100000001, 1.61803399}
+{-0.32491970000000003, -1., -1.37638192, 1.}
+{0.32491970000000003, -1., -1.70130162, 0.}
+{0.85065081, -0.61803399, -1.37638192, -1.}
+{1.0514622200000001, 0., -0.5257311100000001, -1.61803399}
+{0.85065081, 0.61803399, 0.5257311100000001, -1.61803399}
+otherOrbitNorm before folding
+{0.26286555605956685, -0.8090169943749475, 0.5257311121191337}
+
+
+{-1.37638192, -1., -0.85065081, -0.61803399}
+{1.70130162, 0., -0.85065081, -0.61803399}
+{0.32491970000000003, 1., 1.37638192, 1.}
+{-0.85065081, 0.61803399, 1.37638192, 1.}
+{1.90211303, 0.61803399, 0., 0.}
+{-1.90211303, -0.61803399, 0., 0.}
+{-0.32491970000000003, -1., -1.37638192, -1.}
+{0.85065081, -0.61803399, -1.37638192, -1.}
+{-1.70130162, 0., 0.85065081, 0.61803399}
+{1.37638192, 1., 0.85065081, 0.61803399}
+otherOrbitNorm after folding
+{0.26286555605956635, -0.8090169943749479, 0.5257311121191329}
+
+
+
  *)
