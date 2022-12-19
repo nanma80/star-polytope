@@ -152,7 +152,9 @@ projectToDirection[vertex4d_, projectionMatrix_] := vertex4d.Transpose[projectio
 (* perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance); *)
 perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]];
 normalizedInner[u_, v_] := u.v/Norm[u]/Norm[v];
+normalized[u_] := u/Norm[u];
 doubleRotationMatrix[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
+doubleRotationMatrixMirror[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[theta]}}];
 getProjectionMatrix[direction_] := Simplify[Orthogonalize[{direction, {2, -1.4, 0.3, 0.9}, {0, 1, 2.3, 0.8}, {0.5, 0.3, 1, 0.1}}]][[2;;4]];
 
 mapHopfFibration[v4d_] := Module[
@@ -584,18 +586,26 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 
 	allCenters = Map[getCellCenter, rotatedCells];
 	cellIdGroups = Select[Values[GroupBy[highlightedCellIds, Round[ allCenters[[#]], epsilon ]&]], Length[#] > 1 &];
+	Print["overlapping cells"];
 	Print[cellIdGroups];
 
 	selectedCenters = allCenters[[highlightedCellIds]];
 	centerAfterFolding = Mean[selectedCenters];
 	selectedCenters = Map[# - centerAfterFolding &, selectedCenters];
 
-	fibrations = Map[mapHopfFibrationMirror, selectedCenters];
+	fibrations = Map[mapHopfFibration[normalized[#]]&, selectedCenters];
 	Print[Tally[fibrations]];
-	(* Map[Print[Round[#, epsilon]]&, selectedCenters]; *)
-	Map[Print[Round[# * 2 * phi, epsilon]]&, Select[selectedCenters, Norm[{#[[1]],#[[2]]} ] > epsilon & ]];
 
-	otherOrbit = Select[selectedCenters, Norm[{#[[1]],#[[2]]} ] > epsilon & ];
+	If[ Length[Tally[fibrations]] == Length[focusedOrbits],
+		Print["Found a good net"];
+		Exit[],
+		Print["orbits after folding vs orbits before folding"];
+		Print[{Length[Tally[fibrations]], Length[focusedOrbits]}]
+	];
+	(* Map[Print[Round[#, epsilon]]&, selectedCenters]; *)
+	(* Map[Print[Round[# * 2 * phi, epsilon]]&, Select[selectedCenters, Norm[{#[[1]],#[[2]]} ] > epsilon & ]]; *)
+
+(* 	otherOrbit = Select[selectedCenters, Norm[{#[[1]],#[[2]]} ] > epsilon & ];
 	(* Print[otherOrbit//N]; *)
 	otherOrbitNorm = Cross[otherOrbit[[1]][[Range[3]]], otherOrbit[[2]][[Range[3]]]]//N;
 	If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
@@ -609,7 +619,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	Print[otherOrbitNorm];
 	otherOrbitNorm = Cross[otherOrbit[[7]][[Range[3]]], otherOrbit[[8]][[Range[3]]]]//N;
 	If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
-	Print[otherOrbitNorm];
+	Print[otherOrbitNorm]; *)
 
 	(* 
 {0.26286555605956635, -0.8090169943749479, 0.5257311121191329}
@@ -657,7 +667,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	(* Print["Element counts: cells, faces, edges, vertices:"]; *)
 	Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
 	Print[{maxCellCount, maxFaceCount, maxEdgeCount, maxCellId, maxFaceId, maxEdgeId}];
-	(* Print[rotationSchedule]; *)
+	Print[rotationSchedule];
 
 	
 
@@ -725,20 +735,24 @@ Map[Print[{#, N[orientedCellCenters[[#]]]}]&, subgraphIds];
 
 (* six orbits *)
 (* subgraphIds = Select[subgraphIds, orientedCellCenters[[#]][[4]] < -2 & ]; *)
-focusedOrbits = {7, 4};
-subgraphIds = Select[Range[Length[cells]], MemberQ[focusedOrbits, orbitMap[#]]& ];
+(* focusedOrbits = {7, 4, 2, 3, 5, 12}; *)
+bundle1 = {7, 4, 2, 3, 5, 12};
+focusedOrbits = Range[12];
+(* subgraphIds = Select[Range[Length[cells]], MemberQ[focusedOrbits, orbitMap[#]]& ]; *)
+subgraphIds = Select[subgraphIds, MemberQ[focusedOrbits, orbitMap[#]]& ];
 
 
 Print[subgraphIds];
 Print[subgraphIds//Length];
+
 (* Print[orbitMap]; *)
 (* Map[Print[{#,orbitMap[#]}]&, subgraphIds]; *)
 
 centersBeforeFolding = orientedCellCenters[[subgraphIds]];
-fibrationsBeforeFolding = Map[mapHopfFibration, centersBeforeFolding];
+fibrationsBeforeFolding = Map[mapHopfFibration[normalized[#]]&, centersBeforeFolding];
 Print[Tally[fibrationsBeforeFolding]];
 
-otherOrbit = orientedCellCenters[[orbits[[4]]]];
+(* otherOrbit = orientedCellCenters[[orbits[[4]]]];
 Map[Print[Round[#/phi^2*2, epsilon]]&, otherOrbit];
 
 otherOrbitNorm = Cross[otherOrbit[[1]][[Range[3]]], otherOrbit[[2]][[Range[3]]]]//N;
@@ -753,7 +767,7 @@ If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrb
 Print[otherOrbitNorm];
 otherOrbitNorm = Cross[otherOrbit[[7]][[Range[3]]], otherOrbit[[8]][[Range[3]]]]//N;
 If[Norm[otherOrbitNorm] > epsilon, otherOrbitNorm = otherOrbitNorm/Norm[otherOrbitNorm]];
-Print[otherOrbitNorm];
+Print[otherOrbitNorm]; *)
 
 (* z-coordinate of otherOrbitNorm: 0.5257311121191337, 0.85065080835204, 1 *)
 (* Exit[]; *)
@@ -764,17 +778,54 @@ For[subId1 = 1, subId1 <= Length[subgraphIds] - 1, subId1++,
     id1 = subgraphIds[[subId1]];
     id2 = subgraphIds[[subId2]];
     If[orbitMap[id1] == orbitMap[id2], Continue[]];
+    If[id1 != 41 && id2 != 41 && id1 != 59 && id2 != 59, Continue[]];
+    (* If[id1 != 41 && id2 != 41 , Continue[]]; *)
     If[adjacentCellsIndex[cells, id1, id2],
      AppendTo[edges, id1 \[UndirectedEdge] id2];
      ];
     ];
   ];
 
-Print["cross orbit edge count: " <> IntegerString[Length[edges]]];
+Print["cross orbit prototype edge count: " <> IntegerString[Length[edges]]];
+
+(* Print[edges]; *)
+(* Exit[]; *)
+
+shiftedEdges = {};
+For[edgeId = 1, edgeId <= Length[edges], edgeId++,
+	edge = edges[[edgeId]];
+	bundleId = If[
+		edge[[1]] == 41 || edge[[2]] == 41,
+		1,
+		2
+	];
+	For[k = -4, k <= 5, k++,
+		If[bundleId == 1,
+			id1 = orientedCellCentersMap[
+		     Round[orientedCellCenters[[edge[[1]] ]] . 
+		       doubleRotationMatrix[k Pi/5], epsilon]];
+		    id2 = orientedCellCentersMap[
+		     Round[orientedCellCenters[[edge[[2]] ]] . 
+		       doubleRotationMatrix[k Pi/5], epsilon]],
+			id1 = orientedCellCentersMap[
+		     Round[orientedCellCenters[[edge[[1]] ]] . 
+		       doubleRotationMatrixMirror[k Pi/5], epsilon]];
+		    id2 = orientedCellCentersMap[
+		     Round[orientedCellCenters[[edge[[2]] ]] . 
+		       doubleRotationMatrixMirror[k Pi/5], epsilon]]		       
+		];
+
+	    AppendTo[shiftedEdges, id1 \[UndirectedEdge] id2];
+	];
+];
+
+Print["cross orbit shifted edge count: " <> IntegerString[Length[shiftedEdges]]];
+(* Exit[]; *)
 
 subgraph = Graph[subgraphIds, edges, VertexLabels -> "Name"];
 edgesInOrbits = {};
 For[orbitId = 1, orbitId <= Length[orbitSeeds], orbitId++,
+  If[orbitId != 1 && orbitId != 7, Continue[]];
   orbitSeed = orbitSeeds[[orbitId]];
   If[Length[orbitSeed] > 1, Continue[]];
   orbitIds = 
@@ -787,9 +838,26 @@ For[orbitId = 1, orbitId <= Length[orbitSeeds], orbitId++,
   edgesInOrbits = Join[edgesInOrbits, orbitEdges];
 ];
 
+Print[edgesInOrbits];
+
+crossBundleEdges = {};
+(* example of a bundle on the 41 side *)
+id1 = 34;
+For[id2 = 1, id2 <= Length[cells], id2++,
+	If[adjacentCellsIndex[cells, id1, id2],
+		orbitId2 = orbitMap[id2];
+		If[MemberQ[bundle1, orbitId2] == False,
+			AppendTo[crossBundleEdges, id1 \[UndirectedEdge] id2]
+		];
+	];
+];
+
+Print[crossBundleEdges];
+(* Exit[]; *)
+
 (* topN = 121; *)
 (* topN = 1000; *)
-topN = 10 * 1000 * 1000;
+(* topN = 10 * 1000 * 1000; *)
 (* topN = 705432; *)
 (* treeCandidates = 
   Select[TreeGraphQ[Graph@#] &]@
@@ -797,8 +865,9 @@ topN = 10 * 1000 * 1000;
     Subsets[EdgeList[subgraph], {VertexCount[subgraph] - 1}, topN]; *)
 
 
-treeCandidates = Subsets[edges, {Length[focusedOrbits] - 1}, topN];
-
+(* treeCandidates = Subsets[edges, {Length[focusedOrbits] - 1}, topN]; *)
+(* treeCandidates = {edges}; *)
+treeCandidates = Map[{#}&, crossBundleEdges];
 
 Print["Found trees as candidates: " <> IntegerString[Length[treeCandidates]]];
 If[Length[treeCandidates] == 0,
@@ -828,7 +897,7 @@ For[candidateId = 1, candidateId <= Length[treeCandidates], candidateId++,
 	];
 
 	Print[treeCandidates[[candidateId]]];
-	combinedGraph = Graph[Join[treeCandidates[[candidateId]], edgesInOrbits]];
+	combinedGraph = Graph[Join[treeCandidates[[candidateId]], edgesInOrbits, shiftedEdges]];
 	(* If[ConnectedGraphQ[combinedGraph] == False, Continue[]]; *)
 
 	components = ConnectedGraphComponents[combinedGraph, {41}];
@@ -836,15 +905,14 @@ For[candidateId = 1, candidateId <= Length[treeCandidates], candidateId++,
 
 	(* Print[VertexCount[combinedGraph]]; *)
 	highlightedCellIds = VertexList[combinedGraph]//Sort;
-	(* Print[highlightedCellIds]; *)
-	
-	(* Exit[]; *)
+	Print[highlightedCellIds//Length];
 
 	If[TreeGraphQ[combinedGraph] == False,
 		Continue[];
 		Print["unexpected: combined graph is not a tree"];
 		Exit[];
 	];
+
 	combinedTree = GraphTree[combinedGraph, 41];
 	rotationSchedule = {};
 	rotationSchedule = buildSchedule[combinedTree, rotationSchedule, 1];
