@@ -154,7 +154,6 @@ perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDi
 normalizedInner[u_, v_] := u.v/Norm[u]/Norm[v];
 normalized[u_] := u/Norm[u];
 doubleRotationMatrix[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
-doubleRotationMatrixMirror[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[theta]}}];
 getProjectionMatrix[direction_] := Simplify[Orthogonalize[{direction, {2, -1.4, 0.3, 0.9}, {0, 1, 2.3, 0.8}, {0.5, 0.3, 1, 0.1}}]][[2;;4]];
 
 mapHopfFibration[v4d_] := Module[
@@ -585,10 +584,10 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	];
 
 	allCenters = Map[getCellCenter, rotatedCells];
-	cellIdGroups = Select[Values[GroupBy[highlightedCellIds, Round[ allCenters[[#]], epsilon ]&]], Length[#] > 1 &];
+(* 	cellIdGroups = Select[Values[GroupBy[highlightedCellIds, Round[ allCenters[[#]], epsilon ]&]], Length[#] > 1 &];
 	Print["overlapping cells"];
 	Print[cellIdGroups];
-
+ *)
 	selectedCenters = allCenters[[highlightedCellIds]];
 	centerAfterFolding = Mean[selectedCenters];
 	selectedCenters = Map[# - centerAfterFolding &, selectedCenters];
@@ -693,7 +692,7 @@ orbits = Map[#[[1]] &, Tally[rotatedCids, Sort[#1] == Sort[#2] &]];
 orbitMap = <||>;
 
 objectiveDirection1 = {0, 0.000, 0.01, 1};
-objectiveDirection2 = {0.01, 1, 0, 0};
+objectiveDirection2 = {-0.01, 1, 0, 0};
 subgraphIds = {};
 orbitSeeds = {};
 For[orbitId = 1, orbitId <= Length[orbits], orbitId++,
@@ -800,21 +799,12 @@ For[edgeId = 1, edgeId <= Length[edges], edgeId++,
 		2
 	];
 	For[k = -4, k <= 5, k++,
-		If[bundleId == 1,
-			id1 = orientedCellCentersMap[
-		     Round[orientedCellCenters[[edge[[1]] ]] . 
-		       doubleRotationMatrix[k Pi/5], epsilon]];
-		    id2 = orientedCellCentersMap[
-		     Round[orientedCellCenters[[edge[[2]] ]] . 
-		       doubleRotationMatrix[k Pi/5], epsilon]],
-			id1 = orientedCellCentersMap[
-		     Round[orientedCellCenters[[edge[[1]] ]] . 
-		       doubleRotationMatrixMirror[k Pi/5], epsilon]];
-		    id2 = orientedCellCentersMap[
-		     Round[orientedCellCenters[[edge[[2]] ]] . 
-		       doubleRotationMatrixMirror[k Pi/5], epsilon]]		       
-		];
-
+		id1 = orientedCellCentersMap[
+	     Round[orientedCellCenters[[edge[[1]] ]] . 
+	       doubleRotationMatrix[k Pi/5], epsilon]];
+	    id2 = orientedCellCentersMap[
+	     Round[orientedCellCenters[[edge[[2]] ]] . 
+	       doubleRotationMatrix[k Pi/5], epsilon]];
 	    AppendTo[shiftedEdges, id1 \[UndirectedEdge] id2];
 	];
 ];
@@ -842,12 +832,16 @@ Print[edgesInOrbits];
 
 crossBundleEdges = {};
 (* example of a bundle on the 41 side *)
-id1 = 34;
-For[id2 = 1, id2 <= Length[cells], id2++,
-	If[adjacentCellsIndex[cells, id1, id2],
-		orbitId2 = orbitMap[id2];
-		If[MemberQ[bundle1, orbitId2] == False,
-			AppendTo[crossBundleEdges, id1 \[UndirectedEdge] id2]
+(* id1s = {34}; *)
+id1s = {2, 5, 22, 25, 34, 43, 94, 100, 106, 113};
+For[id1Id = 1, id1Id <= Length[id1s], id1Id++,
+	id1 = id1s[[id1Id]];
+	For[id2 = 1, id2 <= Length[cells], id2++,
+		If[adjacentCellsIndex[cells, id1, id2],
+			orbitId2 = orbitMap[id2];
+			If[MemberQ[bundle1, orbitId2] == False,
+				AppendTo[crossBundleEdges, id1 \[UndirectedEdge] id2]
+			];
 		];
 	];
 ];
