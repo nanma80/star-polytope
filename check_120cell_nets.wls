@@ -596,11 +596,12 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	Print[Tally[fibrations]];
 
 	If[ Length[Tally[fibrations]] == Length[focusedOrbits],
-		Print["Found a good net"];
-		Exit[],
+		Print["Found a good net covering all fibers"];
+		,
 		Print["orbits after folding vs orbits before folding"];
 		Print[{Length[Tally[fibrations]], Length[focusedOrbits]}]
 	];
+
 	(* Map[Print[Round[#, epsilon]]&, selectedCenters]; *)
 	(* Map[Print[Round[# * 2 * phi, epsilon]]&, Select[selectedCenters, Norm[{#[[1]],#[[2]]} ] > epsilon & ]]; *)
 
@@ -666,7 +667,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	(* Print["Element counts: cells, faces, edges, vertices:"]; *)
 	Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
 	Print[{maxCellCount, maxFaceCount, maxEdgeCount, maxCellId, maxFaceId, maxEdgeId}];
-	Print[rotationSchedule];
+	(* Print[rotationSchedule]; *)
 
 	
 
@@ -737,6 +738,8 @@ Map[Print[{#, N[orientedCellCenters[[#]]]}]&, subgraphIds];
 (* focusedOrbits = {7, 4, 2, 3, 5, 12}; *)
 bundle1 = {7, 4, 2, 3, 5, 12};
 focusedOrbits = Range[12];
+(* focusedOrbits = bundle1; *)
+
 (* subgraphIds = Select[Range[Length[cells]], MemberQ[focusedOrbits, orbitMap[#]]& ]; *)
 subgraphIds = Select[subgraphIds, MemberQ[focusedOrbits, orbitMap[#]]& ];
 
@@ -787,8 +790,12 @@ For[subId1 = 1, subId1 <= Length[subgraphIds] - 1, subId1++,
 
 Print["cross orbit prototype edge count: " <> IntegerString[Length[edges]]];
 
-(* Print[edges]; *)
-(* Exit[]; *)
+Print[edges];
+edges = Select[edges, #[[1]]!= 5 && #[[2]]!= 5 &];
+edges = Select[edges, #[[1]]!= 28 && #[[2]]!= 28 &];
+(* AppendTo[edges, 5 \[UndirectedEdge] 41 ]; *)
+AppendTo[edges, 5 \[UndirectedEdge] 6 ];
+AppendTo[edges, 28 \[UndirectedEdge] 70 ];
 
 shiftedEdges = {};
 For[edgeId = 1, edgeId <= Length[edges], edgeId++,
@@ -832,8 +839,8 @@ Print[edgesInOrbits];
 
 crossBundleEdges = {};
 (* example of a bundle on the 41 side *)
-(* id1s = {34}; *)
-id1s = {2, 5, 22, 25, 34, 43, 94, 100, 106, 113};
+id1s = {5};
+(* id1s = {2, 5, 22, 25, 34, 43, 94, 100, 106, 113}; *)
 For[id1Id = 1, id1Id <= Length[id1s], id1Id++,
 	id1 = id1s[[id1Id]];
 	For[id2 = 1, id2 <= Length[cells], id2++,
@@ -847,7 +854,11 @@ For[id1Id = 1, id1Id <= Length[id1s], id1Id++,
 ];
 
 Print[crossBundleEdges];
-(* Exit[]; *)
+
+(* 
+{34 \[UndirectedEdge] 52, 34 \[UndirectedEdge] 54, 34 \[UndirectedEdge] 61, 34 \[UndirectedEdge] 76}
+ *)
+(* crossBundleCellIds = {34, 52}; *)
 
 (* topN = 121; *)
 (* topN = 1000; *)
@@ -862,6 +873,7 @@ Print[crossBundleEdges];
 (* treeCandidates = Subsets[edges, {Length[focusedOrbits] - 1}, topN]; *)
 (* treeCandidates = {edges}; *)
 treeCandidates = Map[{#}&, crossBundleEdges];
+(* treeCandidates = {}; *)
 
 Print["Found trees as candidates: " <> IntegerString[Length[treeCandidates]]];
 If[Length[treeCandidates] == 0,
