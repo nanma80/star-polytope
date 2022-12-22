@@ -588,7 +588,6 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	selectedCenters = allCenters[[highlightedCellIds]];
 	
 	centerAfterFolding = Mean[allCenters[[fixedCells]]];
-	Print[centerAfterFolding];
 	shiftedCenters = Map[# - centerAfterFolding &, allCenters];
 	shiftedSelectedCenters = shiftedCenters[[highlightedCellIds]];
 
@@ -613,8 +612,15 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	(* forceQuit = True; *)
 
 	uniqueCenters = Union[selectedCenters, SameTest -> ApproxSamePoint];
-	If[Length[uniqueCenters] == 120 || forceQuit,
-		activeFaces = Union[ Flatten[rotatedCells[[highlightedCellIds]], 1], SameTest -> sameCenter ];
+	If[Length[uniqueCenters] == Length[highlightedCellIds] || forceQuit,
+		Print["Found a good net matching cell count"];
+		Print["Element counts: cells, faces, edges, vertices:"];
+		Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
+		Print[rotationSchedule];
+		Print[FromCharacterCode[{7, 7, 7}]];
+		(* Exit[]; *)
+
+(* 		activeFaces = Union[ Flatten[rotatedCells[[highlightedCellIds]], 1], SameTest -> sameCenter ];
 		If[Length[activeFaces] == 720 || forceQuit,
 			activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
 			If[Length[activeEdges] == 720 || forceQuit,
@@ -627,28 +633,39 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 					Exit[];
 				];
 			];
-		];
+		]; *)
 	];
 
 	If[Length[uniqueCenters] > maxCellCount,
 		maxCellCount = Length[uniqueCenters];
-		maxCellId = candidateId;
+		maxCellId = {candidateId},
+		If[Length[uniqueCenters] == maxCellCount,
+			AppendTo[maxCellId, candidateId];
+		];
 	];
 
-	If[Length[activeFaces] > maxFaceCount,
+(* 	If[Length[activeFaces] > maxFaceCount,
 		maxFaceCount = Length[activeFaces];
-		maxFaceId = candidateId;
+		maxFaceId = {candidateId},
+		If[Length[activeFaces] == maxFaceCount,
+			AppendTo[maxFaceId, candidateId];
+		];
 	];
 
 	If[Length[activeEdges] > maxEdgeCount,
 		maxEdgeCount = Length[activeEdges];
-		maxEdgeId = candidateId;
-	];
+		maxEdgeId = {candidateId},
+		If[Length[activeEdges] == maxEdgeCount,
+			AppendTo[maxEdgeId, candidateId];
+		];		
+	]; *)
 
 	Print["Found a bad net"];
 	(* Print["Element counts: cells, faces, edges, vertices:"]; *)
-	Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
-	Print[{maxCellCount, maxFaceCount, maxEdgeCount, maxCellId, maxFaceId, maxEdgeId}];
+	(* Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]]; *)
+	(* Print[{maxCellCount, maxFaceCount, maxEdgeCount, maxCellId, maxFaceId, maxEdgeId}]; *)
+	Print[Length[uniqueCenters]];
+	Print[{maxCellCount, maxCellId}];	
 	(* Print[rotationSchedule]; *)
 
 	
@@ -686,11 +703,32 @@ For[layerId = 1, layerId <= Length[layers], layerId++,
   ];
 ];
 
+rotatedCids = 
+  Table[orientedCellCentersMap[
+    Round[orientedCellCenters[[cid]].RotationMatrix[k 2 Pi/5, {{1, 0, 0, 0}, {0, 1, 0, 0}}], 
+     epsilon]], {cid, 1, 120}, {k, 0, 4}];
+
+rotatedCids = Map[Union[Sort[#]]&, rotatedCids];
+rotationOrbits = Map[#[[1]] &, Tally[rotatedCids]];
+
+rotationOrbitMap = <||>;
+For[orbitId = 1, orbitId <= Length[rotationOrbits], orbitId++,
+  orbit = rotationOrbits[[orbitId]];
+  For[cid = 1, cid <= Length[orbit], cid++,
+  	cell = orbit[[cid]];
+  	(* rotationOrbitMap[cell] = rotationOrbits[[orbitId]]; *)
+  	rotationOrbitMap[cell] = orbitId;
+  ];
+];
+
 
 fixedLayers = { 1, 2, 4, 6, 8, 9 };
 fixedCells = Apply[Join, layers[[ fixedLayers ]]];
 
-otherLayers = {5};
+(* otherLayers = {3, 5, 7}; *)
+otherLayers = {7};
+otherCells = Apply[Join, layers[[otherLayers]]];
+
 focusedLayers = Join[fixedLayers, otherLayers];
 
 fixedEdges = {};
@@ -713,29 +751,48 @@ For[layerId = 2, layerId <= Length[fixedLayers], layerId++,
 	];
 ];
 
-edges = {};
+edgesPrototype = {};
 
 For[layerId = 1, layerId <= Length[otherLayers], layerId++,
 	otherLayer = otherLayers[[layerId]];
-	fromCell = layers[[otherLayer]][[1]];
-
-	innerLayer = 4; (* for layer 3*)
-	For[cellId2 = 1, cellId2 <= Length[layers[[innerLayer]]], cellId2++,
-		toCell = layers[[innerLayer]][[cellId2]];
-		If[adjacentCellsIndex[cells, fromCell, toCell],			
-			AppendTo[edges, fromCell \[UndirectedEdge] toCell];
+	fromCells = layers[[otherLayer]];
+	orbitsInLayer = Union[Map[rotationOrbitMap, fromCells]];
+	For[oid = 1, oid <= Length[orbitsInLayer] && oid<=200, oid++,
+		orbitId = orbitsInLayer[[oid]];
+		cellsInOrbit = rotationOrbits[[orbitId]];
+		sampleCell = cellsInOrbit[[1]];
+		neighborCells = Select[Range[Length[cells]], adjacentCellsIndex[cells, sampleCell, #] == True &];
+		For[ncid = 1, ncid <= Length[neighborCells], ncid++,
+			neighborCell = neighborCells[[ncid]];
+			AppendTo[edgesPrototype, sampleCell \[UndirectedEdge] neighborCell];
 		];
 	];
 ];
 
-Print[edges];
+(* Print[edgesPrototype//Length]; *)
 
-(* Exit[]; *)
+getEdgeGroupFromEdge[edge_] := Module[
+	{edgeGroup},
+	edgeGroup = Table[
+		orientedCellCentersMap[
+	    	Round[orientedCellCenters[[edge[[1]]]].RotationMatrix[k 2 Pi/5, {{1, 0, 0, 0}, {0, 1, 0, 0}}], 
+     		epsilon]] \[UndirectedEdge] 
+     	orientedCellCentersMap[
+	    	Round[orientedCellCenters[[edge[[2]]]].RotationMatrix[k 2 Pi/5, {{1, 0, 0, 0}, {0, 1, 0, 0}}], 
+     		epsilon]], {k, 0, 4}];
+     edgeGroup = Map[If[ #[[1]] < #[[2]], #, #[[2]] \[UndirectedEdge] #[[1]] ]&, edgeGroup];
+     Sort[edgeGroup]
+];
 
+uniqueEdgesUpToRotation = Map[#[[1]]&, Tally[edgesPrototype, getEdgeGroupFromEdge[#1] == getEdgeGroupFromEdge[#2]& ]];
+
+allEdgesByGroup = Map[getEdgeGroupFromEdge, uniqueEdgesUpToRotation];
+
+Print[Length[allEdgesByGroup]];
 (* topN = 121; *)
 (* topN = 10; *)
-topN = 10000;
-(* topN = 10 * 1000 * 1000; *)
+(* topN = 10000; *)
+topN = 10 * 1000 * 1000;
 (* topN = 705432; *)
 (* treeCandidates = 
   Select[TreeGraphQ[Graph@#] &]@
@@ -743,9 +800,9 @@ topN = 10000;
     Subsets[EdgeList[subgraph], {VertexCount[subgraph] - 1}, topN];
  *)
 
-(* Print["treeCandidates full count: " <> IntegerString[Binomial[Length[edges], crossBundleHops]]]; *)
+Print["treeCandidates full count: " <> IntegerString[Binomial[Length[allEdgesByGroup], Length[otherCells]/5]]];
 
-treeCandidates = Subsets[edges, {1}, topN];
+treeCandidates = Subsets[allEdgesByGroup, {Length[otherCells]/5}, topN];
 
 (* treeCandidates = {edges}; *)
 (* treeCandidates = Map[{#}&, crossBundleEdges]; *)
@@ -759,25 +816,45 @@ If[Length[treeCandidates] == 0,
 maxCellCount = -1;
 maxFaceCount = -1;
 maxEdgeCount = -1;
-maxCellId = -1;
-maxFaceId = -1;
-maxEdgeId = -1;
+maxCellId = {};
+maxFaceId = {};
+maxEdgeId = {};
 
 For[candidateId = 1, candidateId <= Length[treeCandidates], candidateId++,
-	(* If[candidateId < 1883, Continue[]]; *)
+	(* If[candidateId < 29942, Continue[]]; *)
+	(* 
+	with layer 3:
+	achieving 70 distinct cells: {29942, 29947, 30024, 30032, 30035, 30045, 30094, 30101, 30104, 30119, 30125, 30139, 30145, 30155, 30161, 30193, 30213, 30214, 30225, 30255, 30256, 30267, 30335, 30344, 31604, 31614, 31622, 31625, 31626, 31629, 31635, 31638, 31642, 31646, 31653, 31657, 31660, 31676, 31833, 31834, 31842, 31845, 31846, 31849, 31855, 31880, 31887, 31890, 31911, 31931, 31932, 31935, 31941, 32041, 32044, 32047, 32053, 32056, 32059, 32077, 32080, 32091, 32112, 32114, 32752, 32834, 32842, 32845, 32855, 33217, 38342, 38347, 38424, 38432, 38435, 38445, 38494, 38501, 38504, 38519, 38525, 38539, 38545, 38555, 38561, 38593, 38613, 38614, 38625, 38655, 38656, 38667, 38735, 38744, 41427, 41574, 41599, 41616, 41619, 41625, 41635, 41641, 42286, 42288, 42299, 42300, 42303, 42309, 42358, 42409, 42410, 42413, 42419, 43311, 43315, 43319, 43322, 43332, 43356, 43366, 43369, 43375, 43401, 43495, 43498, 43501, 43507, 43510, 43513, 43531, 43534, 43568, 43575, 43584, 43870, 43962, 44138, 44146, 44149, 44155, 44161, 44255, 44256, 44258, 44261, 44267, 44273, 44291, 44294, 44403, 44423, 44424, 44426, 44429, 44435, 44480, 44501, 44504, 44593, 44613, 44616, 44619, 44625, 44670, 44673, 44691, 44694, 44704, 44735, 44744, 44826, 44827, 44829, 44832, 44838, 44844, 45073, 45074, 45076, 45079, 45085, 45130, 45248, 45254, 45261, 45264, 45266, 45270, 45308, 45315, 45324, 45522, 45531, 45535, 45538, 45540, 45544, 45558, 45589, 45598, 45624, 45648, 45724, 45748, 47042, 47051, 47057, 47063, 47064, 47067, 47073, 47076, 47079, 47080, 47088, 47095, 47098, 47246, 47248, 47259, 47260, 47263, 47269, 47271, 47272, 47277, 47283, 47284, 47287, 47293, 47328, 47343, 47349, 47437, 47440, 47443, 47449, 47494, 47497, 47515, 47518, 47528, 47529, 47550, 47667, 47814, 47859, 47865, 47875, 48132, 60106, 60108, 60113, 60116, 60120, 60123, 60320, 60328, 60331, 60332, 60335, 60341, 60367, 60375, 60378, 60384, 60463, 60465, 60468, 60474, 60505, 60507, 60510, 60516, 60519, 60522, 60540, 60543, 60553, 60554, 60575, 60577, 60604, 60658, 60665, 60668, 60672, 60675, 60736, 60738, 60746, 60750, 60753, 60761, 60762, 60767, 60770, 60774, 60777, 60808, 60815, 60833, 60853, 60860, 60863, 60927, 60928, 60930, 60933, 60969, 60970, 60972, 60975, 60984, 60987, 61018, 61019, 61040, 61042, 61096, 61243, 61268, 61285, 61288, 61294, 61304, 61955, 61957, 61968, 61969, 61972, 61978, 62027, 62078, 62079, 62082, 62088, 62980, 62984, 62988, 62991, 63001, 63025, 63035, 63038, 63044, 63164, 63167, 63170, 63176, 63179, 63182, 63200, 63203, 63214, 63235, 63237, 63290, 63293, 63299, 63311, 63314, 63320, 63398, 63399, 63401, 63404, 63410, 63440, 63441, 63443, 63446, 63452, 63455, 63458, 63476, 63479, 63489, 63513, 63539, 63807, 63815, 63818, 63824, 63924, 63925, 63927, 63930, 63936, 63942, 63960, 63963, 64092, 64093, 64095, 64098, 64104, 64149, 64170, 64173, 64282, 64285, 64288, 64294, 64339, 64342, 64360, 64363, 64373, 64374, 64395, 64513, 64799, 64917, 64930, 64933, 64935, 64939, 64954, 64975, 64977, 65191, 65204, 65207, 65209, 65213, 65227, 65228, 65249, 65293, 65294, 65315, 65317, 65349, 65370, 65393, 65394, 65415, 65417, 65456, 65526, 65555, 65563, 65569, 65572, 65576, 65579, 65593, 65599, 65605, 65606, 65609, 65615, 65800, 65810, 65813, 65819, 65919, 65921, 65924, 65930, 65961, 65963, 65966, 65972, 65975, 65978, 65996, 65999, 66009, 66010, 66031, 66033, 66052, 66060, 66121, 66124, 66128, 66131, 66192, 66194, 66202, 66206, 66209, 66217, 66218, 66223, 66226, 66230, 66233, 66264, 66271, 66289, 66309, 66316, 66319, 66383, 66384, 66386, 66389, 66425, 66426, 66428, 66431, 66440, 66443, 66474, 66475, 66496, 66498, 66552, 66699, 66724, 66741, 66744, 66750, 66760, 67411, 67413, 67424, 67425, 67428, 67434, 67483, 67534, 67535, 67538, 67544, 68436, 68440, 68444, 68447, 68457, 68481, 68491, 68494, 68500, 68620, 68623, 68626, 68632, 68635, 68638, 68656, 68659, 68670, 68691, 68693, 68746, 68749, 68755, 68767, 68770, 68776, 68854, 68855, 68857, 68860, 68866, 68896, 68897, 68899, 68902, 68908, 68911, 68914, 68932, 68935, 68945, 68969, 68995, 69263, 69271, 69274, 69280, 69380, 69381, 69383, 69386, 69392, 69398, 69416, 69419, 69548, 69549, 69551, 69554, 69560, 69605, 69626, 69629, 69738, 69741, 69744, 69750, 69795, 69798, 69816, 69819, 69829, 69830, 69851, 69969, 70255, 70373, 70386, 70389, 70391, 70395, 70410, 70431, 70433, 70647, 70660, 70663, 70665, 70669, 70683, 70684, 70705, 70749, 70750, 70771, 70773, 70805, 70826, 70849, 70850, 70871, 70873, 70912, 70982, 71512, 71659, 71701, 71704, 71710, 71720, 72371, 72373, 72384, 72385, 72388, 72394, 72443, 72494, 72495, 72498, 72504, 73396, 73400, 73404, 73407, 73417, 73441, 73451, 73454, 73460, 73486, 73580, 73583, 73586, 73592, 73616, 73619, 73630, 73651, 73653, 73660, 73669, 74223, 74231, 74234, 74240, 74678, 74698, 74701, 74704, 74710, 74776, 74779, 74789, 74790, 74811, 74820, 74829, 76007, 76866, 76868, 76879, 76880, 76883, 76889, 76938, 76989, 76990, 76993, 76999, 80998, 81040, 81049, 81059, 82778, 82795, 82913, 83043, 83063, 83066, 83069, 83075, 83214, 83233, 83253, 83265, 83375, 83384, 83466, 83467, 83469, 83472, 83478, 88881, 88885, 88892, 88902, 88936, 88939, 88945, 89080, 89083, 89101, 89104, 89115, 89136, 89145, 89154, 89716, 89719, 89725, 90240, 90243, 90261, 90264, 90275, 90296, 90305, 90314, 97280, 97299, 97325, 97373, 97419, 97431, 97499, 97508, 97770, 97773, 97779, 97910, 97931, 97933, 97940, 97949, 98221, 98224, 98227, 98233, 98239, 98926, 98954, 98975, 98984, 98993, 99020, 99041, 99043, 99075, 99096, 99120, 99141, 99143, 99252, 99723, 99747, 99754, 99763, 99933, 99957, 99964, 99973, 100245, 100246, 100248, 100251, 100257, 100263, 100492, 100493, 100495, 100498, 100504, 100549, 100667, 100673, 100680, 100683, 100685, 100689, 100727, 100734, 100743, 100941, 100950, 100954, 100957, 100959, 100963, 100977, 101008, 101017, 101043, 101067, 101143, 101167, 101351, 101445, 101448, 101451, 101457, 101670, 102263, 102264, 102266, 102269, 102275, 103330, 103333, 103339, 103434, 103435, 103456, 103465, 103474, 103556, 103557, 103559, 103562, 103568, 103574, 104252, 104261, 104265, 104268, 104270, 104274, 104288, 104289, 104310, 104319, 104328, 104376, 104378, 104454, 104455, 104476, 104478, 105133, 105134, 105136, 105139, 105145, 105190, 105308, 105314, 105321, 105324, 105326, 105330, 105345, 105366, 105368, 105375, 105384, 105684, 105685, 105784, 105785, 105806, 105808, 106273, 106276, 106279, 106285, 106330, 106454, 106485, 106506, 106515, 106524, 106824, 106825, 106846, 106880, 106901, 106924, 106925, 106946, 106987, 107691, 107704, 107707, 107709, 107713, 107727, 107728, 107749, 107815, 107870, 108913, 108926, 108929, 108931, 108935, 108950, 108971, 108973, 109290, 109345, 109830, 109931, 109935, 109944, 110082, 110938, 111040, 111042, 111049, 111117, 111337, 111407, 111502, 111572, 111622, 111692}
+	2022-12-21T18:08:33 candidateId = 29942 out of 111930
+		70
+		before folding, w-coordinates by layer
+		{-1., -0.80901699, -0.30901699, 0., 0.30901699, 0.80901699, 1.}
+		{1, 12, 12, 20, 12, 12, 1}
+		layer counts match before and after folding
+		Found a good net matching cell count
+		Element counts: cells, faces, edges, vertices:
+		{70, 0, 0, 0}
 
-	crossBundleEdges = treeCandidates[[candidateId]];
+	 *)
+
+(* 	If[Mod[candidateId, Floor[ Length[treeCandidates]]/100 ] == 1,
+		Print[DateString["ISODateTime"] <> " candidateId = " <> IntegerString[candidateId]
+			<> " out of " <> IntegerString[Length[treeCandidates]]
+		];
+	]; *)
+
+	edgeGroups = treeCandidates[[candidateId]];
 	(* Print["cross layer shifted edge count: " <> IntegerString[Length[shiftedEdges]]]; *)
 
-	combinedGraph = Graph[Join[crossBundleEdges, fixedEdges]];
+	combinedGraph = Graph[Join[Apply[Join, edgeGroups], fixedEdges]];
 
 	If[ConnectedGraphQ[combinedGraph] == False, 
-		Print["Graph is not connected. Skip"];
+		(* Print["Graph is not connected. Skip"]; *)
 		Continue[];
 	];
 
 	If[TreeGraphQ[combinedGraph] == False,
-		Print["unexpected: combined graph is not a tree"];
+		(* Print["unexpected: combined graph is not a tree"]; *)
 		Continue[];
 	];
 
