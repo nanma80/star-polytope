@@ -47,7 +47,7 @@ imageSizes = <|
 	"singleLayer" -> 150 * {4, 3} (* must be 4:3 *)
 |>;
 
-colors = {Red, Blue, Green, Yellow, Cyan, Brown, Purple,  Orange, GrayLevel[0.5] }//Reverse;
+colors = {Brown, Yellow, Blue, Green, Cyan, Red, Purple, Orange, GrayLevel[0.5] }//Reverse;
 
 allColors = <|
 	"3_3" -> Cyan,
@@ -151,8 +151,8 @@ explodedCell[cell_, explosionFactor_] := Map[
 	cell, {2}];
 normalizedAngle[u_, v_] := ArcSin[u.v/Norm[u]/Norm[v]]/Pi + 0.5;
 projectToDirection[vertex4d_, projectionMatrix_] := vertex4d.Transpose[projectionMatrix];
-(* perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance); *)
-perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]];
+perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance);
+(* perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]]; *)
 normalizedInner[u_, v_] := u.v/Norm[u]/Norm[v];
 doubleRotationMatrix[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
 getProjectionMatrix[direction_] := Simplify[Orthogonalize[{direction, {2, -1.4, 0.3, 0.9}, {0, 1, 2.3, 0.8}, {0.5, 0.3, 1, 0.1}}]][[2;;4]];
@@ -250,9 +250,8 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
 	(* activeCellsCenters = Map[projectTo3d, activeCellsCenters]; *)
 	(* activeCellsCenters = activeCellsCenters/Norm[activeCellsCenters[[1]]]; *)
 
-    wDistance = Max[Flatten[activeFaces]] * 1.05 * 1000000;
+    wDistance = Max[Flatten[activeFaces]] * 100000;
     (* Print[wDistance]; *)
-
 
 	(* fullProjectionMatrix = RotationMatrix[{rootCellCenter, {0, 0, 0, 1}}]; *)
 	(* If[shape == "polytope_3_3_5_cell600", fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}] ]; *)
@@ -268,7 +267,7 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     range = Max[Flatten[activeFaces]] * 2.3;
     range = Max[Flatten[activeFaces]] * 1.4; (* 120-cell *)
 
-    range = If[negativeFold, 1.3, 6];
+    range = If[negativeFold, 1.8, 6];
     viewPoint = {50, -50, 50};
 
     If[shape == "polytope_3_4_3", 
@@ -295,27 +294,37 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     faceCellRatio = Length[activeFaces]/Length[activeCellsCenters];
     grayArea = 0.05;
     graphElements = {};
-    thickness = 0.001;
+    thickness = 0.006;
 
     graphFaces = {};
+    graphEdges = {};
 
     For[k = 1, k <= Length[activeFaces], k++,
 	    cellId = Floor[(k - 1)/faceCellRatio] + 1;
 	    color = cellColors[[cellId]];
+	    centerW = cellCenters[[cellId]][[4]]//N;
+	    face = projectedActiveFaces[[k]] * (1 + 0.003 * centerW);
 
 		AppendTo[graphFaces,
 			{
 				Opacity[1],
 				color,
-				Polygon[ projectedActiveFaces[[k]] ]
+				Polygon[ face ]
 			}
 		];
-
+		edges3d = getEdgesFromFace[face];
+		AppendTo[graphEdges,
+			{
+				FaceForm[White], Map[Cylinder[#, thickness]&, edges3d]
+			}
+		];
     ];
 
 
     Print["draw face count: " <> IntegerString[Length[graphFaces]]];
+    Print["draw edge count: " <> IntegerString[Length[graphEdges]]];
     AppendTo[graphElements, graphFaces];
+    AppendTo[graphElements, graphEdges];
     (* thickness = 1.0; *)
     (* Print[Map[getHue[mapHopfFibration[#]]&, rotatedActiveCellsCenters]//Tally]; *)
 
@@ -331,7 +340,6 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
 		Boxed -> False
 		(* ViewAngle -> range/Norm[viewPoint]/100/6.7 *)
 	];
-
 
 	If[exportToPov,
 		If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
@@ -622,13 +630,14 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	rotatedCells
 ];
 
-negativeFold = True;
-(* negativeFold = False; *)
+(* negativeFold = True; *)
+negativeFold = False;
 
-For[frameId = 0, frameId <= 10, frameId += 1,
+For[frameId = 0, frameId <= 10, frameId += 5,
 	foldPercents = Table[If[negativeFold, -1, 1] * 0.1 * frameId, {k, 20}];
 	rotatedCells = foldCells[cells, rotationSchedule, foldPercents];
-	exportImage[shape, rotatedCells, 0.01, 0, frameId + If[negativeFold, 100, 0]];
+	explosionFactor = (10 - frameId) * 0.05;
+	exportImage[shape, rotatedCells, explosionFactor, 0, frameId + If[negativeFold, 100, 0]];
 ];
 
 
