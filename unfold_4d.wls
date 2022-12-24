@@ -12,6 +12,9 @@ python -m SimpleHTTPServer 8000
 
 (* global config *)
 
+(* frameCount = 10; *)
+frameCount = 200;
+
 shapes = {
 	"test",
 	"polytope_5_3_3_cell120",
@@ -151,8 +154,8 @@ explodedCell[cell_, explosionFactor_] := Map[
 	cell, {2}];
 normalizedAngle[u_, v_] := ArcSin[u.v/Norm[u]/Norm[v]]/Pi + 0.5;
 projectToDirection[vertex4d_, projectionMatrix_] := vertex4d.Transpose[projectionMatrix];
-perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance);
-(* perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]]; *)
+(* perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance); *)
+perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]];
 normalizedInner[u_, v_] := u.v/Norm[u]/Norm[v];
 doubleRotationMatrix[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
 getProjectionMatrix[direction_] := Simplify[Orthogonalize[{direction, {2, -1.4, 0.3, 0.9}, {0, 1, 2.3, 0.8}, {0.5, 0.3, 1, 0.1}}]][[2;;4]];
@@ -209,6 +212,8 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
 		imageSize,
 		faceTemp,faceNormalVector,faceCenter,projectedFaceCenter,faceVisible
 	},
+
+	(* If[serialNumber < 30, Continue[]]; *)
 
 	shapeTokens = StringSplit[shape, "_"];
 	If[Length[shapeTokens] < 3,
@@ -351,6 +356,8 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
 	Print["Saved the image to " <> outputFileName];
 ];
 
+smoothFall[x_, start_, duration_] := If[x < start, 1, If[x > start + duration, 0, (1 + Cos[(x - start)/duration*Pi])/2]];
+
 exportAnimation[shape_] := Module[
 	{
 		outputFolder,
@@ -358,7 +365,6 @@ exportAnimation[shape_] := Module[
 		gifFolder,
 		explosionConfig,
 		maxExplosionFactor,
-		frameCount,
 		explodeStep,
 		explosionFactors,
 		frameIndex,
@@ -375,37 +381,62 @@ exportAnimation[shape_] := Module[
 
 	explosionConfig = explosionConfigs[shape];
 	maxExplosionFactor = explosionConfig[[1]];
-	frameCount = explosionConfig[[2]];
 	explodeStep = maxExplosionFactor/frameCount;
 
-	frameCount = 200;
 	explosionFactor = 2.9 * If[shape == "polytope_3_3_5_cell600", 5, 1];
 	explosionFactor = 0.4; (* 120-cell *)
 	If[shape == "polytope_3_3_5_cell600", explosionFactor = 0.7];
 	If[shape == "polytope_3_4_3", explosionFactor = 0.4];
 
-	angleSpan = Pi/5;
+(* 	angleSpan = Pi/5;
     If[shape == "polytope_3_4_3", 
     	frameCount = 200;
     	angleSpan = 2 Pi/6];
     If[shape == "bitruncated_3_4_3", 
     	frameCount = 200;
     	angleSpan = 2 Pi/6];
-    (* frameCount = 20; *)
+ *)    (* frameCount = 20; *)
 
-    thetas = Table[(k - 1) * angleSpan / (frameCount), {k, 1, frameCount}];
+	negativeFold = True;
+	(* negativeFold = False; *)
 
-    For[ frameIndex = 1, frameIndex <= Length[thetas] , frameIndex++,
-        theta = thetas[[frameIndex]] * 1.0;
-        Print["Frame #" <> IntegerString[frameIndex] <> "/" <> IntegerString[Length[thetas]] 
-            <> " ; theta: " <> ToString[theta, InputForm]];
-		exportImage[shape, explosionFactor, theta, frameIndex];
-    ];
+	(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
+	unfoldPercents = Table[smoothFall[x, 0, 1]//N, {x, 0, 1, 1/(frameCount-1)}, {k, maxLevel}];
+	zeros = Table[0.0, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}];
+	minusOnes = Table[-1.0, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}];
+	unfoldPercents = Join[unfoldPercents, zeros, zeros, unfoldPercents - 1, minusOnes];
+
+	explosionFactors = Join[
+			Table[0.0, {x, 0, 1, 1/(frameCount-1)}], 
+			Table[(1-smoothFall[x, 0, 1]) * 0.5, {x, 0, 1, 1/( frameCount/2 - 1 )}]
+		];
+	explosionFactors = Join[explosionFactors, Reverse[explosionFactors], Table[0.0, {x, 0, 1, 1/(frameCount/4-1)}] ];
+
+	Print[unfoldPercents];
+	Print[explosionFactors];
+
+(* 	For[frameId = 0, frameId <= 10, frameId += 1,
+		foldPercents = Table[If[negativeFold, -1, 1] * 0.1 * frameId, {k, 20}];
+		rotatedCells = foldCells[cells, rotationSchedule, foldPercents];
+		explosionFactor = (10 - frameId) * 0.05;
+		exportImage[shape, rotatedCells, explosionFactor, 0, frameId + If[negativeFold, 100, 0]];
+	]; *)
+
+	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
+		(* If[frameIndex <= 30, Continue[]]; *)
+		unfoldPercent = unfoldPercents[[frameIndex]];
+		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
+		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
+		(* spinAngle = -Pi/2 - If[p == 4, Pi/6, Pi/4] - frameIndex/Length[unfoldPercents] * 2 * Pi; *)
+		rotatedCells = foldCells[cells, rotationSchedule, unfoldPercent];
+		explosionFactor = explosionFactors[[frameIndex]];
+		exportImage[shape, rotatedCells, explosionFactor, 0, frameIndex];
+	];
 
     delay = If[frameCount > 30, 3, 50];
 
-    (* gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*) *)
-    gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *)
+    gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*)
+    (* gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *) *)
 		<> IntegerString[delay] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
@@ -422,20 +453,6 @@ exportAnimation[shape_] := Module[
     Run[mp4Command];
     Print["Saved the video to " <> gifFolder <> "\\" <> gifFileName <> ".mp4"];
 ];
-
-(* For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
-	shape = shapes[[shapeIndex]];	
-	If[
-		StringContainsQ[shape, "polytope_3_3_"],
-		activeLayerMin = 1; activeLayerMax = 15,
-		activeLayerMin = 1; activeLayerMax = 9
-	];
-	If[shape == "polytope_3_4_3", activeLayerMax = 5];
-	If[shape == "bitruncated_3_4_3", activeLayerMax = 7];
-    
-	exportAnimation[shape];
-];
- *)
 
 shape = shapes[[1]];
 
@@ -519,11 +536,6 @@ shiftedEdges = {{41, 31, 1, {2, 10, 13, 25, 27, 112, 48, 16, 17, 38, 46, 22, 32,
 byLayer = {{41, 5, 1, {4, 19, 53, 16, 14, 102, 5}}, {5, 102, 2, {4, 19, 53, 16, 14, 102}}, {102, 14, 3, {4, 19, 53, 16, 14}}, {14, 4, 4, {4}}, {14, 16, 4, {19, 53, 16}}, {16, 53, 5, {19, 53}}, {53, 19, 6, {19}}, {41, 6, 1, {7, 23, 20, 17, 26, 103, 6}}, {6, 103, 2, {7, 23, 20, 17, 26, 103}}, {103, 26, 3, {7, 23, 20, 17, 26}}, {26, 7, 4, {7}}, {26, 17, 4, {23, 20, 17}}, {17, 20, 5, {23, 20}}, {20, 23, 6, {23}}, {41, 30, 1, {32, 70, 85, 38, 28, 51, 30}}, {30, 51, 2, {32, 70, 85, 38, 28, 51}}, {51, 28, 3, {32, 70, 85, 38, 28}}, {28, 32, 4, {32}}, {28, 38, 4, {70, 85, 38}}, {38, 85, 5, {70, 85}}, {85, 70, 6, {70}}, {41, 31, 1, {2, 3, 10, 13, 25, 27, 48, 60, 66, 33, 111, 112, 15, 31}}, {31, 15, 2, {2, 3, 10, 13, 25, 27, 48, 60, 66, 33, 111, 112, 15}}, {15, 2, 3, {2}}, {15, 3, 3, {3}}, {15, 10, 3, {10}}, {15, 13, 3, {13}}, {15, 25, 3, {25}}, {15, 27, 3, {27}}, {15, 48, 3, {48}}, {15, 60, 3, {60}}, {15, 66, 3, {66}}, {15, 111, 3, {33, 111}}, {111, 33, 4, {33}}, {15, 112, 3, {112}}, {41, 34, 1, {8, 12, 1, 37, 65, 29, 52, 62, 61, 54, 34}}, {34, 54, 2, {8, 12, 1, 37, 65, 29, 52, 62, 61, 54}}, {54, 1, 3, {8, 12, 1}}, {1, 8, 4, {8}}, {1, 12, 4, {12}}, {54, 29, 3, {37, 65, 29}}, {29, 37, 4, {37}}, {29, 65, 4, {65}}, {54, 61, 3, {52, 62, 61}}, {61, 52, 4, {52}}, {61, 62, 4, {62}}, {41, 35, 1, {11, 110, 9, 36, 64, 21, 68, 104, 67, 18, 35}}, {35, 18, 2, {11, 110, 9, 36, 64, 21, 68, 104, 67, 18}}, {18, 9, 3, {11, 110, 9}}, {9, 11, 4, {11}}, {9, 110, 4, {110}}, {18, 21, 3, {36, 64, 21}}, {21, 36, 4, {36}}, {21, 64, 4, {64}}, {18, 67, 3, {68, 104, 67}}, {67, 68, 4, {68}}, {67, 104, 4, {104}}, {41, 42, 1, {74, 57, 22, 43, 49, 55, 42}}, {42, 55, 2, {74, 57, 22, 43, 49, 55}}, {55, 49, 3, {74, 57, 22, 43, 49}}, {49, 22, 4, {74, 57, 22}}, {22, 57, 5, {74, 57}}, {57, 74, 6, {74}}, {49, 43, 4, {43}}, {41, 44, 1, {45, 92, 50, 24, 101, 69, 56, 114, 77, 58, 44}}, {44, 58, 2, {45, 92, 50, 24, 101, 69, 56, 114, 77, 58}}, {58, 50, 3, {45, 92, 50}}, {50, 45, 4, {45}}, {50, 92, 4, {92}}, {58, 69, 3, {24, 101, 69}}, {69, 24, 4, {24}}, {69, 101, 4, {101}}, {58, 77, 3, {56, 114, 77}}, {77, 56, 4, {56}}, {77, 114, 4, {114}}, {41, 79, 1, {99, 90, 46, 72, 116, 84, 79}}, {79, 84, 2, {99, 90, 46, 72, 116, 84}}, {84, 116, 3, {99, 90, 46, 72, 116}}, {116, 46, 4, {99, 90, 46}}, {46, 90, 5, {99, 90}}, {90, 99, 6, {99}}, {116, 72, 4, {72}}, {41, 80, 1, {39, 47, 63, 71, 40, 73, 75, 87, 91, 100, 106, 107, 88, 86, 80}}, {80, 86, 2, {39, 47, 63, 71, 40, 73, 75, 87, 91, 100, 106, 107, 88, 86}}, {86, 88, 3, {39, 47, 63, 71, 40, 73, 75, 87, 91, 100, 106, 107, 88}}, {88, 39, 4, {39}}, {88, 47, 4, {47}}, {88, 63, 4, {63}}, {88, 71, 4, {71}}, {88, 73, 4, {40, 73}}, {73, 40, 5, {40}}, {88, 75, 4, {75}}, {88, 87, 4, {87}}, {88, 91, 4, {91}}, {88, 100, 4, {100}}, {88, 106, 4, {106}}, {88, 107, 4, {107}}, {41, 115, 1, {83, 113, 76, 59, 78, 98, 82, 93, 118, 105, 115}}, {115, 105, 2, {83, 113, 76, 59, 78, 98, 82, 93, 118, 105}}, {105, 76, 3, {83, 113, 76}}, {76, 83, 4, {83}}, {76, 113, 4, {113}}, {105, 98, 3, {59, 78, 98}}, {98, 59, 4, {59}}, {98, 78, 4, {78}}, {105, 118, 3, {82, 93, 118}}, {118, 82, 4, {82}}, {118, 93, 4, {93}}, {41, 117, 1, {89, 109, 95, 81, 96, 97, 94, 120, 119, 108, 117}}, {117, 108, 2, {89, 109, 95, 81, 96, 97, 94, 120, 119, 108}}, {108, 95, 3, {89, 109, 95}}, {95, 89, 4, {89}}, {95, 109, 4, {109}}, {108, 97, 3, {81, 96, 97}}, {97, 81, 4, {81}}, {97, 96, 4, {96}}, {108, 119, 3, {94, 120, 119}}, {119, 94, 4, {94}}, {119, 120, 4, {120}}};
 
 rootCellId = 41;
-(* rotationSchedule = randomRotationSchedule; *)
-(* rotationSchedule = manualRotationSchedule; *)
-(* rotationSchedule = schedule22439; *)
-(* rotationSchedule = twoBundles; *)
-(* rotationSchedule = shiftedEdges; *)
 rotationSchedule = byLayer;
 
 rotation3D = IdentityMatrix[3];
@@ -534,9 +546,6 @@ If[shape == "polytope_3_4_3" || shape == "bitruncated_3_4_3", rotation3D = Rotat
 fullProjectionMatrix = ArrayFlatten[
 	{{rotation3D, 0}, {0, 1}}
 ];
-
-(* fullProjectionMatrix = RotationMatrix[{rootCellCenter, {0, 0, 0, 1}}]; *)
-(* If[shape == "polytope_3_3_5_cell600", fullProjectionMatrix = ArrayFlatten[{{1, 0, 0}, {0, RotationMatrix[-ArcTan[Sqrt[2]]], 0}, {0, 0, 1}}].ArrayFlatten[{{IdentityMatrix[2], 0}, {0, RotationMatrix[Pi/4]}}] ]; *)
 
 cells = Map[#.Transpose[fullProjectionMatrix] &, cells, {2}];
 cellCenters = Map[getCellCenter, cells];
@@ -566,7 +575,8 @@ cellColors = Map[colors[[ layerMap[#] ]]&, Range[Length[cells]]];
 (* Exit[]; *)
 
 maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
-(* Print[maxLevel]; *)
+Print["maxLevel: "];
+Print[maxLevel];
 
 foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	{originalDihedralAngle, rotatedCells, scheduleId, level, schedule, cell1Id, cell2Id, rotatedCellIds},
@@ -615,13 +625,13 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
-	If[negativeFold && Mean[foldPercents] == -1,
+(* 	If[negativeFold && Mean[foldPercents] == -1,
 		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
 		activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
 		activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
 		Print["Element counts: cells, faces, edges, vertices:"];
 		Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
-	];
+	]; *)
 
 	(* negative fold, random tree {120, 629, 707, 119} *)
 	(* negative fold, manual tree {120, 530, 690, 120} *)
@@ -630,15 +640,8 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	rotatedCells
 ];
 
-(* negativeFold = True; *)
-negativeFold = False;
+exportAnimation[shape];
 
-For[frameId = 0, frameId <= 10, frameId += 5,
-	foldPercents = Table[If[negativeFold, -1, 1] * 0.1 * frameId, {k, 20}];
-	rotatedCells = foldCells[cells, rotationSchedule, foldPercents];
-	explosionFactor = (10 - frameId) * 0.05;
-	exportImage[shape, rotatedCells, explosionFactor, 0, frameId + If[negativeFold, 100, 0]];
-];
 
 
 
