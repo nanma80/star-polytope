@@ -636,8 +636,8 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 					Print["Element counts: cells, faces, edges, vertices:"];
 					Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
 					Print[rotationSchedule];
-					Print[FromCharacterCode[{7, 7, 7}]];
-					Exit[];
+					(* Print[FromCharacterCode[{7, 7, 7}]]; *)
+					(* Exit[]; *)
 				];
 			];
 		];
