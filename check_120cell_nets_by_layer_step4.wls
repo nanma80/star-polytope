@@ -636,6 +636,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 					Print["Element counts: cells, faces, edges, vertices:"];
 					Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
 					Print[rotationSchedule];
+					Print[FromCharacterCode[{7, 7, 7}]];
 					Exit[];
 				];
 			];
@@ -732,7 +733,7 @@ fixedLayers = { 1, 2, 4, 6, 8, 9 };
 fixedCells = Apply[Join, layers[[ fixedLayers ]]];
 (* otherLayers = {3, 5, 7}; *)
 (* otherLayers = {3}; *)
-otherLayers = {3, 7};
+otherLayers = {3, 7, 5};
 (* otherLayers = {5}; *)
 otherCells = Apply[Join, layers[[otherLayers]]];
 

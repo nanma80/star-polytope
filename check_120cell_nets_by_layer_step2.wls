@@ -859,6 +859,7 @@ If[otherLayers == {5}, candidateIds = candidateIdsLayer5Partial ];
 
 For[candidateId = 1, candidateId <= Length[treeCandidates], candidateId++,
 	If[MemberQ[candidateIds, candidateId] == False, Continue[]];
+	If[candidateId > 42906, Continue[]];
 
 	(* 
 	with layer 3:
