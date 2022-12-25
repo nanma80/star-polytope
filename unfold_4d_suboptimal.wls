@@ -421,6 +421,7 @@ exportAnimation[shape_] := Module[
 	]; *)
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
+		Continue[];
 		(* If[frameIndex < 31, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
