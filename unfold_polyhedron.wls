@@ -37,6 +37,9 @@ stageCount = 2;
 (* frameCount = 12; *)
 frameCount = 150;
 
+suboptimal = True;
+(* suboptimal = False; *)
+
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
 	p = ToExpression[argv[[1]]]; q = ToExpression[argv[[2]]],
@@ -164,7 +167,7 @@ partialProjection[p_, center_, norm_, projectionRatio_] := If[stereographicProje
 (p - center)/Norm[(p - center)] * (Norm[(p - center)] (1 - projectionRatio) + projectionRatio * (4*norm*norm/Norm[(p - center)] ) )  + center,
 ArcCos[Dot[p, -center]/Norm[p]/Norm[center]]/Pi*projectionRatio * p + p];
 
-shapeWithParams = shape <> "_" <> IntegerString[frameCount];
+shapeWithParams = shape <> "_" <> IntegerString[frameCount] <> If[suboptimal, "_suboptimal", ""];
 
 getGenerator[p_, q_] := Module[
 	{inner01, inner02, inner12, signature, p0, p1, p2, otherp2, ch2psi},
@@ -507,11 +510,13 @@ exportAnimation[] := Module[
 	tree = GraphTree[spanningTree];
 
 	If[p == 5 && q == 3,
-		(* manually constructed for {5,3} by Rinus Roelofs. Two cups *)
-		(* tree = Tree[1, {Tree[2, {Tree[4, {Tree[11, {9, 5, 10, 12}]}]}], 3, 6, 7, 8}]; *)
-
 		(* Found by my script. Should be a good net *)
 		tree = Tree[1, {Tree[2, {Tree[9, {Tree[11, {Tree[4, {5}], Tree[10, {12}]}]}]}], Tree[3, {8}], 6, 7}];
+
+		If[suboptimal,
+			(* manually constructed for {5,3} by Rinus Roelofs. Two cups *)
+			tree = Tree[1, {Tree[2, {Tree[4, {Tree[11, {9, 5, 10, 12}]}]}], 3, 6, 7, 8}];
+		];
 	];
 
 	rootFaceId = TreeData[tree];
@@ -542,7 +547,7 @@ exportAnimation[] := Module[
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-		spinAngle = -Pi/2 - If[p == 4, Pi/6, Pi/4] - frameIndex/Length[unfoldPercents] * 2 * Pi;
+		spinAngle = -Pi/2 - If[p == 4, Pi/6, Pi/4] - frameIndex/Length[unfoldPercents] * 2 * Pi + If[suboptimal, -Pi/4, 0];
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 

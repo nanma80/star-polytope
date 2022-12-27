@@ -504,10 +504,15 @@ exportAnimation[] := Module[
 	Print[adjMatrix];
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
-	treesTopN = 100000 * 10;
+	treesTopN = 1000000;
+	Print[Binomial[ Length[EdgeList[graph]], VertexCount[graph] - 1 ]];
+
 	trees = Select[TreeGraphQ[Graph@#] &]@Select[VertexCount@# == VertexCount[graph] &]@Subsets[EdgeList[graph], {VertexCount[graph] - 1}, treesTopN];
 	Print["Found trees as candidates: " <> IntegerString[Length[trees]]];
-	(* Exit[]; *)
+	(* if we don't restrict top n subset, we need to consider around 3 million tree candidates.
+	 *)
+
+	Exit[];
 
 	For[treeId = 1, treeId <=Length[trees], treeId++,
 		Print["treeId: " <> IntegerString[treeId]];
