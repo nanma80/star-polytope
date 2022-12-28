@@ -280,7 +280,7 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     	range = Max[Flatten[activeFaces]] * 2.2;
     	viewPoint = {1.0, -0.9, 0.5}];
     If[shape == "polytope_3_3_5_cell600", 
-    	range = Max[Flatten[activeFaces]] * 1.5;
+    	range = Max[Flatten[activeFaces]] * 0.8;
     	viewPoint = {1.2, -0.7, 0.5}];
     If[shape == "polytope_5_3_3_cell120", 
     	range = Max[Flatten[activeFaces]] * 0.8;
@@ -525,50 +525,61 @@ buildSchedule[t_, schedule_, level_] := Module[
 getRotationSchedule[cells_] := Module[
 	{limit, adjMatrix, id1, graph, spanningTree, tree, rootCellCenter, rotationSchedule},
 	limit = Length[cells];
-	adjMatrix = {};
 
-	For[id1 = 1, id1 <= limit, id1++,
-		row = Table[If[adjacentCellsIndex[cells, id1, id2], 1, 0], 
-			{id2, 1, limit}];
-		Print[id1];
-		AppendTo[adjMatrix, row];
+
+	adjMatrixFileName = "adjMatrix_600_cell";
+
+	adjMatrixFileName = FileNameJoin[{dataFolder, "folding_600_cell", adjMatrixFileName <> ".wl"}];
+
+	If[FileExistsQ[adjMatrixFileName],
+		adjMatrix = Get[adjMatrixFileName],
+		adjMatrix = {};
+		For[id1 = 1, id1 <= limit, id1++,
+			row = Table[If[adjacentCellsIndex[cells, id1, id2], 1, 0], {id2, 1, limit}];
+			Print[id1];
+			AppendTo[adjMatrix, row];
+		];
+
+		Save[adjMatrixFileName, adjMatrix];
 	];
 
-	Print[adjMatrix];
+	(* Print[adjMatrix]; *)
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
 
-	treesTopN = 1000000;
+	spanningTree = FindSpanningTree[DirectedGraph[graph]];
+	tree = GraphTree[spanningTree];
+
+	rootCellId = TreeData[tree];
+
+	rotationSchedule = {};
+
+	rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
+	rotationSchedule
+
+(* 	treesTopN = 1000000;
 	Print[Binomial[ Length[EdgeList[graph]], VertexCount[graph] - 1 ]];
 
 	trees = Select[TreeGraphQ[Graph@#] &]@Select[VertexCount@# == VertexCount[graph] &]@Subsets[EdgeList[graph], {VertexCount[graph] - 1}, treesTopN];
-	Print["Found trees as candidates: " <> IntegerString[Length[trees]]];
-
-
-
+	Print["Found trees as candidates: " <> IntegerString[Length[trees]]]; *)
 ];
 
 rootCellId = 1;
 
-getRotationSchedule[cells];
-
-
-
-
-
-
-Exit[];
-
-rotationSchedule = byLayer;
+rotationSchedule = getRotationSchedule[cells];
 
 rotation3D = IdentityMatrix[3];
 (* for 600 cell, the following will lead to 60 rings. Each ring has 10 cells *)
-If[shape == "polytope_5_3_3_cell120" || shape == "polytope_3_3_5_cell600", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
+(* If[shape == "polytope_5_3_3_cell120" || shape == "polytope_3_3_5_cell600", rotation3D = RotationMatrix[-ArcTan[1/phi], {0, 1, 0}]];
 If[shape == "polytope_3_4_3" || shape == "bitruncated_3_4_3", rotation3D = RotationMatrix[Pi/6, {0, 0, 1}].RotationMatrix[-ArcTan[Sqrt[2]], {1, 0, 0}].RotationMatrix[Pi/4, {0, 0, 1}]];
 
 fullProjectionMatrix = ArrayFlatten[
 	{{rotation3D, 0}, {0, 1}}
 ];
+ *)
+rootCellCenter = getCellCenter[cells[[rootCellId]]]//N;
+Print[rootCellCenter];
+fullProjectionMatrix = RotationMatrix[{ getCellCenter[cells[[rootCellId]]], {0, 0, 0, -1} }];
 
 cells = Map[#.Transpose[fullProjectionMatrix] &, cells, {2}];
 cellCenters = Map[getCellCenter, cells];
@@ -605,7 +616,7 @@ Print[maxLevel];
 foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	{originalDihedralAngle, rotatedCells, scheduleId, level, schedule, cell1Id, cell2Id, rotatedCellIds},
 	originalDihedralAngle = 0;
-	rotatedCells = cells;
+	rotatedCells = N[cells];
 
 	For[scheduleId = 1, scheduleId <= Length[rotationSchedule], scheduleId++,
 		schedule = rotationSchedule[[scheduleId]];
@@ -631,16 +642,16 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			relativeCell1 = cellCenter1 - pivotCenter;
 			relativeCell2 = cellCenter2 - pivotCenter;
 			
-			originalDihedralAngle = ArcCos[ Dot[relativeCell1, relativeCell2]/Norm[relativeCell1]/Norm[relativeCell2] ];
+			originalDihedralAngle = ArcCos[ Dot[relativeCell1, relativeCell2]/Norm[relativeCell1]/Norm[relativeCell2] ]//N;
 			
-			Print["originalDihedralAngle"];
-			Print[originalDihedralAngle / Pi * 180.];
+(* 			Print["originalDihedralAngle"];
+			Print[originalDihedralAngle / Pi * 180.]; *)
 			(* 
 				600-cell: ArcCos[-1/8 - (3*Sqrt[5])/8], 164.47751218593
 				grand 600-cell: ArcCos[-1/8 + (3*Sqrt[5])/8], 44.47751218592993
 			*)
 			
-			grand600CellDihedralAngle = ArcCos[-1/8 + (3*Sqrt[5])/8];
+			grand600CellDihedralAngle = ArcCos[-1/8 + (3*Sqrt[5])/8]//N;
 
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = grand600CellDihedralAngle - originalDihedralAngle;
@@ -657,13 +668,27 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
-(* 	If[negativeFold && Mean[foldPercents] == -1,
+	rotatedCenters = Map[getCellCenter, rotatedCells];
+	uniqueCenters = Union[rotatedCenters, SameTest -> ApproxSamePoint];
+	Print["unique center count:"];
+	Print[Length[uniqueCenters]];
+	(* Exit[]; *)
+
+	If[True,
 		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
 		activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
 		activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
 		Print["Element counts: cells, faces, edges, vertices:"];
-		Print[Map[Length, {rotatedCells, activeFaces, activeEdges, activeVertices}]];
-	]; *)
+		Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
+
+		(* 
+		600-cell:
+		{600, 1200, 720, 120}
+
+		grand 600-cell:
+		{600, 1200, 720, 120}
+ *)
+	];
 
 	(* negative fold, random tree {120, 629, 707, 119} *)
 	(* negative fold, manual tree {120, 530, 690, 120} *)
@@ -672,7 +697,13 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	rotatedCells
 ];
 
-exportAnimation[shape];
+unfoldPercent = Table[1.0, {k, maxLevel}];
+rotatedCells = foldCells[cells, rotationSchedule, unfoldPercent];
+explosionFactor = 0;
+exportImage[shape, rotatedCells, explosionFactor, 0, 0];
+
+
+(* exportAnimation[shape]; *)
 
 
 
