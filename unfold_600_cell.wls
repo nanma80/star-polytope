@@ -12,8 +12,8 @@ python -m SimpleHTTPServer 8000
 
 (* global config *)
 
-frameCount = 10;
-(* frameCount = 200; *)
+(* frameCount = 10; *)
+frameCount = 200;
 
 shapes = {
 	"test",
@@ -35,6 +35,7 @@ shapes = {
 	(* "polytope_3_4_3", *)
 	(* "polytope_5_3_3_cell120" *)
 	"polytope_3_3_5_cell600"
+	(* "polytope_3_3_4" *)
 	(* "polytope_3_3_52" *)
 	(* "bitruncated_3_4_3" *)
 };
@@ -52,7 +53,12 @@ imageSizes = <|
 |>;
 
 colors = {Brown, Yellow, Blue, Green, Cyan, Red, Purple, Orange, GrayLevel[0.5] }//Reverse;
-colors = Join[colors, RandomColor[100]];
+colors = Join[colors, RandomColor[22]];
+Print["colors"];
+Print[colors];
+
+(* one realization, for consistency *)
+colors = {GrayLevel[0.5], RGBColor[1, 0.5, 0], RGBColor[0.5, 0, 0.5], RGBColor[1, 0, 0], RGBColor[0, 1, 1], RGBColor[0, 1, 0], RGBColor[0, 0, 1], RGBColor[1, 1, 0], RGBColor[0.6, 0.4, 0.2], RGBColor[0.8105083771645483, 0.23663910012583567, 0.9729724714759138], RGBColor[0.4557800892072139, 0.8234255243528599, 0.9418538225276114], RGBColor[0.5069713088717647, 0.1380399589796435, 0.19818135119997504], RGBColor[0.2806740950494051, 0.3345641912556099, 0.7331840382027028], RGBColor[0.6990518103172214, 0.6930044550663568, 0.21216510098565355], RGBColor[0.635757416229463, 0.2805162691577381, 0.06597817940854078], RGBColor[0.07304761358679368, 0.31593429655179883, 0.8113773066626391], RGBColor[0.9495640041418516, 0.7659294996073056, 0.6003537437365118], RGBColor[0.8328776949418131, 0.3685282033460118, 0.7052695612598112], RGBColor[0.35081137933012174, 0.881099836794254, 0.47760936834021805], RGBColor[0.7777753167949859, 0.8251038447392216, 0.16601549689517126], RGBColor[0.4449309065416689, 0.6322731203349534, 0.6291439048555509], RGBColor[0.24322046711504153, 0.0891596610827492, 0.46520471005013464], RGBColor[0.43432540122159424, 0.024885395526281107, 0.2181294067744901], RGBColor[0.021260327105693477, 0.5419837395492464, 0.052403481011500386], RGBColor[0.3622508277723713, 0.4103831876922248, 0.29828023549958105], RGBColor[0.07200671983615048, 0.8046114145871346, 0.9387164377216226], RGBColor[0.4433616581728024, 0.6446156492388302, 0.419397360522628], RGBColor[0.35117845515707447, 0.8432311313509513, 0.8943553143329561], RGBColor[0.6594666395066768, 0.31036553489567353, 0.7321958736332197], RGBColor[0.00523150782617221, 0.17778574255011081, 0.8113615450824387], RGBColor[0.12288040075655227, 0.2059601403945157, 0.7977872301981275]};
 
 allColors = <|
 	"3_3" -> Cyan,
@@ -281,7 +287,7 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     	range = Max[Flatten[activeFaces]] * 2.2;
     	viewPoint = {1.0, -0.9, 0.5}];
     If[shape == "polytope_3_3_5_cell600", 
-    	range = Max[Flatten[activeFaces]] * 1.5;
+    	range = Max[Flatten[activeFaces]] * 0.8;
     	viewPoint = {1.2, -0.7, 0.5}];
     If[shape == "polytope_5_3_3_cell120", 
     	range = Max[Flatten[activeFaces]] * 0.8;
@@ -410,22 +416,16 @@ exportAnimation[shape_] := Module[
 
 	explosionFactors = Join[
 			Table[0.0, {x, 0, 1, 1/(frameCount-1)}], 
-			Table[(1-smoothFall[x, 0, 1]) * 0.5, {x, 0, 1, 1/( frameCount/2 - 1 )}]
+			Table[(1-smoothFall[x, 0, 1]) * 1.5, {x, 0, 1, 1/( frameCount/2 - 1 )}]
 		];
 	explosionFactors = Join[explosionFactors, Reverse[explosionFactors], Table[0.0, {x, 0, 1, 1/(frameCount/4-1)}] ];
 
 	Print[unfoldPercents];
 	Print[explosionFactors];
 
-(* 	For[frameId = 0, frameId <= 10, frameId += 1,
-		foldPercents = Table[If[negativeFold, -1, 1] * 0.1 * frameId, {k, 20}];
-		rotatedCells = foldCells[cells, rotationSchedule, foldPercents];
-		explosionFactor = (10 - frameId) * 0.05;
-		exportImage[shape, rotatedCells, explosionFactor, 0, frameId + If[negativeFold, 100, 0]];
-	]; *)
-
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
-		(* If[frameIndex <= 30, Continue[]]; *)
+		Continue[];
+		(* If[frameIndex < 400, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -505,6 +505,7 @@ findDihedralAngle[cells_] := Module[
 	originalDihedralAngle = ArcCos[ Dot[relativeCell1, relativeCell2]/Norm[relativeCell1]/Norm[relativeCell2] ];
 	Print[originalDihedralAngle//FullSimplify];
 	Print[originalDihedralAngle/Pi * 180.0];
+	Exit[];
 	originalDihedralAngle
 ];
 
@@ -547,7 +548,6 @@ getRotationSchedule[cells_] := Module[
 	(* Print[adjMatrix]; *)
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
-
 	spanningTree = FindSpanningTree[DirectedGraph[graph]];
 	tree = GraphTree[spanningTree];
 
@@ -577,8 +577,10 @@ rootCellCenter = getCellCenter[cells[[rootCellId]]]//N;
 fullProjectionMatrix = RotationMatrix[{ getCellCenter[cells[[rootCellId]]], {0, 0, 0, -1} }];
 
 cells = Map[#.Transpose[fullProjectionMatrix] &, cells, {2}];
-cellCenters = Map[getCellCenter, cells];
+Print["getting cell centers"];
+cellCenters = Map[getCellCenter, cells//N];
 
+Print["grouping cells by layer"];
 layerGroupBy = 
  GroupBy[Range[Length[cellCenters]], 
   Round[cellCenters[[#]][[4]], epsilon] &];
@@ -644,14 +646,22 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			(* 
 				600-cell: ArcCos[-1/8 - (3*Sqrt[5])/8], 164.47751218593
 				grand 600-cell: ArcCos[-1/8 + (3*Sqrt[5])/8], 44.47751218592993
+				5-cell {3,3,3}: ArcSec[4], 75.52248781407008
+				16-cell {3,3,4}: (2*Pi)/3, 120.0
 			*)
 			
 			grand600CellDihedralAngle = ArcCos[-1/8 + (3*Sqrt[5])/8]//N;
+			cell5DihedralAngle = ArcSec[4]//N;
+			cell16DihedralAngle = (2*Pi)/3//N;
 
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = grand600CellDihedralAngle - originalDihedralAngle;
+			(* angleToStellate = cell5DihedralAngle - originalDihedralAngle; *)
+			(* angleToStellate = cell16DihedralAngle - originalDihedralAngle; *)
+
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
+
 			rotMatrix = RotationMatrix[angleToTarget * Abs[perc], {relativeCell2, relativeCell1}];
 
 			For[cid = 1, cid <= Length[rotatedCellIds], cid++,
@@ -662,6 +672,9 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			];
 		];
 	];
+
+	Print["Dihedral angle:"];
+	Print[(angleToTarget * Abs[perc] + originalDihedralAngle)/Pi * 180.0];
 
 	rotatedCenters = Map[getCellCenter, rotatedCells];
 	uniqueCenters = Union[rotatedCenters, SameTest -> ApproxSamePoint];
@@ -682,6 +695,12 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 
 		grand 600-cell:
 		{600, 1200, 720, 120}
+
+		5-cell:
+		{5, 10, 10, 5}
+
+		16-cell:
+		{16, 32, 24, 8}
  *)
 	];
 
@@ -691,7 +710,9 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 exportAnimation[shape];
 
 
-
+(* 
+for ($num = 627 ; $num -le 650 ; $num++) { cp pov_animation_polytope_3_3_5_cell600_0626.png "pov_animation_polytope_3_3_5_cell600_0$num.png" }
+ *)
 
 (* exportImage[shape, 1, 9, 2.9, 1 deltaTheta, 11]; *)
 (* exportImage[shape, 1, 9, 2.9, 2 deltaTheta, 12]; *)
