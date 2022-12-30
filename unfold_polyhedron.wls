@@ -35,15 +35,16 @@ stageCount = 2;
 (* frameCount = 5; *)
 (* frameCount = 10; *)
 (* frameCount = 12; *)
-frameCount = 150;
+(* frameCount = 150; *)
+frameCount = 160;
 
-suboptimal = True;
-(* suboptimal = False; *)
+(* suboptimal = True; *)
+suboptimal = False;
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
 	p = ToExpression[argv[[1]]]; q = ToExpression[argv[[2]]],
-	p = 5; q = 3; (* default *)
+	p = 3; q = 5; (* default *)
 ];
 
 If[Length[argv] >= 3, 
@@ -90,6 +91,7 @@ Rotation[t_] :=
 };
 epsilon = 0.00000001;
 smoothFall[x_, start_, duration_] := If[x < start, 1, If[x > start + duration, 0, (1 + Cos[(x - start)/duration*Pi])/2]];
+smoothFallFromTo[x_, start_, duration_, from_, to_] := smoothFall[x, start, duration] (from - to) + to;
 HReflect[point_, mirror_, sig_] := If[sig!= 0, 
 	point - 2 * HInner[point, mirror, sig]/HInner[mirror, mirror, sig]*mirror,
 	point - 2 * (mirror[[2]]*point[[2]] + mirror[[3]]*point[[3]] + mirror[[1]])/(mirror[[2]]^2 + mirror[[3]]^2) * {0, mirror[[2]], mirror[[3]]}
@@ -340,7 +342,7 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 
 	elements = {
 			Table[{
-				Opacity[opacity], FaceForm[allColors[[k]]], Polygon[selectedFaces[[k]] ]
+				Opacity[opacity], FaceForm[allColors[[k]]], Polygon[selectedFaces[[k]] * (1 + 0.0001 k)]
 			}, {k, Length[selectedFaces]}],
 			{
 				Opacity[1], FaceForm[White], Map[Cylinder[#, thickness]&, edges]
@@ -370,7 +372,7 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 		schedule = rotationSchedule[[scheduleId]];
 		level = schedule[[3]];
 		If[level >= 1,
-			Print[schedule];
+			(* Print[schedule]; *)
 			face1Id = schedule[[1]];
 			face2Id = schedule[[2]];
 			rotatedFaceIds = schedule[[4]];
@@ -529,10 +531,27 @@ exportAnimation[] := Module[
 
 	maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
 
+
 	(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
 	unfoldPercents = Table[smoothFall[x, k/2/maxLevel - 1/4/maxLevel, 1/2]//N, {x, 0, 1, 1/(frameCount-1)}, {k, maxLevel}];
 	If[stageCount == 2,
-		unfoldPercents = Join[unfoldPercents, Map[Reverse , unfoldPercents - 1] ];
+		If[p == 3 && q == 5,
+			dihedralOctahedron = ArcCos[-1/3];
+			dihedralTetrahedron = ArcCos[1/3];
+			dihedralIcosahedron = ArcCos[-Sqrt[5]/3];
+			dihedralGreatIcosahedron = ArcCos[Sqrt[5]/3];
+			step1 = (dihedralOctahedron - dihedralIcosahedron)/(dihedralGreatIcosahedron - dihedralIcosahedron);
+			step2 = (dihedralTetrahedron - dihedralOctahedron)/(dihedralGreatIcosahedron - dihedralIcosahedron);
+			step3 = (dihedralGreatIcosahedron - dihedralTetrahedron)/(dihedralGreatIcosahedron - dihedralIcosahedron);
+			negativePercents = Join[
+				Table[smoothFallFromTo[x, 0, 1, 0, -step1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
+			  Table[smoothFallFromTo[x, 0, 1, -step1, -step1 - step2], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}], 
+			  Table[smoothFallFromTo[x, 0, 1, -step1 - step2, -1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}]
+      ]//N;
+
+			unfoldPercents = Join[unfoldPercents, negativePercents ],
+			unfoldPercents = Join[unfoldPercents, Map[Reverse , unfoldPercents - 1] ];
+		];
 	];
 	
 	unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]];
@@ -544,6 +563,7 @@ exportAnimation[] := Module[
 	Print[unfoldPercents];
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
+		(* If[frameIndex != 10 && frameIndex != 15 && frameIndex != 20, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
