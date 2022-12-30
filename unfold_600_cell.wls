@@ -12,6 +12,7 @@ python -m SimpleHTTPServer 8000
 
 (* global config *)
 
+(* frameCount = 5; *)
 (* frameCount = 10; *)
 frameCount = 200;
 
@@ -411,20 +412,26 @@ exportAnimation[shape_] := Module[
 	(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
 	unfoldPercents = Table[smoothFall[x, 0, 1]//N, {x, 0, 1, 1/(frameCount-1)}, {k, maxLevel}];
 	zeros = Table[0.0, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}];
-	minusOnes = Table[-1.0, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}];
-	unfoldPercents = Join[unfoldPercents, zeros, zeros, unfoldPercents - 1, minusOnes];
+	minusOnes = Table[-1.0, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}];
+	unfoldPercentsFast = Table[smoothFall[x, 0, 1] // N, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}];
+	unfoldPercents = Join[unfoldPercents, zeros, zeros, unfoldPercentsFast - 1, unfoldPercentsFast - 2, unfoldPercentsFast - 3, minusOnes*3];
 
+	(* 
+	unfold percents: 1: flat, 0: 600-cell, -1: 16-cell, -2, 5-cell, -3, grand 600-cell
+	 *)
 	explosionFactors = Join[
 			Table[0.0, {x, 0, 1, 1/(frameCount-1)}], 
 			Table[(1-smoothFall[x, 0, 1]) * 1.5, {x, 0, 1, 1/( frameCount/2 - 1 )}]
 		];
-	explosionFactors = Join[explosionFactors, Reverse[explosionFactors], Table[0.0, {x, 0, 1, 1/(frameCount/4-1)}] ];
+	explosionFactors = Join[explosionFactors, Reverse[explosionFactors]];
+	paddingLength = Length[unfoldPercents] - Length[explosionFactors];
+	explosionFactors = Join[explosionFactors, Table[0.0, {k, paddingLength}] ];
 
-	Print[unfoldPercents];
+	Print[Map[First, unfoldPercents]];
 	Print[explosionFactors];
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
-		Continue[];
+		(* Continue[]; *)
 		(* If[frameIndex < 400, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
@@ -437,8 +444,8 @@ exportAnimation[shape_] := Module[
 
     delay = If[frameCount > 30, 3, 50];
 
-    gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*)
-    (* gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *) *)
+    (* gifCommand = "magick convert -duplicate 1,-2-1 -quiet +repage -alpha remove -loop 0 -delay "  (* loop back*) *)
+    gifCommand = "magick convert -quiet +repage -alpha remove -loop 0 -delay " (* no looping back *)
 		<> IntegerString[delay] <> " -dispose 2 " <> outputFolder <> "\\*animation*.png " <> gifFolder <> "\\" <> gifFileName <> ".gif";
 
 	Print[gifCommand];
@@ -654,15 +661,36 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			cell5DihedralAngle = ArcSec[4]//N;
 			cell16DihedralAngle = (2*Pi)/3//N;
 
-			angleToFlat = Pi - originalDihedralAngle;
-			angleToStellate = grand600CellDihedralAngle - originalDihedralAngle;
+			(* angleToFlat = Pi - originalDihedralAngle; *)
+			(* angleToStellate = grand600CellDihedralAngle - originalDihedralAngle; *)
 			(* angleToStellate = cell5DihedralAngle - originalDihedralAngle; *)
 			(* angleToStellate = cell16DihedralAngle - originalDihedralAngle; *)
 
 			perc = foldPercents[[level]];
-			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
+			(* angleToTarget = If[perc >= 0, angleToFlat, angleToStellate]; *)
 
-			rotMatrix = RotationMatrix[angleToTarget * Abs[perc], {relativeCell2, relativeCell1}];
+			(* if perc >= 0 *)
+			angleInterval = {originalDihedralAngle, Pi};
+			absolutePerc = Abs[perc];
+
+			If[perc < 0 && perc >= -1,
+				angleInterval = {originalDihedralAngle, cell16DihedralAngle};
+			];
+
+			If[perc < -1 && perc >= -2,
+				angleInterval = {cell16DihedralAngle, cell5DihedralAngle};
+				absolutePerc = Abs[perc] - 1;
+			];
+
+			If[perc < -2 && perc >= -3,
+				angleInterval = {cell5DihedralAngle, grand600CellDihedralAngle};
+				absolutePerc = Abs[perc] - 2;
+			];
+
+			dihedralAngle = angleInterval[[1]] (1-absolutePerc) + angleInterval[[2]] absolutePerc;
+			angleToRotate = dihedralAngle - originalDihedralAngle;
+
+			rotMatrix = RotationMatrix[angleToRotate, {relativeCell2, relativeCell1}];
 
 			For[cid = 1, cid <= Length[rotatedCellIds], cid++,
 				cellId = rotatedCellIds[[cid]];
@@ -674,7 +702,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	];
 
 	Print["Dihedral angle:"];
-	Print[(angleToTarget * Abs[perc] + originalDihedralAngle)/Pi * 180.0];
+	Print[dihedralAngle/Pi * 180.0];
 
 	rotatedCenters = Map[getCellCenter, rotatedCells];
 	uniqueCenters = Union[rotatedCenters, SameTest -> ApproxSamePoint];
@@ -711,7 +739,7 @@ exportAnimation[shape];
 
 
 (* 
-for ($num = 627 ; $num -le 650 ; $num++) { cp pov_animation_polytope_3_3_5_cell600_0626.png "pov_animation_polytope_3_3_5_cell600_0$num.png" }
+for ($num = 701 ; $num -le 800 ; $num++) { cp pov_animation_polytope_3_3_5_cell600_0700.png "pov_animation_polytope_3_3_5_cell600_0$num.png" }
  *)
 
 (* exportImage[shape, 1, 9, 2.9, 1 deltaTheta, 11]; *)
