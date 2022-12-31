@@ -546,8 +546,16 @@ getRotationSchedule[cells_] := Module[
 	(* Print[adjMatrix]; *)
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
+	Print[Length[EdgeList[graph]]];
+	edgeSubsets = Subsets[EdgeList[graph], {Length[EdgeList[graph]] - 1} ];
+	Print[Length[edgeSubsets]];
 
-	spanningTree = FindSpanningTree[DirectedGraph[graph]];
+	subsetId = RandomInteger[{1, Length[edgeSubsets]}];
+	Print["subsetId"];
+	Print[subsetId];
+	spanningTree = FindSpanningTree[DirectedGraph[Graph[edgeSubsets[[subsetId]]]]];
+
+	(* spanningTree = FindSpanningTree[DirectedGraph[graph]]; *)
 	tree = GraphTree[spanningTree];
 
 	rootCellId = TreeData[tree];
@@ -582,7 +590,7 @@ Print[rootCellCenter];
 fullProjectionMatrix = RotationMatrix[{ getCellCenter[cells[[rootCellId]]], {0, 0, 0, -1} }];
 
 cells = Map[#.Transpose[fullProjectionMatrix] &, cells, {2}];
-cellCenters = Map[getCellCenter, cells];
+cellCenters = Map[getCellCenter, cells//N];
 
 layerGroupBy = 
  GroupBy[Range[Length[cellCenters]], 
@@ -601,9 +609,9 @@ For[layerId = 1, layerId <= Length[layers], layerId++,
   ];
 ];
 
-(* cellColors = Map[getHue[mapHopfFibration[#]]&, cellCenters]; *)
+cellColors = Map[getHue[mapHopfFibration[#]]&, cellCenters];
 (* cellColors = Map[colors[[ layerMap[#] ]]&, Range[Length[cells]]]; *)
-cellColors = Map[Red&, Range[Length[cells]]];
+(* cellColors = Map[Red&, Range[Length[cells]]]; *)
 
 (* rootCellCenter = getCellCenter[cells[[rootCellId]]]; *)
 (* Print[rootCellCenter//N]; *)
@@ -672,9 +680,9 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	uniqueCenters = Union[rotatedCenters, SameTest -> ApproxSamePoint];
 	Print["unique center count:"];
 	Print[Length[uniqueCenters]];
-	(* Exit[]; *)
+	Exit[];
 
-	If[True,
+	If[False,
 		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
 		activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
 		activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
@@ -697,7 +705,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	rotatedCells
 ];
 
-unfoldPercent = Table[1.0, {k, maxLevel}];
+unfoldPercent = Table[-1.0, {k, maxLevel}];
 rotatedCells = foldCells[cells, rotationSchedule, unfoldPercent];
 explosionFactor = 0;
 exportImage[shape, rotatedCells, explosionFactor, 0, 0];
