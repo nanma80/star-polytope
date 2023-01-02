@@ -33,10 +33,10 @@ stageCount = 2;
 
 (* frameCount = 2; *)
 (* frameCount = 5; *)
-frameCount = 10;
+(* frameCount = 10; *)
 (* frameCount = 12; *)
 (* frameCount = 150; *)
-(* frameCount = 160; *)
+frameCount = 200;
 
 (* suboptimal = True; *)
 suboptimal = False;
@@ -57,7 +57,11 @@ If[p == 4, stageCount = 1];
 
 allColors = Join[{Lighter[Blue, 0.3], Lighter[Green, 0.4], Orange, Purple, Yellow, Cyan, Magenta, Brown, Pink, Red, Blue, Green}, RandomColor[100]];
 
-(* faceColor = allColors[p]; *)
+colorMap = <|
+	1 -> Red,
+	2 -> Yellow,
+	3 -> Blue
+|>;
 
 splitEdgeParts = 2;
 
@@ -334,6 +338,7 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 	faceCenters = Map[Mean, selectedFaces];
 	allVertices = Flatten[edges, 1];
 	vertices = Union[allVertices , SameTest -> ApproxSamePoint];
+	Print["vertices count"];
 	Print[vertices//Length];
 
 	viewCenter = Mean[faceCenters];
@@ -396,10 +401,14 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			(* Print[originalDihedralAngle / Pi * 180]; *)
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = -2 * originalDihedralAngle + Pi;
+			If[Length[face1] + Length[face2] == 7,
+				angleToStellate = -Pi;
+			];
 
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
 			rotMatrix = RotationMatrix[angleToTarget * Abs[perc], {relativeFace2, relativeFace1}];
+			(* Print[{ originalDihedralAngle, angleToStellate, originalDihedralAngle + angleToStellate } * 180.0/Pi]; *)
 			(* Print[rotMatrix]; *)
 
 			For[fid = 1, fid <= Length[rotatedFaceIds], fid++,
@@ -424,10 +433,21 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	(* If[EvenQ[frameIndex] == False, Return[]]; *)
 
 	rotatedFaces = foldFaces[faces, rotationSchedule, foldPercents];
-	rotatedFaceCenters = Map[Mean, rotatedFaces];
+	(* rotatedFaces = Select[rotatedFaces, Length[#] == 4 &]; *)
+	triangleIds = Select[Range[Length[rotatedFaces]], Length[ rotatedFaces[[#]] ] == 3 & ];
+	squareIds = Select[Range[Length[rotatedFaces]], Length[ rotatedFaces[[#]] ] == 4 & ];
+
+	rotatedFaceCenters = Map[Mean, rotatedFaces ];
 	rotatedFaceCentersTally = Tally[rotatedFaceCenters, ApproxSamePoint[#1, #2]&];
 	faceTallyCounts = Sort[Map[#[[2]]&, rotatedFaceCentersTally], Greater];
-	Print["tallies"];
+	(* rotatedCenter = Mean[rotatedFaceCenters[[squareIds]] ]; *)
+
+(* 	Map[Print[ (# - rotatedCenter)/0.2071067811865478 ]&, rotatedFaceCenters[[squareIds]]  ];
+	Print[];
+	Map[Print[ (# - rotatedCenter)/0.2071067811865478 ]&, rotatedFaceCenters[[triangleIds]]  ];
+	Exit[]; *)
+
+	Print["face tallies"];
 	Print[faceTallyCounts];
 	Print[faceTallyCounts//Length];
 
@@ -435,10 +455,11 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	rotatedEdgeCenters = Map[Mean, rotatedEdges];
 	rotatedEdgeCentersTally = Tally[rotatedEdgeCenters, ApproxSamePoint[#1, #2]&];
 	edgeTallyCounts = Sort[Map[#[[2]]&, rotatedEdgeCentersTally], Greater];
+	Print["edge tallies"];
 	Print[edgeTallyCounts];
 	Print[edgeTallyCounts//Length];
 
-	range = If[Max[foldPercents] > 0, Max[foldPercents] + 1, 1] + 0.4 (r - 1);
+	range = If[Max[foldPercents] > 0, Max[foldPercents] * 2 + 1, 1] + 0.4 (r - 1);
 
 	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, -1, range];
 	testing = (outputFolderName == "test");
@@ -506,6 +527,13 @@ exportAnimation[] := Module[
 	polygons = PolyhedronData["SmallRhombicuboctahedron", "Polygons"];
 	faces = Map[First, polygons];
 
+	For[fid = 1, fid <= Length[faces], fid++,
+		face = faces[[fid]];
+		faceCenter = Mean[face];
+		faceCenterPattern = Total[Map[If[Abs[#] < epsilon, 0, 1]&, faceCenter]];
+		allColors[[fid]] = colorMap[faceCenterPattern];
+	];
+
 	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
 	Print[adjMatrix];
 
@@ -545,8 +573,12 @@ exportAnimation[] := Module[
 
 	(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
 	unfoldPercents = Table[smoothFall[x, k/2/maxLevel - 1/4/maxLevel, 1/2]//N, {x, 0, 1, 1/(frameCount-1)}, {k, maxLevel}];
-	
-	unfoldPercents = Join[unfoldPercents, Map[Reverse , unfoldPercents - 1] ];
+
+	negativePercents = Table[smoothFallFromTo[x, 0, 1, 0, -1]//N, {x, 0, 1, 1/(frameCount - 1)}, {k, maxLevel}];
+
+	minusOnes = Table[-1.0, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}];
+
+	unfoldPercents = Join[unfoldPercents, negativePercents, minusOnes ];
 	
 	unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]];
 
@@ -557,7 +589,8 @@ exportAnimation[] := Module[
 	Print[unfoldPercents];
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
-		If[frameIndex != 1 && frameIndex != 10 && frameIndex != 15 && frameIndex != 20 && frameIndex != 25, Continue[]];
+		(* If[frameIndex != 1 && frameIndex != 10 && frameIndex != 15 && frameIndex != 20 && frameIndex != 25, Continue[]]; *)
+		(* If[frameIndex != 20, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -565,7 +598,7 @@ exportAnimation[] := Module[
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
-	Exit[];
+	(* Exit[]; *)
 
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
