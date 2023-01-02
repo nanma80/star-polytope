@@ -42,7 +42,7 @@ frameCount = 10;
 suboptimal = False;
 
 argv = Rest @ $ScriptCommandLine;
-shapeId = "SmallRhombicuboctahedron";
+shapeId = "RhombicDodecahedron";
 
 If[Length[argv] >= 1, 
 	shapeId = argv[[1]]
@@ -328,15 +328,26 @@ stellateFace[halfEdges_, r_, level_] := Module[
 elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 	{allEdges, edges, allVertices, vertices, ratio, selectedFaces, edgeGroups},
 
-	staticOrientation = RotationMatrix[{rootFaceCenter, {0, 0, -1}}];
+	rootFaceCenterInner = Dot[rootFaceCenter, {0, 0, -1}]/Norm[rootFaceCenter];
+	If[Abs[rootFaceCenterInner] > 1 - epsilon,
+		If[rootFaceCenterInner > 0,
+			staticOrientation = IdentityMatrix[3],
+			staticOrientation = RotationMatrix[Pi, {0, 1, 0}]
+		],
+		staticOrientation = RotationMatrix[{rootFaceCenter, {0, 0, -1}}]
+	];
+
 	rotation = RotationMatrix[spinAngle, {0, 0, 1}].staticOrientation;
 	selectedFaces = Map[(rotation.#) &, faces, {2}];
-	selectedFaces = Map[scaleFace[#, r]&, selectedFaces];
+	(* selectedFaces = Map[scaleFace[#, r]&, selectedFaces]; *)
+
 	allEdges = Flatten[Map[getEdgesFromFace, selectedFaces], 1];
+
 	edges = Union[allEdges , SameTest -> sameEdge];
 
 	faceCenters = Map[Mean, selectedFaces];
 	allVertices = Flatten[edges, 1];
+
 	vertices = Union[allVertices , SameTest -> ApproxSamePoint];
 	Print["vertices count"];
 	Print[vertices//Length];
@@ -396,20 +407,23 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			pivotCenter = Mean[pivot];
 			relativeFace1 = faceCenter1 - pivotCenter;
 			relativeFace2 = faceCenter2 - pivotCenter;
+			pivotDirection = pivot[[1]] - pivotCenter//N;
+			faceNorms = Map[Cross[#, pivotDirection]&, {relativeFace2, relativeFace1}];
 
-			originalDihedralAngle = ArcCos[ Dot[relativeFace1, relativeFace2]/Norm[relativeFace1]/Norm[relativeFace2] ];
+			originalDihedralAngle = ArcCos[ Dot[faceNorms[[1]], faceNorms[[2]]]/Norm[faceNorms[[1]]]/Norm[faceNorms[[2]]] ]//N;
 			(* Print[originalDihedralAngle / Pi * 180]; *)
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = -2 * originalDihedralAngle + Pi;
-			If[Length[face1] + Length[face2] == 7,
+(* 			If[Length[face1] + Length[face2] == 7,
 				angleToStellate = -Pi;
 			];
+ *)
 
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
-			rotMatrix = RotationMatrix[angleToTarget * Abs[perc], {relativeFace2, relativeFace1}];
 			(* Print[{ originalDihedralAngle, angleToStellate, originalDihedralAngle + angleToStellate } * 180.0/Pi]; *)
-			(* Print[rotMatrix]; *)
+			(* Print[angleToTarget * Abs[perc]]; *)
+			rotMatrix = RotationMatrix[angleToTarget * Abs[perc], faceNorms];
 
 			For[fid = 1, fid <= Length[rotatedFaceIds], fid++,
 				faceId = rotatedFaceIds[[fid]];
@@ -525,7 +539,12 @@ exportAnimation[] := Module[
 
 	(* faces = generateFaces[p, q]; *)
 	polygons = PolyhedronData[shapeId, "Polygons"];
-	faces = Map[First, polygons];
+	faces = Map[First, polygons]//N;
+	norms = Map[Norm, faces, {2}];
+	maxNorm = Max[Flatten[norms]];
+	(* Print[maxNorm]; *)
+	faces = faces/maxNorm;
+	(* Exit[]; *)
 
 	For[fid = 1, fid <= Length[faces], fid++,
 		face = faces[[fid]];
@@ -552,7 +571,7 @@ exportAnimation[] := Module[
 	tree = GraphTree[spanningTree];
 
 	rootFaceId = TreeData[tree];
-	rootFaceCenter = Mean[faces[[rootFaceId]]];
+	rootFaceCenter = Mean[faces[[rootFaceId]]]//N;
 
 	rotationSchedule = {};
 
