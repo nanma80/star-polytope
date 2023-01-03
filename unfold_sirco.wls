@@ -33,10 +33,10 @@ stageCount = 2;
 
 (* frameCount = 2; *)
 (* frameCount = 5; *)
-(* frameCount = 10; *)
+frameCount = 10;
 (* frameCount = 12; *)
 (* frameCount = 150; *)
-frameCount = 200;
+(* frameCount = 200; *)
 
 (* suboptimal = True; *)
 suboptimal = False;
@@ -539,16 +539,16 @@ exportAnimation[] := Module[
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
 	(* random spanning tree *)
-	(* Print[EdgeList[graph]];
-	edgeSubsets = Subsets[EdgeList[graph], {Length[EdgeList[graph]] - 5} ];
+	Print[EdgeList[graph]];
+	edgeSubsets = Subsets[EdgeList[graph], {Length[EdgeList[graph]] - 2} ];
 	Print[Length[edgeSubsets]];
 
 	subsetId = RandomInteger[{1, Length[edgeSubsets]}];
 	Print["subsetId"];
 	Print[subsetId];
-	spanningTree = FindSpanningTree[DirectedGraph[Graph[edgeSubsets[[subsetId]]]]]; *)
+	spanningTree = FindSpanningTree[DirectedGraph[Graph[edgeSubsets[[subsetId]]]]];
 
-	spanningTree = FindSpanningTree[DirectedGraph[graph]];
+	(* spanningTree = FindSpanningTree[DirectedGraph[graph]]; *)
 	tree = GraphTree[spanningTree];
 
 	If[p == 5 && q == 3,
@@ -590,7 +590,7 @@ exportAnimation[] := Module[
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* If[frameIndex != 1 && frameIndex != 10 && frameIndex != 15 && frameIndex != 20 && frameIndex != 25, Continue[]]; *)
-		(* If[frameIndex != 20, Continue[]]; *)
+		If[frameIndex != 1 && frameIndex != 20, Continue[]];
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -598,7 +598,7 @@ exportAnimation[] := Module[
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
-	(* Exit[]; *)
+	Exit[];
 
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
