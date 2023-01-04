@@ -33,9 +33,9 @@ stageCount = 2;
 
 (* frameCount = 2; *)
 (* frameCount = 5; *)
-frameCount = 10;
+(* frameCount = 10; *)
 (* frameCount = 12; *)
-(* frameCount = 150; *)
+frameCount = 150;
 (* frameCount = 200; *)
 
 (* suboptimal = True; *)
@@ -353,6 +353,10 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 	Print[vertices//Length];
 
 	viewCenter = Mean[faceCenters];
+	relativeFaceCenterDistances = Map[ Norm[# - viewCenter] &, faceCenters];
+	range = Max[relativeFaceCenterDistances];
+	(* Exit[]; *)
+
 	thickness = 0.01 * range;
 	opacity = 1;
 
@@ -550,7 +554,7 @@ exportAnimation[] := Module[
 		face = faces[[fid]];
 		faceCenter = Mean[face];
 		faceCenterPattern = Total[Map[If[Abs[#] < epsilon, 0, 1]&, faceCenter]];
-		allColors[[fid]] = colorMap[faceCenterPattern];
+		(* allColors[[fid]] = colorMap[faceCenterPattern]; *)
 	];
 
 	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
@@ -591,9 +595,7 @@ exportAnimation[] := Module[
 	
 	unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]];
 
-	If[r > 1,
-		unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
-	];
+	unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
 
 	Print[unfoldPercents];
 
