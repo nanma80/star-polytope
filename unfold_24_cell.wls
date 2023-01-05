@@ -13,9 +13,9 @@ python -m SimpleHTTPServer 8000
 (* global config *)
 
 (* frameCount = 5; *)
-frameCount = 10;
+(* frameCount = 10; *)
 (* frameCount = 150; *)
-(* frameCount = 160; *)
+frameCount = 160;
 
 shapes = {
 	"test",
@@ -34,10 +34,10 @@ shapes = {
 };
 
 shapes = {
-	(* "polytope_3_4_3", *)
+	"polytope_3_4_3"
 	(* "polytope_5_3_3_cell120" *)
 	(* "polytope_3_3_5_cell600" *)
-	"polytope_3_3_4"
+	(* "polytope_3_3_4" *)
 	(* "polytope_3_3_52" *)
 	(* "bitruncated_3_4_3" *)
 };
@@ -284,8 +284,8 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     viewPoint = {50, -50, 50};
 
     If[shape == "polytope_3_4_3", 
-    	range = Max[Flatten[activeFaces]] * 2.2;
-    	viewPoint = {1.0, -0.9, 0.5}];
+    	range = Max[Flatten[activeFaces]] * 0.8;
+    	viewPoint = {1.2, -0.7, 0.5}];
     If[shape == "polytope_3_3_5_cell600", 
     	range = Max[Flatten[activeFaces]] * 0.8;
     	viewPoint = {1.2, -0.7, 0.5}];
@@ -297,7 +297,7 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     	viewPoint = {1.2, -0.7, 0.5}];
 	If[shape == "polytope_3_3_4", 
     	range = Max[Flatten[activeFaces]] * 1.0;
-    	viewPoint = {1.2, -0.9, 0.5}];
+    	viewPoint = {1.2, -0.7, 0.5}];
 
     Print["range"];
     Print[range];
@@ -432,7 +432,7 @@ exportAnimation[shape_] := Module[
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* Continue[]; *)
-		(* If[frameIndex < 30, Continue[]]; *)
+		If[frameIndex < 300, Continue[]];
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -536,9 +536,9 @@ getRotationSchedule[cells_] := Module[
 	{limit, adjMatrix, id1, graph, spanningTree, tree, rootCellCenter, rotationSchedule},
 	limit = Length[cells];
 
-	adjMatrixFileName = "adjMatrix_16_cell";
+	adjMatrixFileName = "adjMatrix_24_cell";
 
-	adjMatrixFileName = FileNameJoin[{dataFolder, "folding_16_cell", adjMatrixFileName <> ".wl"}];
+	adjMatrixFileName = FileNameJoin[{dataFolder, "folding_24_cell", adjMatrixFileName <> ".wl"}];
 
 	If[FileExistsQ[adjMatrixFileName],
 		adjMatrix = Get[adjMatrixFileName],
@@ -660,6 +660,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			grand600CellDihedralAngle = ArcCos[-1/8 + (3*Sqrt[5])/8]//N;
 			cell5DihedralAngle = ArcSec[4]//N;
 			cell16DihedralAngle = (2*Pi)/3//N;
+			targetDihedralAngle = 0.0;
 
 			(* angleToFlat = Pi - originalDihedralAngle; *)
 			(* angleToStellate = grand600CellDihedralAngle - originalDihedralAngle; *)
@@ -674,7 +675,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			absolutePerc = Abs[perc];
 
 			If[perc < 0 && perc >= -1,
-				angleInterval = {originalDihedralAngle, cell5DihedralAngle};
+				angleInterval = {originalDihedralAngle, targetDihedralAngle};
 			];
 
 			dihedralAngle = angleInterval[[1]] (1-absolutePerc) + angleInterval[[2]] absolutePerc;
@@ -706,13 +707,13 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 		activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
 		Print["Element counts: cells, faces, edges, vertices:"];
 		Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
-
+		Exit[];
 	(* 
-		5-cell:
-		{5, 10, 10, 5}
+		if target angle == 5 cell angle, 
+		{18, 82, 99, 41}
 
-		16-cell:
-		{16, 32, 24, 8}
+		if target angle == 60 degrees,
+		{15, 113, 157, 70}
 	*)
 	];
 
@@ -736,4 +737,22 @@ for ($num = 701 ; $num -le 800 ; $num++) { cp pov_animation_polytope_3_3_5_cell6
 
 	cells = Get[dataFileName];
 	Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
+ *)
+
+(* 
+interesting angles:
+take
+frameCount = 150;
+450 frames in total.
+
+negative fold starts from 300.
+
+exporting frame 332 / 450
+Dihedral angle:
+75.33297618343664, 5-cell angle
+
+exporting frame 338 / 450
+Dihedral angle:
+60.2864788975654, 60 degrees
+
  *)
