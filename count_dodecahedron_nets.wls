@@ -630,7 +630,10 @@ spanning trees, not combining symmetrical ones
 edge subgraph count:
 54627300 (30 choose 11)
 
+total tree count, good net count, trees per good net
+{5184000, 7320, 708.1967213114754}
 
+43200/61
 
  *)
 
