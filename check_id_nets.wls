@@ -37,32 +37,30 @@ frameCount = 10;
 (* frameCount = 12; *)
 (* frameCount = 150; *)
 (* frameCount = 200; *)
+(* frameCount = 220; *)
 
 (* suboptimal = True; *)
 suboptimal = False;
 
 argv = Rest @ $ScriptCommandLine;
-shapeId = "Icosidodecahedron";
-
-If[Length[argv] >= 1, 
-	shapeId = argv[[1]]
+If[Length[argv] >= 2, 
+	p = ToExpression[argv[[1]]]; q = ToExpression[argv[[2]]],
+	p = 3; q = 4; (* default *)
 ];
 
-(* 
-RhombicDodecahedron
-RhombicTriacontahedron
-Icosidodecahedron
- *)
-Print[shapeId];
+If[Length[argv] >= 3, 
+	r = ToExpression[argv[[3]]],
+	r = 1; (* default *)
+];
 
-p = 3; q = 5; r = 1;
+If[p <= 4, r = 1];
+If[p == 4, stageCount = 1];
+
 allColors = Join[{Lighter[Blue, 0.3], Lighter[Green, 0.4], Orange, Purple, Yellow, Cyan, Magenta, Brown, Pink, Red, Blue, Green}, RandomColor[100]];
 
 colorMap = <|
-	1 -> Red,
-	2 -> Yellow,
-	3 -> Blue,
-	4 -> Green
+	3 -> Yellow,
+	5 -> Red
 |>;
 
 splitEdgeParts = 2;
@@ -76,7 +74,8 @@ nGenerations = If[Length[argv] >= 4, ToExpression[argv[[4]]], 4];
 dihedralSpherical = 0;
 dihedralHyperbolic = 0;
 
-shape = "unfold_" <> shapeId <> "_" <> IntegerString[stageCount];
+shape = "unfold_id_" <> IntegerString[stageCount];
+
 
 norm = 1.0;
 imageFolder = "output";
@@ -340,24 +339,16 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 
 	rotation = RotationMatrix[spinAngle, {0, 0, 1}].staticOrientation;
 	selectedFaces = Map[(rotation.#) &, faces, {2}];
-	(* selectedFaces = Map[scaleFace[#, r]&, selectedFaces]; *)
-
 	allEdges = Flatten[Map[getEdgesFromFace, selectedFaces], 1];
-
 	edges = Union[allEdges , SameTest -> sameEdge];
 
 	faceCenters = Map[Mean, selectedFaces];
 	allVertices = Flatten[edges, 1];
-
 	vertices = Union[allVertices , SameTest -> ApproxSamePoint];
 	Print["vertices count"];
 	Print[vertices//Length];
 
 	viewCenter = Mean[faceCenters];
-	relativeFaceCenterDistances = Map[ Norm[# - viewCenter] &, faceCenters];
-	range = Max[relativeFaceCenterDistances];
-	(* Exit[]; *)
-
 	thickness = 0.01 * range;
 	opacity = 1;
 
@@ -412,23 +403,28 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			pivotCenter = Mean[pivot];
 			relativeFace1 = faceCenter1 - pivotCenter;
 			relativeFace2 = faceCenter2 - pivotCenter;
-			pivotDirection = pivot[[1]] - pivotCenter//N;
-			faceNorms = Map[Cross[#, pivotDirection]&, {relativeFace2, relativeFace1}];
 
-			originalDihedralAngle = ArcCos[ Dot[faceNorms[[1]], faceNorms[[2]]]/Norm[faceNorms[[1]]]/Norm[faceNorms[[2]]] ]//N;
+			originalDihedralAngle = ArcCos[ Dot[relativeFace1, relativeFace2]/Norm[relativeFace1]/Norm[relativeFace2] ];
+			gidtidDihedralAngle = ArcCos[Sqrt[ (5 - 2 * Sqrt[5])/15 ]]//N;
 			(* Print[originalDihedralAngle / Pi * 180]; *)
+			(* Print[gidtidDihedralAngle / Pi * 180]; *)
+			
 			angleToFlat = Pi - originalDihedralAngle;
-			angleToStellate = -2 * originalDihedralAngle + Pi;
-(* 			If[Length[face1] + Length[face2] == 7,
-				angleToStellate = -Pi;
-			];
- *)
+			angleToStellate = gidtidDihedralAngle - originalDihedralAngle;
 
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
+			rotationAngle = angleToTarget * Abs[perc];
+
+			If[perc < -1,
+				realPerc = Abs[perc + 1];
+				rotationAngle = realPerc * angleToFlat + (1 - realPerc) * angleToStellate;
+			];
+
+			(* Print[{angleToFlat - angleToStellate,  angleToFlat + originalDihedralAngle, angleToStellate + originalDihedralAngle,  rotationAngle + originalDihedralAngle}  * 180.0/Pi]; *)
+			rotMatrix = RotationMatrix[rotationAngle, {relativeFace2, relativeFace1}];
 			(* Print[{ originalDihedralAngle, angleToStellate, originalDihedralAngle + angleToStellate } * 180.0/Pi]; *)
-			(* Print[angleToTarget * Abs[perc]]; *)
-			rotMatrix = RotationMatrix[angleToTarget * Abs[perc], faceNorms];
+			(* Print[rotMatrix]; *)
 
 			For[fid = 1, fid <= Length[rotatedFaceIds], fid++,
 				faceId = rotatedFaceIds[[fid]];
@@ -466,41 +462,39 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	Map[Print[ (# - rotatedCenter)/0.2071067811865478 ]&, rotatedFaceCenters[[triangleIds]]  ];
 	Exit[]; *)
 
-	Print["face tallies"];
+(* 	Print["face tallies"];
 	Print[faceTallyCounts];
-	Print[faceTallyCounts//Length];
+	Print[faceTallyCounts//Length]; *)
 
 	rotatedEdges = Flatten[Map[getEdgesFromFace, rotatedFaces], 1];
 	rotatedEdgeCenters = Map[Mean, rotatedEdges];
 	rotatedEdgeCentersTally = Tally[rotatedEdgeCenters, ApproxSamePoint[#1, #2]&];
 	edgeTallyCounts = Sort[Map[#[[2]]&, rotatedEdgeCentersTally], Greater];
-	Print["edge tallies"];
+(* 	Print["edge tallies"];
 	Print[edgeTallyCounts];
-	Print[edgeTallyCounts//Length];
+	Print[edgeTallyCounts//Length]; *)
 
-	range = If[Max[foldPercents] > 0, Max[foldPercents] * 2 + 1, 1] + 0.4 (r - 1);
+	If[Length[faceTallyCounts] > maxFaceCount,
+		maxFaceCount = Length[faceTallyCounts];
+		Print["new maxFaceCount: " <> IntegerString[maxFaceCount]];
+		Print["face tallies"];
+		Print[faceTallyCounts];
+		Print[faceTallyCounts//Length];
 
-	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, -1, range];
-	testing = (outputFolderName == "test");
+		Print["edge tallies"];
+		Print[edgeTallyCounts];
+		Print[edgeTallyCounts//Length];
 
-	outputFolder = FileNameJoin[{imageFolder, outputFolderName}];
-	If[!DirectoryQ[outputFolder], CreateDirectory[outputFolder]];
+		Print["rootFaceId: " <> IntegerString[rootFaceId] ];
+		Print[rotationSchedule];
 
-	outputFileName = "spinning_frame_" <> IntegerString[frameIndex, 10, 4] <> ".png";
-	If[testing, outputFileName = shapeWithParams <> ".png"];
-	outputFileName = FileNameJoin[{outputFolder, outputFileName}];
-
-	cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
-
-	If[exportToPov,
-	  If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
-	  POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize, RenderOptions -> "+A0.001 -J +UA"];
-	  Run[cropCommand];
-	  ,
-	  Export[outputFileName, graph];
+		If[Length[faceTallyCounts] == 32,
+			Print["Found a good net"];
+			Exit[];
+		];
 	];
-	Print["Saved an image to " <> outputFileName];
 
+	Return[];
 ];
 
 adjacentFaces[f1_,f2_] := Length[Intersection[f1, f2, SameTest -> ApproxSamePoint]] == 2;
@@ -543,40 +537,107 @@ exportAnimation[] := Module[
 	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
 	(* faces = generateFaces[p, q]; *)
-	polygons = PolyhedronData[shapeId, "Polygons"];
+	polygons = PolyhedronData["Icosidodecahedron", "Polygons"];
 	faces = Map[First, polygons]//N;
 	norms = Map[Norm, faces, {2}];
 	maxNorm = Max[Flatten[norms]];
-	(* Print[maxNorm]; *)
 	faces = faces/maxNorm;
-	(* Exit[]; *)
 
 	For[fid = 1, fid <= Length[faces], fid++,
 		face = faces[[fid]];
-		faceCenter = Mean[face];
-		faceCenterPattern = Total[Map[If[Abs[#] < epsilon, 0, 1]&, faceCenter]];
-		(* allColors[[fid]] = colorMap[faceCenterPattern]; *)
+		allColors[[fid]] = colorMap[Length[face]];
 	];
 
 	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
 	Print[adjMatrix];
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
+	maxFaceCount = -1;
+
+	treesTopN = 100000;
+	(* Print[Binomial[ Length[EdgeList[graph]], VertexCount[graph] - 1 ]]; *)
+
+	(* trees = Select[TreeGraphQ[Graph@#] &]@Select[VertexCount@# == VertexCount[graph] &]@Subsets[EdgeList[graph], {VertexCount[graph] - 1}, treesTopN]; *)
+	(* Print["Found trees as candidates: " <> IntegerString[Length[trees]]]; *)
+	(* if we don't restrict top n subset, we need to consider around 3 million tree candidates.
+	 *)
+
 	(* random spanning tree *)
-	(* Print[EdgeList[graph]];
-	edgeSubsets = Subsets[EdgeList[graph], {Length[EdgeList[graph]] - 5} ];
-	Print[Length[edgeSubsets]];
+	graphEdgeList = EdgeList[graph];
+	Print[graphEdgeList];
+	(* edgeSubsets = Subsets[RandomSample[EdgeList[graph]], {Length[EdgeList[graph]] - 3} ]; *)
+	(* Print[Length[edgeSubsets]]; *)
 
-	subsetId = RandomInteger[{1, Length[edgeSubsets]}];
-	Print["subsetId"];
-	Print[subsetId];
-	spanningTree = FindSpanningTree[DirectedGraph[Graph[edgeSubsets[[subsetId]]]]]; *)
+	For[subsetId = 1, subsetId <= treesTopN, subsetId++,
+		If[Mod[subsetId, 1000] == 0,
+			Print[DateString["ISODateTime"] <> " SubsetId: " <> IntegerString[subsetId] <> " out of " <> IntegerString[treesTopN]];
+		];
 
-	spanningTree = FindSpanningTree[DirectedGraph[graph]];
-	tree = GraphTree[spanningTree];
+		randomSubset = RandomSample[graphEdgeList, Length[graphEdgeList] - 3];
+		spanningTree = FindSpanningTree[DirectedGraph[Graph[randomSubset]]];
+		tree = GraphTree[spanningTree];
+		rootFaceId = TreeData[tree];
+		rootFaceCenter = Mean[faces[[rootFaceId]]];
+
+		rotationSchedule = {};
+
+		rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
+		(* Print[rotationSchedule]; *)
+
+		(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
+		unfoldPercents = {-1.0};
+
+		For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
+			unfoldPercent = unfoldPercents[[frameIndex]];
+			(* Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ]; *)
+			(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
+			exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, 10}], 1, 0, frameIndex, outputFolderName];
+		];
+	];
+
+
+(* 	For[treeId = 1, treeId <=Length[trees], treeId++,
+		Print["treeId: " <> IntegerString[treeId]];
+		tree = GraphTree[FindSpanningTree[DirectedGraph[trees[[treeId]]]]];
+
+		rootFaceId = TreeData[tree];
+		rootFaceCenter = Mean[faces[[rootFaceId]]];
+
+		rotationSchedule = {};
+
+		rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
+		(* Print[rotationSchedule]; *)
+
+		(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
+		unfoldPercents = {-1.0};
+
+		For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
+			unfoldPercent = unfoldPercents[[frameIndex]];
+			Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
+			(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
+			exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, 10}], 1, 0, frameIndex, outputFolderName];
+		];
+	]; *)
+
+
+
+
+	Print["cannot find any good net with treesTopN = " <> IntegerString[treesTopN]];
+	Exit[];
+
+
+	If[p == 5 && q == 3,
+		(* Found by my script. Should be a good net *)
+		tree = Tree[1, {Tree[2, {Tree[9, {Tree[11, {Tree[4, {5}], Tree[10, {12}]}]}]}], Tree[3, {8}], 6, 7}];
+
+		If[suboptimal,
+			(* manually constructed for {5,3} by Rinus Roelofs. Two cups *)
+			tree = Tree[1, {Tree[2, {Tree[4, {Tree[11, {9, 5, 10, 12}]}]}], 3, 6, 7, 8}];
+		];
+	];
 
 	rootFaceId = TreeData[tree];
-	rootFaceCenter = Mean[faces[[rootFaceId]]]//N;
+	rootFaceCenter = Mean[faces[[rootFaceId]]];
 
 	rotationSchedule = {};
 
@@ -589,20 +650,26 @@ exportAnimation[] := Module[
 	unfoldPercents = Table[smoothFall[x, k/2/maxLevel - 1/4/maxLevel, 1/2]//N, {x, 0, 1, 1/(frameCount-1)}, {k, maxLevel}];
 
 	negativePercents = Table[smoothFallFromTo[x, 0, 1, 0, -1]//N, {x, 0, 1, 1/(frameCount - 1)}, {k, maxLevel}];
+	
+	(* returnPercents = Table[smoothFallFromTo[x, 0, 1, -1, -2]//N, {x, 0, 1, 1/(2 *frameCount - 1)}, {k, maxLevel}]; *)
 
 	minusOnes = Table[-1.0, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}];
+	zeros = Table[-0.0, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}];
 
-	unfoldPercents = Join[unfoldPercents, negativePercents, minusOnes ];
+	unfoldPercents = Join[unfoldPercents, zeros, negativePercents, minusOnes ];
 	
 	unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]];
 
-	unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
+	If[r > 1,
+		unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
+	];
 
 	Print[unfoldPercents];
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* If[frameIndex != 1 && frameIndex != 10 && frameIndex != 15 && frameIndex != 20 && frameIndex != 25, Continue[]]; *)
-		(* If[frameIndex != 20, Continue[]]; *)
+		(* If[frameIndex != 1 && frameIndex != 20, Continue[]]; *)
+		(* If[frameIndex < 24, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -636,30 +703,22 @@ exportAnimation[] := Module[
   Print["Saved the video to " <> gifFolder <> "\\" <> gifFileName <> ".mp4"];
 ];
 
-(* faces = generateFaces[p, q];
-
-adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
-Print[adjMatrix];
-
-graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
-spanningTree = FindSpanningTree[DirectedGraph[graph]];
-tree = GraphTree[spanningTree];
-rootFaceId = TreeData[tree];
-rootFaceCenter = Mean[faces[[rootFaceId]]];
-
-rotationSchedule = {};
-
-rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
-Print[rotationSchedule];
- *)
-(* exportFrame[faces, rotationSchedule, {10, 50, 100}, 1, 0, 1, "test"]; *)
-(* exportFrame[faces[[ {1,2,3,4,5,6,7,8,9,10,12} ]], 1, 0, 2, "test"]; *)
-
 exportAnimation[];
 
 
 (* 
 
-for ($num = 69 ; $num -le 99 ; $num++) { cp spinning_frame_0068.png "spinning_frame_00$num.png" }
+convex form
+https://en.wikipedia.org/wiki/Icosidodecahedron
+F = 32, E = 60, V = 30 (χ = 2)
+
+
+non convex form
+https://en.wikipedia.org/wiki/Great_ditrigonal_icosidodecahedron
+https://polytope.miraheze.org/wiki/Great_ditrigonary_icosidodecahedron
+
+F = 32, E = 60, V = 20 (χ = −8)
+
+
 
  *)
