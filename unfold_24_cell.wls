@@ -13,9 +13,9 @@ python -m SimpleHTTPServer 8000
 (* global config *)
 
 (* frameCount = 5; *)
-(* frameCount = 10; *)
+frameCount = 10;
 (* frameCount = 150; *)
-frameCount = 160;
+(* frameCount = 160; *)
 
 shapes = {
 	"test",
@@ -432,7 +432,7 @@ exportAnimation[shape_] := Module[
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* Continue[]; *)
-		If[frameIndex < 300, Continue[]];
+		If[frameIndex < 30, Continue[]];
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -660,7 +660,8 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			grand600CellDihedralAngle = ArcCos[-1/8 + (3*Sqrt[5])/8]//N;
 			cell5DihedralAngle = ArcSec[4]//N;
 			cell16DihedralAngle = (2*Pi)/3//N;
-			targetDihedralAngle = 0.0;
+			(* targetDihedralAngle = 0.0; *)
+			targetDihedralAngle = 60/180*Pi//N;
 
 			(* angleToFlat = Pi - originalDihedralAngle; *)
 			(* angleToStellate = grand600CellDihedralAngle - originalDihedralAngle; *)
@@ -701,19 +702,34 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 	Print[Length[uniqueCenters]]; *)
 	(* Exit[]; *)
 
-	If[False,
+	If[True,
 		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
 		activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter];
 		activeVertices = Union[ Flatten[activeFaces,1], SameTest -> ApproxSamePoint];
 		Print["Element counts: cells, faces, edges, vertices:"];
 		Print[Map[Length, {uniqueCenters, activeFaces, activeEdges, activeVertices}]];
+
+		facesTally = Tally[Flatten[rotatedCells, 1], sameCenter[#1, #2]&];
+		facesTallyCounts = Sort[Map[#[[2]]&, facesTally], Greater];
+		Print[facesTallyCounts];
+
 		Exit[];
 	(* 
 		if target angle == 5 cell angle, 
 		{18, 82, 99, 41}
+		
+		facesTallyCounts:
+		{13, 12, 11, 11, 10, 9, 6, 5, 5, 4, 4, 4, 4, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+		
+		it's not a polytope because of the 1s
 
 		if target angle == 60 degrees,
 		{15, 113, 157, 70}
+
+		facesTallyCounts:
+		{16, 7, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+		
+		it's not a polytope because of the 1s
 	*)
 	];
 
