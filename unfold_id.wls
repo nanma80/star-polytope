@@ -33,10 +33,10 @@ stageCount = 2;
 
 (* frameCount = 2; *)
 (* frameCount = 5; *)
-frameCount = 10;
+(* frameCount = 10; *)
 (* frameCount = 12; *)
 (* frameCount = 150; *)
-(* frameCount = 200; *)
+frameCount = 200;
 (* frameCount = 220; *)
 
 (* suboptimal = True; *)
@@ -594,7 +594,7 @@ exportAnimation[] := Module[
 
 	unfoldPercents = Join[unfoldPercents, zeros, negativePercents, minusOnes ];
 	
-	unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]];
+	(* unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]]; *)
 
 	If[r > 1,
 		unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
@@ -605,11 +605,11 @@ exportAnimation[] := Module[
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* If[frameIndex != 1 && frameIndex != 10 && frameIndex != 15 && frameIndex != 20 && frameIndex != 25, Continue[]]; *)
 		(* If[frameIndex != 1 && frameIndex != 20, Continue[]]; *)
-		(* If[frameIndex < 24, Continue[]]; *)
+		(* If[frameIndex < 6, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-		spinAngle = -Pi/2 - If[p == 4, Pi/6, Pi/4] - frameIndex/Length[unfoldPercents] * 2 * Pi + Pi/5;
+		spinAngle = Pi/2 - frameIndex/Length[unfoldPercents] * 2 * Pi + Pi/5;
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
