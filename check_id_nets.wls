@@ -439,7 +439,7 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 	rotatedFaces
 ];
 
-exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngle_, frameIndex_, outputFolderName_] := Module[
+testFold[faces_, rotationSchedule_, foldPercents_] := Module[
 	{},
 
 	(* Return[]; *)
@@ -455,26 +455,13 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	rotatedFaceCenters = Map[Mean, rotatedFaces ];
 	rotatedFaceCentersTally = Tally[rotatedFaceCenters, ApproxSamePoint[#1, #2]&];
 	faceTallyCounts = Sort[Map[#[[2]]&, rotatedFaceCentersTally], Greater];
-	(* rotatedCenter = Mean[rotatedFaceCenters[[squareIds]] ]; *)
-
-(* 	Map[Print[ (# - rotatedCenter)/0.2071067811865478 ]&, rotatedFaceCenters[[squareIds]]  ];
-	Print[];
-	Map[Print[ (# - rotatedCenter)/0.2071067811865478 ]&, rotatedFaceCenters[[triangleIds]]  ];
-	Exit[]; *)
-
-(* 	Print["face tallies"];
-	Print[faceTallyCounts];
-	Print[faceTallyCounts//Length]; *)
 
 	rotatedEdges = Flatten[Map[getEdgesFromFace, rotatedFaces], 1];
 	rotatedEdgeCenters = Map[Mean, rotatedEdges];
 	rotatedEdgeCentersTally = Tally[rotatedEdgeCenters, ApproxSamePoint[#1, #2]&];
 	edgeTallyCounts = Sort[Map[#[[2]]&, rotatedEdgeCentersTally], Greater];
-(* 	Print["edge tallies"];
-	Print[edgeTallyCounts];
-	Print[edgeTallyCounts//Length]; *)
 
-	If[Length[faceTallyCounts] > maxFaceCount,
+	If[Length[faceTallyCounts] >= maxFaceCount,
 		maxFaceCount = Length[faceTallyCounts];
 		Print["new maxFaceCount: " <> IntegerString[maxFaceCount]];
 		Print["face tallies"];
@@ -488,13 +475,20 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 		Print["rootFaceId: " <> IntegerString[rootFaceId] ];
 		Print[rotationSchedule];
 
-		If[Length[faceTallyCounts] == 32,
+		Print[neighbor];
+
+		If[Length[faceTallyCounts] == 32 && Length[edgeTallyCounts] == 60 && Length[rotatedFaces[[rootFaceId]]] == 5,
 			Print["Found a good net"];
 			Exit[];
 		];
 	];
 
-	Return[];
+	If[Length[faceTallyCounts] > maxFaceCount,
+		Print["resetting bestEdgeList"];
+		bestEdgeList = {};
+	];
+
+	Return[ Length[faceTallyCounts] ];
 ];
 
 adjacentFaces[f1_,f2_] := Length[Intersection[f1, f2, SameTest -> ApproxSamePoint]] == 2;
@@ -513,6 +507,20 @@ buildSchedule[t_, schedule_, level_] := Module[
 	newSchedule
 ];
 
+getNeighborEdgeLists[selectedEdges_, graphEdgeList_] := Module[
+	{neighbors, minusEdgeId, remainingSelectedEdges, neighborEdgeLists, neighborEdgeListsAsTree},
+	neighbors = {};
+	For[minusEdgeId = 1, minusEdgeId <= Length[selectedEdges], minusEdgeId++,
+		remainingSelectedEdges = selectedEdges[[ Complement[Range[Length[selectedEdges]], {minusEdgeId} ]]];
+
+		neighborEdgeLists = Map[ Union[{#}, remainingSelectedEdges]& , graphEdgeList];
+		neighborEdgeLists = Select[neighborEdgeLists, Length[#] == Length[remainingSelectedEdges] + 1 &];
+		neighborEdgeListsAsTree = Select[neighborEdgeLists, TreeGraphQ[Graph[#]] &];
+		neighbors = Join[neighbors, Map[Sort, neighborEdgeListsAsTree]];
+	];
+
+	Union[neighbors]
+];
 
 exportAnimation[] := Module[
 	{
@@ -554,7 +562,7 @@ exportAnimation[] := Module[
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
 	maxFaceCount = -1;
 
-	treesTopN = 100000;
+	treesTopN = 1000;
 	(* Print[Binomial[ Length[EdgeList[graph]], VertexCount[graph] - 1 ]]; *)
 
 	(* trees = Select[TreeGraphQ[Graph@#] &]@Select[VertexCount@# == VertexCount[graph] &]@Subsets[EdgeList[graph], {VertexCount[graph] - 1}, treesTopN]; *)
@@ -568,61 +576,54 @@ exportAnimation[] := Module[
 	(* edgeSubsets = Subsets[RandomSample[EdgeList[graph]], {Length[EdgeList[graph]] - 3} ]; *)
 	(* Print[Length[edgeSubsets]]; *)
 
-	For[subsetId = 1, subsetId <= treesTopN, subsetId++,
-		If[Mod[subsetId, 1000] == 0,
-			Print[DateString["ISODateTime"] <> " SubsetId: " <> IntegerString[subsetId] <> " out of " <> IntegerString[treesTopN]];
+	(* randomSubset = RandomSample[graphEdgeList, Length[graphEdgeList] - 3]; *)
+
+	(* for debugging, remove randomness *)
+	randomSubset = graphEdgeList;
+
+	spanningTree = FindSpanningTree[Graph[randomSubset]];
+	tree = GraphTree[spanningTree];
+
+	selectedEdges = { EdgeList[spanningTree] };
+
+	iterationLimit = 20;
+	truncationLimit = 30;
+
+	For[iteration = 1, iteration <= iterationLimit, iteration++,
+		Print["Iteration " <> IntegerString[iteration] ];
+		neighbors = Apply[Union, Map[getNeighborEdgeLists[#, graphEdgeList]&, selectedEdges]];
+		Print["neighbor count " <> IntegerString[Length[neighbors]] ];
+		bestEdgeList = {};
+
+		For[neighborId = 1, neighborId <= Length[neighbors], neighborId++,
+			neighbor = neighbors[[neighborId]];
+			spanningTree = FindSpanningTree[Graph[neighbor]];
+			tree = GraphTree[spanningTree];
+			rootFaceId = TreeData[tree];
+			rootFaceCenter = Mean[faces[[rootFaceId]]];
+
+			rotationSchedule = {};
+
+			rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
+			maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
+			unfoldPercent = -1.0;
+			distinctFaces = testFold[faces, rotationSchedule, Table[unfoldPercent, {k, 1, maxLevel}]];
+
+			If[distinctFaces == maxFaceCount,
+				AppendTo[bestEdgeList, neighbor];
+			];
 		];
+		Print["End of iteration. bestEdgeList count: " <> IntegerString[Length[bestEdgeList]] ];
+		selectedEdges = RandomSample[bestEdgeList, Min[Length[bestEdgeList], truncationLimit]];
 
-		randomSubset = RandomSample[graphEdgeList, Length[graphEdgeList] - 3];
-		spanningTree = FindSpanningTree[DirectedGraph[Graph[randomSubset]]];
-		tree = GraphTree[spanningTree];
-		rootFaceId = TreeData[tree];
-		rootFaceCenter = Mean[faces[[rootFaceId]]];
-
-		rotationSchedule = {};
-
-		rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
-		(* Print[rotationSchedule]; *)
-
-		(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
-		unfoldPercents = {-1.0};
-
-		For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
-			unfoldPercent = unfoldPercents[[frameIndex]];
-			(* Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ]; *)
-			(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-			exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, 10}], 1, 0, frameIndex, outputFolderName];
-		];
 	];
-
-
-(* 	For[treeId = 1, treeId <=Length[trees], treeId++,
-		Print["treeId: " <> IntegerString[treeId]];
-		tree = GraphTree[FindSpanningTree[DirectedGraph[trees[[treeId]]]]];
-
-		rootFaceId = TreeData[tree];
-		rootFaceCenter = Mean[faces[[rootFaceId]]];
-
-		rotationSchedule = {};
-
-		rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
-		(* Print[rotationSchedule]; *)
-
-		(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
-		unfoldPercents = {-1.0};
-
-		For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
-			unfoldPercent = unfoldPercents[[frameIndex]];
-			Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
-			(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-			exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, 10}], 1, 0, frameIndex, outputFolderName];
-		];
-	]; *)
+	
 
 
 
 
-	Print["cannot find any good net with treesTopN = " <> IntegerString[treesTopN]];
+
+	Print["cannot find any good net with iteration limit = " <> IntegerString[iterationLimit]];
 	Exit[];
 
 
@@ -719,6 +720,17 @@ https://polytope.miraheze.org/wiki/Great_ditrigonary_icosidodecahedron
 
 F = 32, E = 60, V = 20 (χ = −8)
 
+new maxFaceCount: 32
+face tallies
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+32
+edge tallies
+{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+60
+rootFaceId: 1
+{{1, 2, 1, {9, 27, 13, 2}}, {2, 13, 2, {9, 27, 13}}, {13, 9, 3, {9}}, {13, 27, 3, {27}}, {1, 3, 1, {24, 28, 10, 14, 3}}, {3, 14, 2, {24, 28, 10, 14}}, {14, 10, 3, {24, 28, 10}}, {10, 28, 4, {24, 28}}, {28, 24, 5, {24}}, {1, 4, 1, {5, 20, 18, 17, 22, 23, 32, 21, 31, 8, 26, 12, 19, 30, 7, 16, 25, 29, 11, 15, 4}}, {4, 15, 2, {5, 20, 18, 17, 22, 23, 32, 21, 31, 8, 26, 12, 19, 30, 7, 16, 25, 29, 11, 15}}, {15, 11, 3, {5, 20, 18, 17, 22, 23, 32, 21, 31, 8, 26, 12, 19, 30, 7, 16, 25, 29, 11}}, {11, 29, 4, {5, 20, 18, 17, 22, 23, 32, 21, 31, 8, 26, 12, 19, 30, 7, 16, 25, 29}}, {29, 25, 5, {5, 20, 18, 17, 22, 23, 32, 21, 31, 8, 26, 12, 19, 30, 7, 16, 25}}, {25, 16, 6, {5, 20, 18, 17, 22, 23, 32, 21, 31, 8, 26, 12, 19, 30, 7, 16}}, {16, 5, 7, {5}}, {16, 7, 7, {20, 18, 17, 22, 23, 32, 21, 31, 8, 26, 12, 19, 30, 7}}, {7, 12, 8, {20, 18, 17, 22, 23, 32, 21, 31, 8, 26, 12}}, {12, 8, 9, {20, 18, 17, 22, 23, 32, 21, 31, 8}}, {8, 31, 10, {20, 18, 17, 22, 23, 32, 21, 31}}, {31, 20, 11, {20}}, {31, 21, 11, {18, 17, 22, 23, 32, 21}}, {21, 32, 12, {18, 17, 22, 23, 32}}, {32, 22, 13, {18, 17, 22}}, {22, 17, 14, {18, 17}}, {17, 18, 15, {18}}, {32, 23, 13, {23}}, {12, 26, 9, {26}}, {7, 30, 8, {19, 30}}, {30, 19, 9, {19}}, {1, 6, 1, {6}}}
+{1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 7, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 15 \[UndirectedEdge] 11, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 22, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 23 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 30 \[UndirectedEdge] 19, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22}
+Found a good net
 
 
  *)

@@ -555,21 +555,30 @@ exportAnimation[] := Module[
 		allColors[[fid]] = colorMap[Length[face]];
 	];
 
-	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
+(* 	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
 	Print[adjMatrix];
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
-	spanningTree = FindSpanningTree[DirectedGraph[graph]];
-	tree = GraphTree[spanningTree];
+ *)
+	edgeList = {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 7, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 15 \[UndirectedEdge] 11, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 22, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 23 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 30 \[UndirectedEdge] 19, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22};
+
+	spanningTree = FindSpanningTree[Graph[edgeList]];
+
+	pentagonIds = Select[Range[Length[faces]], Length[faces[[#]]]==5 &];
+	Print[pentagonIds];
+	treeHeights = Map[TreeDepth[GraphTree[spanningTree, #]]&, pentagonIds];
+	Print[treeHeights];
+
+	rootFaceId = 16;
+
+	tree = GraphTree[spanningTree, rootFaceId];
 
 	rotationSchedule = {};
+	rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
 
-	(* rotationSchedule = buildSchedule[tree, rotationSchedule, 1]; *)
-	(* Print[rotationSchedule]; *)
-
-	rotationSchedule = {{24, 15, 1, {2, 12, 6, 1, 4, 5, 7, 25, 16, 11, 15}}, {15, 4, 2, {2, 12, 6, 1, 4}}, {4, 1, 3, {2, 12, 6, 1}}, {1, 2, 4, {2}}, {1, 6, 4, {12, 6}}, {6, 12, 5, {12}}, {15, 5, 2, {5}}, {15, 11, 2, {7, 25, 16, 11}}, {11, 16, 3, {7, 25, 16}}, {16, 7, 4, {7}}, {16, 25, 4, {25}}, {24, 28, 1, {3, 13, 9, 14, 10, 8, 31, 21, 17, 20, 26, 30, 19, 29, 18, 27, 32, 22, 23, 28}}, {28, 10, 2, {3, 13, 9, 14, 10}}, {10, 14, 3, {3, 13, 9, 14}}, {14, 3, 4, {3}}, {14, 9, 4, {13, 9}}, {9, 13, 5, {13}}, {28, 18, 2, {8, 31, 21, 17, 20, 26, 30, 19, 29, 18}}, {18, 17, 3, {8, 31, 21, 17}}, {17, 21, 4, {8, 31, 21}}, {21, 31, 5, {8, 31}}, {31, 8, 6, {8}}, {18, 29, 3, {20, 26, 30, 19, 29}}, {29, 19, 4, {20, 26, 30, 19}}, {19, 30, 5, {20, 26, 30}}, {30, 20, 6, {20}}, {30, 26, 6, {26}}, {28, 22, 2, {27, 32, 22}}, {22, 32, 3, {27, 32}}, {32, 27, 4, {27}}, {28, 23, 2, {23}}};
-	rootFaceId = rotationSchedule[[1]][[1]];
 	rootFaceCenter = Mean[faces[[rootFaceId]]];
+	Print["root face side count"];
+	Print[IntegerString[ Length[faces[[rootFaceId]] ]]];
 
 	maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
 
