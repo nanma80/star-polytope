@@ -409,22 +409,23 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			(* Print[originalDihedralAngle / Pi * 180]; *)
 			(* Print[gidtidDihedralAngle / Pi * 180]; *)
 			
-			angleToFlat = Pi - originalDihedralAngle;
-			angleToStellate = gidtidDihedralAngle - originalDihedralAngle;
+			(* angleToFlat = Pi - originalDihedralAngle; *)
+			(* angleToStellate = gidtidDihedralAngle - originalDihedralAngle; (* 79.19 deg *) *)
+			(* angleToStellate = Pi - gidtidDihedralAngle - originalDihedralAngle; (* 100.81 deg *) *)
+			(* angleToStellate = Pi - originalDihedralAngle - originalDihedralAngle; (* 37.38 deg *) *)
 
 			perc = foldPercents[[level]];
-			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
-			rotationAngle = angleToTarget * Abs[perc];
 
-			If[perc < -1,
-				realPerc = Abs[perc + 1];
-				rotationAngle = realPerc * angleToFlat + (1 - realPerc) * angleToStellate;
-			];
+			targetAngle = Pi;
+			If[perc == 0, targetAngle = originalDihedralAngle];
+			If[perc == -1, targetAngle = Pi - gidtidDihedralAngle]; (* 100.81 *)
+			If[perc == -2, targetAngle = gidtidDihedralAngle]; (* 79.19 *)
+			If[perc == -3, targetAngle = Pi - originalDihedralAngle]; (* 37.38 *)
+
+			rotationAngle = targetAngle - originalDihedralAngle//N;
 
 			(* Print[{angleToFlat - angleToStellate,  angleToFlat + originalDihedralAngle, angleToStellate + originalDihedralAngle,  rotationAngle + originalDihedralAngle}  * 180.0/Pi]; *)
 			rotMatrix = RotationMatrix[rotationAngle, {relativeFace2, relativeFace1}];
-			(* Print[{ originalDihedralAngle, angleToStellate, originalDihedralAngle + angleToStellate } * 180.0/Pi]; *)
-			(* Print[rotMatrix]; *)
 
 			For[fid = 1, fid <= Length[rotatedFaceIds], fid++,
 				faceId = rotatedFaceIds[[fid]];
@@ -477,7 +478,7 @@ testFold[faces_, rotationSchedule_, foldPercents_] := Module[
 
 		Print[neighbor];
 
-		If[Length[faceTallyCounts] == 32 && Length[edgeTallyCounts] == 60 && Length[rotatedFaces[[rootFaceId]]] == 5,
+		If[Length[faceTallyCounts] == 32 && Length[rotatedFaces[[rootFaceId]]] == 5,
 			Print["Found a good net"];
 			Exit[];
 		];
@@ -586,8 +587,8 @@ exportAnimation[] := Module[
 
 	selectedEdges = { EdgeList[spanningTree] };
 
-	iterationLimit = 20;
-	truncationLimit = 30;
+	iterationLimit = 50;
+	truncationLimit = 50;
 
 	For[iteration = 1, iteration <= iterationLimit, iteration++,
 		Print["Iteration " <> IntegerString[iteration] ];
@@ -606,12 +607,34 @@ exportAnimation[] := Module[
 
 			rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
 			maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
-			unfoldPercent = -1.0;
-			distinctFaces = testFold[faces, rotationSchedule, Table[unfoldPercent, {k, 1, maxLevel}]];
+			unfoldPercents = {-1, -3};
+			distinctFacesCounts = Map[testFold[faces, rotationSchedule, Table[#, {k, 1, maxLevel}]]&,unfoldPercents];
 
-			If[distinctFaces == maxFaceCount,
+			If[Total[distinctFacesCounts] > maxFaceCount,
+				maxFaceCount = Total[distinctFacesCounts];
+				Print["updated maxFaceCount to " <> IntegerString[maxFaceCount] ];
+				Print[distinctFacesCounts];
+				Print["resetting bestEdgeList"];
+				bestEdgeList = {};
+			];
+
+			If[Total[distinctFacesCounts] == maxFaceCount,
+				Print["Keeping maxFaceCount as " <> IntegerString[maxFaceCount] ];
+				Print[distinctFacesCounts];
+
+				Print["rootFaceId: " <> IntegerString[rootFaceId] ];
+				Print[rotationSchedule];
+				Print[neighbor];
+
+				If[Length[faceTallyCounts] == 32 * Length[unfoldPercents] && Length[faces[[rootFaceId]]] == 5,
+					Print["Found a good net"];
+					Exit[];
+				];
+
 				AppendTo[bestEdgeList, neighbor];
 			];
+
+
 		];
 		Print["End of iteration. bestEdgeList count: " <> IntegerString[Length[bestEdgeList]] ];
 		selectedEdges = RandomSample[bestEdgeList, Min[Length[bestEdgeList], truncationLimit]];
@@ -712,13 +735,13 @@ exportAnimation[];
 convex form
 https://en.wikipedia.org/wiki/Icosidodecahedron
 F = 32, E = 60, V = 30 (χ = 2)
-
+dihedral angle: 142.62
 
 non convex form
 https://en.wikipedia.org/wiki/Great_ditrigonal_icosidodecahedron
 https://polytope.miraheze.org/wiki/Great_ditrigonary_icosidodecahedron
-
 F = 32, E = 60, V = 20 (χ = −8)
+dihedral angle: 79.19
 
 new maxFaceCount: 32
 face tallies

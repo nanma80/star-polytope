@@ -33,10 +33,10 @@ stageCount = 2;
 
 (* frameCount = 2; *)
 (* frameCount = 5; *)
-(* frameCount = 10; *)
+frameCount = 10;
 (* frameCount = 12; *)
 (* frameCount = 150; *)
-frameCount = 200;
+(* frameCount = 200; *)
 (* frameCount = 220; *)
 
 (* suboptimal = True; *)
@@ -410,7 +410,9 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			(* Print[gidtidDihedralAngle / Pi * 180]; *)
 			
 			angleToFlat = Pi - originalDihedralAngle;
-			angleToStellate = gidtidDihedralAngle - originalDihedralAngle;
+			(* angleToStellate = gidtidDihedralAngle - originalDihedralAngle; (* 79.19 deg *) *)
+			(* angleToStellate = Pi - gidtidDihedralAngle - originalDihedralAngle; (* 100.81 deg *) *)
+			angleToStellate = Pi - originalDihedralAngle - originalDihedralAngle; (* 37.38 deg *)
 
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
@@ -421,7 +423,7 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 				rotationAngle = realPerc * angleToFlat + (1 - realPerc) * angleToStellate;
 			];
 
-			(* Print[{angleToFlat - angleToStellate,  angleToFlat + originalDihedralAngle, angleToStellate + originalDihedralAngle,  rotationAngle + originalDihedralAngle}  * 180.0/Pi]; *)
+			(* Print[{angleToFlat + originalDihedralAngle, angleToStellate + originalDihedralAngle,  rotationAngle + originalDihedralAngle}  * 180.0/Pi]; *)
 			rotMatrix = RotationMatrix[rotationAngle, {relativeFace2, relativeFace1}];
 			(* Print[{ originalDihedralAngle, angleToStellate, originalDihedralAngle + angleToStellate } * 180.0/Pi]; *)
 			(* Print[rotMatrix]; *)
@@ -436,6 +438,7 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
+	Print[{angleToFlat + originalDihedralAngle, angleToStellate + originalDihedralAngle,  rotationAngle + originalDihedralAngle}  * 180.0/Pi];
 	rotatedFaces
 ];
 
@@ -560,7 +563,20 @@ exportAnimation[] := Module[
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
  *)
-	edgeList = {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 7, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 15 \[UndirectedEdge] 11, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 22, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 23 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 30 \[UndirectedEdge] 19, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22};
+ (* 
+	optimized only for 79.19: non convex shape: Gidtid
+  *)
+	(* edgeList = {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 7, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 15 \[UndirectedEdge] 11, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 22, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 23 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 30 \[UndirectedEdge] 19, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22}; *)
+	rootFaceId = 16;
+
+	(* optimized only for 100.81
+	 *)
+	edgeList = {1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 5, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 6 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 9 \[UndirectedEdge] 13, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 7, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 23, 15 \[UndirectedEdge] 11, 15 \[UndirectedEdge] 24, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 19, 17 \[UndirectedEdge] 22, 22 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 30, 26 \[UndirectedEdge] 31, 27 \[UndirectedEdge] 32, 28 \[UndirectedEdge] 18, 30 \[UndirectedEdge] 19, 30 \[UndirectedEdge] 20, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22};
+	rootFaceId = 16;
+
+	(* -1: 30, -3: 32 *)
+	edgeList = {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 12, 8 \[UndirectedEdge] 31, 9 \[UndirectedEdge] 32, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 14 \[UndirectedEdge] 23, 15 \[UndirectedEdge] 11, 15 \[UndirectedEdge] 24, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 19, 17 \[UndirectedEdge] 22, 18 \[UndirectedEdge] 29, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 22 \[UndirectedEdge] 28, 23 \[UndirectedEdge] 32, 25 \[UndirectedEdge] 29, 26 \[UndirectedEdge] 30, 27 \[UndirectedEdge] 31, 30 \[UndirectedEdge] 19};
+	rootFaceId = 1;
 
 	spanningTree = FindSpanningTree[Graph[edgeList]];
 
@@ -569,7 +585,7 @@ exportAnimation[] := Module[
 	treeHeights = Map[TreeDepth[GraphTree[spanningTree, #]]&, pentagonIds];
 	Print[treeHeights];
 
-	rootFaceId = 16;
+	
 
 	tree = GraphTree[spanningTree, rootFaceId];
 
@@ -605,7 +621,7 @@ exportAnimation[] := Module[
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* If[frameIndex != 1 && frameIndex != 10 && frameIndex != 15 && frameIndex != 20 && frameIndex != 25, Continue[]]; *)
 		(* If[frameIndex != 1 && frameIndex != 20, Continue[]]; *)
-		(* If[frameIndex < 6, Continue[]]; *)
+		If[frameIndex < 10, Continue[]];
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -613,7 +629,7 @@ exportAnimation[] := Module[
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
-	(* Exit[]; *)
+	Exit[];
 
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
@@ -660,6 +676,17 @@ Print[rotationSchedule];
 
 exportAnimation[];
 
+(* 
+180: flat net
+142.62: icosidodecahedron
+100.81: icosahedron + great dodecahedron
+79.19: non convex shape: Gidtid. https://en.wikipedia.org/wiki/Great_ditrigonal_icosidodecahedron
+37.38: another icosahedron + great dodecahedron
+
+It's not clear if the 100.81 shape and 37.38 shape can achieve "full faces" at the same time.
+Answer: Not always.
+
+ *)
 
 (* 
 
