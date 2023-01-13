@@ -578,6 +578,13 @@ exportAnimation[] := Module[
 	edgeList = {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 12, 8 \[UndirectedEdge] 31, 9 \[UndirectedEdge] 32, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 14 \[UndirectedEdge] 23, 15 \[UndirectedEdge] 11, 15 \[UndirectedEdge] 24, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 19, 17 \[UndirectedEdge] 22, 18 \[UndirectedEdge] 29, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 22 \[UndirectedEdge] 28, 23 \[UndirectedEdge] 32, 25 \[UndirectedEdge] 29, 26 \[UndirectedEdge] 30, 27 \[UndirectedEdge] 31, 30 \[UndirectedEdge] 19};
 	rootFaceId = 1;
 
+	(* -1, -2, -3 are 29, 32, 32, respectively *)
+	edgeList = {1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 12, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 15 \[UndirectedEdge] 11, 15 \[UndirectedEdge] 24, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 19, 17 \[UndirectedEdge] 20, 18 \[UndirectedEdge] 29, 20 \[UndirectedEdge] 31, 22 \[UndirectedEdge] 28, 23 \[UndirectedEdge] 32, 25 \[UndirectedEdge] 29, 27 \[UndirectedEdge] 32, 30 \[UndirectedEdge] 19, 31 \[UndirectedEdge] 21};
+	rootFaceId = 1;
+
+	edgeList = {1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 5, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 12, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 9 \[UndirectedEdge] 32, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 14 \[UndirectedEdge] 23, 15 \[UndirectedEdge] 11, 15 \[UndirectedEdge] 24, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 19, 25 \[UndirectedEdge] 29, 26 \[UndirectedEdge] 30, 28 \[UndirectedEdge] 18, 30 \[UndirectedEdge] 19, 30 \[UndirectedEdge] 20, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22};
+	rootFaceId = 1;
+
 	spanningTree = FindSpanningTree[Graph[edgeList]];
 
 	pentagonIds = Select[Range[Length[faces]], Length[faces[[#]]]==5 &];
@@ -621,7 +628,7 @@ exportAnimation[] := Module[
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* If[frameIndex != 1 && frameIndex != 10 && frameIndex != 15 && frameIndex != 20 && frameIndex != 25, Continue[]]; *)
 		(* If[frameIndex != 1 && frameIndex != 20, Continue[]]; *)
-		If[frameIndex < 10, Continue[]];
+		(* If[frameIndex < 10, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)

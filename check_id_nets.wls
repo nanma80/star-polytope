@@ -41,6 +41,7 @@ frameCount = 10;
 
 (* suboptimal = True; *)
 suboptimal = False;
+weights = {1, 1, 0};
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -462,7 +463,7 @@ testFold[faces_, rotationSchedule_, foldPercents_] := Module[
 	rotatedEdgeCentersTally = Tally[rotatedEdgeCenters, ApproxSamePoint[#1, #2]&];
 	edgeTallyCounts = Sort[Map[#[[2]]&, rotatedEdgeCentersTally], Greater];
 
-	If[Length[faceTallyCounts] >= maxFaceCount,
+(* 	If[Length[faceTallyCounts] >= maxFaceCount,
 		maxFaceCount = Length[faceTallyCounts];
 		Print["new maxFaceCount: " <> IntegerString[maxFaceCount]];
 		Print["face tallies"];
@@ -488,7 +489,7 @@ testFold[faces_, rotationSchedule_, foldPercents_] := Module[
 		Print["resetting bestEdgeList"];
 		bestEdgeList = {};
 	];
-
+ *)
 	Return[ Length[faceTallyCounts] ];
 ];
 
@@ -511,11 +512,15 @@ buildSchedule[t_, schedule_, level_] := Module[
 getNeighborEdgeLists[selectedEdges_, graphEdgeList_] := Module[
 	{neighbors, minusEdgeId, remainingSelectedEdges, neighborEdgeLists, neighborEdgeListsAsTree},
 	neighbors = {};
-	For[minusEdgeId = 1, minusEdgeId <= Length[selectedEdges], minusEdgeId++,
-		remainingSelectedEdges = selectedEdges[[ Complement[Range[Length[selectedEdges]], {minusEdgeId} ]]];
+	neighborDistance = 2;
+	minusEdgeIds = Subsets[Range[Length[selectedEdges]], {neighborDistance}];
 
-		neighborEdgeLists = Map[ Union[{#}, remainingSelectedEdges]& , graphEdgeList];
-		neighborEdgeLists = Select[neighborEdgeLists, Length[#] == Length[remainingSelectedEdges] + 1 &];
+	For[minusEdgeId = 1, minusEdgeId <= Length[selectedEdges], minusEdgeId++,
+		minusEdges = minusEdgeIds[[minusEdgeId]];
+		remainingSelectedEdges = selectedEdges[[ Complement[Range[Length[selectedEdges]], minusEdges ]]];
+
+		neighborEdgeLists = Map[ Union[#, remainingSelectedEdges]& , Subsets[graphEdgeList, {neighborDistance} ]];
+		neighborEdgeLists = Select[neighborEdgeLists, Length[#] == Length[remainingSelectedEdges] + neighborDistance &];
 		neighborEdgeListsAsTree = Select[neighborEdgeLists, TreeGraphQ[Graph[#]] &];
 		neighbors = Join[neighbors, Map[Sort, neighborEdgeListsAsTree]];
 	];
@@ -557,11 +562,11 @@ exportAnimation[] := Module[
 		allColors[[fid]] = colorMap[Length[face]];
 	];
 
+	maxFaceCount = -1;
 	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
 	Print[adjMatrix];
 
 	graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ];
-	maxFaceCount = -1;
 
 	treesTopN = 1000;
 	(* Print[Binomial[ Length[EdgeList[graph]], VertexCount[graph] - 1 ]]; *)
@@ -586,12 +591,15 @@ exportAnimation[] := Module[
 	tree = GraphTree[spanningTree];
 
 	selectedEdges = { EdgeList[spanningTree] };
+	injectedEdges = {1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 2 \[UndirectedEdge] 12, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 6 \[UndirectedEdge] 12, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 9 \[UndirectedEdge] 13, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 15, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 14 \[UndirectedEdge] 10, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 19, 17 \[UndirectedEdge] 20, 18 \[UndirectedEdge] 29, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 22 \[UndirectedEdge] 28, 23 \[UndirectedEdge] 28, 23 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 27 \[UndirectedEdge] 31, 30 \[UndirectedEdge] 19};
+	(* selectedEdges = {injectedEdges}; *)
+	(* maxFaceCount = Dot[{32, 31, 31}, weights]; *)
 
-	iterationLimit = 50;
-	truncationLimit = 50;
+	iterationLimit = 60;
+	truncationLimit = 20;
 
 	For[iteration = 1, iteration <= iterationLimit, iteration++,
-		Print["Iteration " <> IntegerString[iteration] ];
+		Print[DateString["ISODateTime"] <> " Iteration " <> IntegerString[iteration] ];
 		neighbors = Apply[Union, Map[getNeighborEdgeLists[#, graphEdgeList]&, selectedEdges]];
 		Print["neighbor count " <> IntegerString[Length[neighbors]] ];
 		bestEdgeList = {};
@@ -607,27 +615,36 @@ exportAnimation[] := Module[
 
 			rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
 			maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
-			unfoldPercents = {-1, -3};
+			unfoldPercents = {-1, -2, -3};
+			
 			distinctFacesCounts = Map[testFold[faces, rotationSchedule, Table[#, {k, 1, maxLevel}]]&,unfoldPercents];
 
-			If[Total[distinctFacesCounts] > maxFaceCount,
-				maxFaceCount = Total[distinctFacesCounts];
-				Print["updated maxFaceCount to " <> IntegerString[maxFaceCount] ];
+			If[Dot[distinctFacesCounts, weights] > maxFaceCount,
+				maxFaceCount = Dot[distinctFacesCounts, weights];
+				Print[DateString["ISODateTime"] <> " Iteration " <> IntegerString[iteration] <> " Updated maxFaceCount to " <> IntegerString[maxFaceCount] ];
 				Print[distinctFacesCounts];
 				Print["resetting bestEdgeList"];
 				bestEdgeList = {};
+				Print["rootFaceId: " <> IntegerString[rootFaceId] ];
+				Print[rotationSchedule];
+				Print[neighbor];
 			];
 
-			If[Total[distinctFacesCounts] == maxFaceCount,
-				Print["Keeping maxFaceCount as " <> IntegerString[maxFaceCount] ];
+			If[Dot[distinctFacesCounts, weights] == maxFaceCount,
+				Print[DateString["ISODateTime"] <> " Iteration " <> IntegerString[iteration] <> " Keeping maxFaceCount as " <> IntegerString[maxFaceCount] ];
 				Print[distinctFacesCounts];
 
 				Print["rootFaceId: " <> IntegerString[rootFaceId] ];
 				Print[rotationSchedule];
 				Print[neighbor];
 
-				If[Length[faceTallyCounts] == 32 * Length[unfoldPercents] && Length[faces[[rootFaceId]]] == 5,
+				If[Total[distinctFacesCounts] == 32 * Length[unfoldPercents] && Length[faces[[rootFaceId]]] == 5,
 					Print["Found a good net"];
+					Exit[];
+				];
+
+				If[Total[distinctFacesCounts[[{1, 2}]]] == 32 * 2,
+					Print["Found a less ideal net. The first two fold shapes are complete"];
 					Exit[];
 				];
 
@@ -755,5 +772,11 @@ rootFaceId: 1
 {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 7, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 13 \[UndirectedEdge] 27, 14 \[UndirectedEdge] 10, 15 \[UndirectedEdge] 11, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 22, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 23 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 30 \[UndirectedEdge] 19, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22}
 Found a good net
 
+
+when I search for a good net for three levels, -1, -2, -3, the best we got is 94 faces
+{32, 31, 31}
+or {31, 31, 32}
+
+for 93, we can get {29, 32, 32}
 
  *)
