@@ -512,7 +512,7 @@ buildSchedule[t_, schedule_, level_] := Module[
 getNeighborEdgeLists[selectedEdges_, graphEdgeList_] := Module[
 	{neighbors, minusEdgeId, remainingSelectedEdges, neighborEdgeLists, neighborEdgeListsAsTree},
 	neighbors = {};
-	neighborDistance = 2;
+	neighborDistance = 3;
 	minusEdgeIds = Subsets[Range[Length[selectedEdges]], {neighborDistance}];
 
 	For[minusEdgeId = 1, minusEdgeId <= Length[selectedEdges], minusEdgeId++,
@@ -592,8 +592,8 @@ exportAnimation[] := Module[
 
 	selectedEdges = { EdgeList[spanningTree] };
 	injectedEdges = {1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4, 2 \[UndirectedEdge] 12, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 6 \[UndirectedEdge] 12, 7 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 30, 8 \[UndirectedEdge] 31, 9 \[UndirectedEdge] 13, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 15, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 14 \[UndirectedEdge] 10, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 19, 17 \[UndirectedEdge] 20, 18 \[UndirectedEdge] 29, 20 \[UndirectedEdge] 31, 21 \[UndirectedEdge] 32, 22 \[UndirectedEdge] 28, 23 \[UndirectedEdge] 28, 23 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 27 \[UndirectedEdge] 31, 30 \[UndirectedEdge] 19};
-	(* selectedEdges = {injectedEdges}; *)
-	(* maxFaceCount = Dot[{32, 31, 31}, weights]; *)
+	selectedEdges = {injectedEdges};
+	maxFaceCount = Dot[{32, 31, 31}, weights];
 
 	iterationLimit = 60;
 	truncationLimit = 20;
