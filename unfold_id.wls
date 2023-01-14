@@ -607,9 +607,28 @@ exportAnimation[] := Module[
 	(* unfoldPercents = Table[k/(frameCount-1), {k, 0, frameCount-1}]; *)
 	unfoldPercents = Table[smoothFall[x, k/2/maxLevel - 1/4/maxLevel, 1/2]//N, {x, 0, 1, 1/(frameCount-1)}, {k, maxLevel}];
 
-	negativePercents = Table[smoothFallFromTo[x, 0, 1, 0, -1]//N, {x, 0, 1, 1/(frameCount - 1)}, {k, maxLevel}];
-	
-	(* returnPercents = Table[smoothFallFromTo[x, 0, 1, -1, -2]//N, {x, 0, 1, 1/(2 *frameCount - 1)}, {k, maxLevel}]; *)
+	angleToFlat = Pi - originalDihedralAngle;
+	(* angleToStellate = gidtidDihedralAngle - originalDihedralAngle; (* 79.19 deg *) *)
+	(* angleToStellate = Pi - gidtidDihedralAngle - originalDihedralAngle; (* 100.81 deg *) *)
+	angleToStellate = Pi - originalDihedralAngle - originalDihedralAngle; (* 37.38 deg *)
+
+	angle142 = ArcCos[-Sqrt[ (5 + 2 * Sqrt[5])/15 ]]//N; (* 142.62 , id dihedral angle*)
+	angle79 = ArcCos[Sqrt[ (5 - 2 * Sqrt[5])/15 ]]//N; (* 79.19 , gidtid dihedral angle*)
+	angle100 = Pi - angle79; (* 100.81 *)
+	angle37 = Pi - angle142; (* 37.38 *)
+
+	Print[{angle142, angle100, angle79, angle37}/Pi * 180];
+
+	step1 = (angle142 - angle100)/(angle142 - angle37);
+	step2 = (angle100 - angle79)/(angle142 - angle37);
+	step3 = (angle79 - angle37)/(angle142 - angle37);
+	negativePercents = Join[
+		Table[smoothFallFromTo[x, 0, 1, 0, -step1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
+		Table[-step1, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
+	  Table[smoothFallFromTo[x, 0, 1, -step1, -step1 - step2], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}], 
+	  Table[-step1 - step2, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
+	  Table[smoothFallFromTo[x, 0, 1, -step1 - step2, -1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}]
+  ]//N;
 
 	minusOnes = Table[-1.0, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}];
 	zeros = Table[-0.0, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}];
