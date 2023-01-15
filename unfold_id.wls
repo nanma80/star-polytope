@@ -353,7 +353,29 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 	thickness = 0.01;
 	opacity = 1;
 
-	elements = {
+	faceElements = {};
+	For[fid = 1, fid <= Length[selectedFaces], fid++,
+		color = allColors[[fid]];
+		face = selectedFaces[[fid]];
+		holeSize = If[Length[face] == 5, 0.7, 0.6];
+		faceCenter = Mean[face];
+		edgesInFace = getEdgesFromFace[face];
+		For[eid = 1, eid <= Length[edgesInFace], eid++,
+			edge = edgesInFace[[eid]];
+			facePiece = {edge[[1]], edge[[2]], 
+				holeSize * edge[[2]] + (1 - holeSize) faceCenter, 
+				holeSize * edge[[1]] + (1 - holeSize) faceCenter
+			};
+			AppendTo[faceElements,
+				{
+					FaceForm[color],
+					Polygon[facePiece]
+				}
+			];
+		];
+	];
+
+(* 	elements = {
 			Table[{
 				Opacity[opacity], FaceForm[allColors[[k]]], Polygon[selectedFaces[[k]] * (1 + 0.0001 k)]
 			}, {k, Length[selectedFaces]}],
@@ -363,7 +385,9 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 			{
 				Opacity[1], FaceForm[White], Map[Sphere[#, thickness * 1.5]&, vertices]
 			}
-	};
+	}; *)
+
+	elements = faceElements;
 
 	graph = Graphics3D[
 		elements,
@@ -585,7 +609,7 @@ exportAnimation[] := Module[
 
 	(* 32, 32, 29 *)
 	edgeList = {1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 12, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 13, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 8 \[UndirectedEdge] 31, 9 \[UndirectedEdge] 14, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 14 \[UndirectedEdge] 10, 14 \[UndirectedEdge] 23, 15 \[UndirectedEdge] 24, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 20, 17 \[UndirectedEdge] 22, 19 \[UndirectedEdge] 29, 19 \[UndirectedEdge] 30, 21 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 27 \[UndirectedEdge] 31, 30 \[UndirectedEdge] 20, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22};
-	rootFaceId = 12;
+	rootFaceId = 31;
 
 	spanningTree = FindSpanningTree[Graph[edgeList]];
 
@@ -651,7 +675,7 @@ exportAnimation[] := Module[
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-		spinAngle = - frameIndex/Length[unfoldPercents] * 2 * Pi;
+		spinAngle = - Pi/2 - frameIndex/Length[unfoldPercents] * 2 * Pi;
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
