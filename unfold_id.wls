@@ -349,7 +349,8 @@ elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
 	Print[vertices//Length];
 
 	viewCenter = Mean[faceCenters];
-	thickness = 0.01 * range;
+	(* thickness = 0.01 * range; *)
+	thickness = 0.01;
 	opacity = 1;
 
 	elements = {
@@ -410,9 +411,9 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			(* Print[gidtidDihedralAngle / Pi * 180]; *)
 			
 			angleToFlat = Pi - originalDihedralAngle;
-			(* angleToStellate = gidtidDihedralAngle - originalDihedralAngle; (* 79.19 deg *) *)
+			angleToStellate = gidtidDihedralAngle - originalDihedralAngle; (* 79.19 deg *)
 			(* angleToStellate = Pi - gidtidDihedralAngle - originalDihedralAngle; (* 100.81 deg *) *)
-			angleToStellate = Pi - originalDihedralAngle - originalDihedralAngle; (* 37.38 deg *)
+			(* angleToStellate = Pi - originalDihedralAngle - originalDihedralAngle; (* 37.38 deg *) *)
 
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
@@ -613,21 +614,21 @@ exportAnimation[] := Module[
 	angleToStellate = Pi - originalDihedralAngle - originalDihedralAngle; (* 37.38 deg *)
 
 	angle142 = ArcCos[-Sqrt[ (5 + 2 * Sqrt[5])/15 ]]//N; (* 142.62 , id dihedral angle*)
-	angle79 = ArcCos[Sqrt[ (5 - 2 * Sqrt[5])/15 ]]//N; (* 79.19 , gidtid dihedral angle*)
 	angle100 = Pi - angle79; (* 100.81 *)
+	angle79 = ArcCos[Sqrt[ (5 - 2 * Sqrt[5])/15 ]]//N; (* 79.19 , gidtid dihedral angle*)
 	angle37 = Pi - angle142; (* 37.38 *)
 
 	Print[{angle142, angle100, angle79, angle37}/Pi * 180];
 
-	step1 = (angle142 - angle100)/(angle142 - angle37);
-	step2 = (angle100 - angle79)/(angle142 - angle37);
-	step3 = (angle79 - angle37)/(angle142 - angle37);
+	step1 = (angle142 - angle100)/(angle142 - angle79);
+	step2 = (angle100 - angle79)/(angle142 - angle79);
+	(* step3 = (angle79 - angle37)/(angle142 - angle37); *)
 	negativePercents = Join[
 		Table[smoothFallFromTo[x, 0, 1, 0, -step1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
-		Table[-step1, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
-	  Table[smoothFallFromTo[x, 0, 1, -step1, -step1 - step2], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}], 
-	  Table[-step1 - step2, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
-	  Table[smoothFallFromTo[x, 0, 1, -step1 - step2, -1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}]
+		Table[-step1, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}],
+	  Table[smoothFallFromTo[x, 0, 1, -step1, -step1 - step2], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}]
+	  (* Table[-step1 - step2, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}], *)
+	  (* Table[smoothFallFromTo[x, 0, 1, -step1 - step2, -1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}] *)
   ]//N;
 
 	minusOnes = Table[-1.0, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}];
@@ -635,7 +636,7 @@ exportAnimation[] := Module[
 
 	unfoldPercents = Join[unfoldPercents, zeros, negativePercents, minusOnes ];
 	
-	(* unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]]; *)
+	unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]];
 
 	If[r > 1,
 		unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
@@ -650,7 +651,7 @@ exportAnimation[] := Module[
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-		spinAngle = Pi/2 - frameIndex/Length[unfoldPercents] * 2 * Pi + Pi/5;
+		spinAngle = - frameIndex/Length[unfoldPercents] * 2 * Pi;
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
