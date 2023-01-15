@@ -33,10 +33,10 @@ stageCount = 2;
 
 (* frameCount = 2; *)
 (* frameCount = 5; *)
-frameCount = 10;
+(* frameCount = 10; *)
 (* frameCount = 12; *)
 (* frameCount = 150; *)
-(* frameCount = 200; *)
+frameCount = 200;
 (* frameCount = 220; *)
 
 (* suboptimal = True; *)
@@ -672,6 +672,7 @@ exportAnimation[] := Module[
 		(* If[frameIndex != 1 && frameIndex != 10 && frameIndex != 15 && frameIndex != 20 && frameIndex != 25, Continue[]]; *)
 		(* If[frameIndex != 1 && frameIndex != 20, Continue[]]; *)
 		(* If[frameIndex < 10, Continue[]]; *)
+		If[frameIndex < 210, Continue[]];
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -679,7 +680,7 @@ exportAnimation[] := Module[
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
-	Exit[];
+	(* Exit[]; *)
 
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
