@@ -730,7 +730,10 @@ exportAnimation[];
 (* 
 180: flat net
 142.62: icosidodecahedron
-100.81: icosahedron + great dodecahedron
+100.81: icosahedron + great dodecahedron (cid)
+https://polytope.miraheze.org/wiki/Small_complex_icosidodecahedron
+https://en.wikipedia.org/wiki/Small_complex_icosidodecahedron
+
 79.19: non convex shape: Gidtid. https://en.wikipedia.org/wiki/Great_ditrigonal_icosidodecahedron
 37.38: another icosahedron + great dodecahedron
 
