@@ -34,6 +34,7 @@ stageCount = 2;
 (* frameCount = 2; *)
 (* frameCount = 5; *)
 frameCount = 10;
+(* frameCount = 40; *)
 (* frameCount = 12; *)
 (* frameCount = 150; *)
 (* frameCount = 200; *)
@@ -419,10 +420,10 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			(* Print[originalDihedralAngle / Pi * 180]; *)
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = -2 * originalDihedralAngle + Pi;
-(* 			If[Length[face1] + Length[face2] == 7,
+			If[Length[face1] + Length[face2] == 7,
 				angleToStellate = -Pi;
 			];
- *)
+
 
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
@@ -610,7 +611,7 @@ exportAnimation[] := Module[
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
 	];
 
-	(* Exit[]; *)
+	Exit[];
 
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
