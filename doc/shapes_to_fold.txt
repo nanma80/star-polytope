@@ -1,0 +1,115 @@
+Data from:
+https://polytope.miraheze.org/wiki/List_of_uniform_polyhedra
+
+
+----
+done
+Quasirhombicuboctahedron	querco	Uniform great rhombicuboctahedron.png	x4/3o3x	4.3/2.4.4	24	48	8 triangles
+6+12 squares	Truncated cube	Great cubicuboctahedron	B3	4-4: {\displaystyle 45°}{\displaystyle 45°}
+4-3: {\displaystyle \arccos\left( \frac{\sqrt{6}}{3} \right) \approx 35.26439°}{\displaystyle \arccos\left( \frac{\sqrt{6}}{3} \right) \approx 35.26439°}
+
+Small rhombicuboctahedron	sirco	Small rhombicuboctahedron.png	x4o3x	3.4.4.4	24	48	8 triangles
+6+12 squares	Small rhombicuboctahedron	Small rhombicuboctahedron	B3	4-3: {\displaystyle \arccos\left( -\frac{\sqrt{6}}{3} \right) \approx 144.73561°}{\displaystyle \arccos\left( -\frac{\sqrt{6}}{3} \right) \approx 144.73561°}
+4-4: {\displaystyle 135°}{\displaystyle 135°}
+---
+done
+https://en.wikipedia.org/wiki/Great_ditrigonal_icosidodecahedron
+https://polytope.miraheze.org/wiki/Great_ditrigonary_icosidodecahedron
+great ditrigonal icosidodecahedron (or great ditrigonary icosidodecahedron)
+
+Great ditrigonary icosidodecahedron	gidtid	Great ditrigonal icosidodecahedron.png	x3/2o3o5*a	(5.3.5.3.5.3)/2	20	60	20 triangles
+12 pentagons	Dodecahedron	Small ditrigonary icosidodecahedron	H3	5-3: {\displaystyle \arccos\left( -\sqrt{\frac{5+2\sqrt{5}}{15}} \right) \approx 142.62263°}{\displaystyle \arccos\left( -\sqrt{\frac{5+2\sqrt{5}}{15}} \right) \approx 142.62263°}
+Icosidodecahedron	id	Icosidodecahedron.png	o5x3o	3.5.3.5	30	60	20 triangles
+12 pentagons	Icosidodecahedron	Icosidodecahedron	H3	3-5: {\displaystyle \arccos\left( -\sqrt{\frac{5+2\sqrt{5}}{15}} \right) \approx 142.62263°}{\displaystyle \arccos\left( -\sqrt{\frac{5+2\sqrt{5}}{15}} \right) \approx 142.62263°}
+
+also degenerate
+Small complex icosidodecahedron(ike + gad)	cid		o5/3o3x5*a	(3.5.3.5.3.5.3.5.3.5)/2	12	30*2	20 triangles
+12 pentagons	Icosahedron	Icosahedron
+====
+
+
+20 triangles
+30 squares
+12 pentagrams
+
+uniform polyhedron
+Quasirhombicosidodecahedron	qrid	Uniform great rhombicosidodecahedron.png	x5/3o3x	4.5/3.4.3	60	120	20 triangles
+30 squares
+12 pentagrams
+
+degenerate polyhedron
+Small complex rhombicosidodecahedron(sidtid + 5 cubes)	sicdatrid
+
+====
+30 squares
+12 pentagons
+12 pentagrams
+raded + cadditradid
+
+Rhombidodecadodecahedron	raded	Rhombidodecadodecahedron.png	x5/2o5x	4.5/2.4.5	60	120
+degen:
+Complex rhombidodecadodecahedron(ditdid + 5 cubes)	cadditradid
+
+
+---
+
+12 pentagons + 12 pentagrams
+
+Ditrigonary dodecadodecahedron	ditdid	Ditrigonal dodecadodecahedron.png	x5/3o3o5*a	5/3.5.5/3.5.5/3.5	20	60	12 pentagons
+12 pentagrams	Dodecahedron	Small ditrigonary icosidodecahedron	H3	5-5/2: {\displaystyle \arccos\left( \frac{\sqrt{5}}{5} \right) \approx 63.43495°}{\displaystyle \arccos\left( \frac{\sqrt{5}}{5} \right) \approx 63.43495°}
+
+Dodecadodecahedron	did	Dodecadodecahedron.png	o5/2x5o	5/2.5.5/2.5	30	60	12 pentagons
+12 pentagrams	Icosidodecahedron	Dodecadodecahedron	H3	5-5/2: {\displaystyle \arccos\left( -\frac{\sqrt{5}}{5} \right) \approx 116.56505°}{\displaystyle \arccos\left( -\frac{\sqrt{5}}{5} \right) \approx 116.56505°}
+
+People were interested
+galoomba — 01/15/2023 6:17 PM
+do did and ditdid have common nets?
+
+===
+20 triangles + 12 pentagrams
+sidtid, gid, gacid (degen)
+
+Small ditrigonary icosidodecahedron	sidtid	Small ditrigonal icosidodecahedron.png	x5/2o3o3*a	5/2.3.5/2.3.5/2.3	20	60	20 triangles
+12 pentagrams	Dodecahedron	Small ditrigonary icosidodecahedron	H3	5/2-3: 142.62263°
+{\displaystyle \arccos\left( -\sqrt{\frac{5+2\sqrt{5}}{15}} \right) \approx 142.62263°}
+Great icosidodecahedron	gid	Great icosidodecahedron.png	o5/2x3o	5/2.3.5/2.3	30	60	20 triangles
+12 pentagrams	Icosidodecahedron	Great icosidodecahedron	H3	3-5/2: ⁡37.37737°
+{\displaystyle \arccos\left( \sqrt{\frac{5+2\sqrt{5}}{15}} \right) \approx 37.37737°}
+
+also degenerate
+Great complex icosidodecahedron(sissid + gike)	gacid		o5/3x3o5*a	(3.5/2.3.5/2.3.5/2.3.5/2.3.5/2)/2	12	30*2	20 triangles
+12 pentagrams	Icosahedron	Great icosahedron
+
+====
+snub pairs
+---
+Great inverted snub icosidodecahedron	gisid	Great inverted snub icosidodecahedron.png	s5/3s3s	3.3.3.3.5/3	60	150	20+60 triangles
+12 pentagrams	Non-uniform snub dodecahedron	Great inverted snub icosidodecahedron	H3+	3–3: {\displaystyle \approx 89.78760°}{\displaystyle \approx 89.78760°}
+5/2–3: {\displaystyle \approx 21.61047°}{\displaystyle \approx 21.61047°}
+
+Great retrosnub icosidodecahedron	girsid	Great retrosnub icosidodecahedron.png	s5/3s3/2s	(3.3.3.3.5/2)/2	60	150	20+60 triangles
+12 pentagrams	Non-uniform snub dodecahedron	Great inverted retrosnub icosidodecahedron	H3+	5/2–3: {\displaystyle \approx 67.31029°}{\displaystyle \approx 67.31029°}
+3–3: {\displaystyle \approx 21.72466°}{\displaystyle \approx 21.72466°}
+
+---
+Snub dodecadodecahedron	siddid	Snub dodecadodecahedron.png	s5/2s5s	3.3.5/2.3.5	60	150	60 triangles
+12 pentagons
+12 pentagrams	Non-uniform snub dodecahedron	Snub dodecadodecahedron	H3+	5–3: {\displaystyle \approx 129.79515°}{\displaystyle \approx 129.79515°}
+3–3: {\displaystyle \approx 151.48799°}{\displaystyle \approx 151.48799°} 5/2–3: {\displaystyle \approx 157.77792°}{\displaystyle \approx 157.77792°}
+
+Inverted snub dodecadodecahedron	isdid	Inverted snub dodecadodecahedron.png	s5/3s5s	3.5/3.3.3.5	60	150	60 triangles
+12 pentagons
+12 pentagrams	Non-uniform snub dodecahedron	Inverted snub dodecadodecahedron	H3+	3–3: {\displaystyle \approx 130.49074°}{\displaystyle \approx 130.49074°}
+5-3: {\displaystyle \approx 68.64088°}{\displaystyle \approx 68.64088°} 5/2-3: {\displaystyle \approx 11.12448°}{\displaystyle \approx 11.12448°}
+
+---
+Small inverted retrosnub icosicosidodecahedron	sirsid	Small retrosnub icosicosidodecahedron.png	s5/2s3/2s3/2*a	(3.3.3.3.3.5/3)/2	60	180	60 triangles
+20 hexagrams
+12 pentagrams	Semi-uniform truncated dodecahedron	Small inverted retrosnub icosicosidodecahedron	H3	5/2–3: {\displaystyle \arccos\left(\sqrt{\frac{15-2\sqrt5-2\sqrt{30\sqrt5-65}}{15}}\right) ≈ 44.45753°}{\displaystyle \arccos\left(\sqrt{\frac{15-2\sqrt5-2\sqrt{30\sqrt5-65}}{15}}\right) ≈ 44.45753°}
+3–3: {\displaystyle \arccos\left(\frac{\sqrt{3+2\sqrt5}}{3}\right) ≈ 24.33196°}{\displaystyle \arccos\left(\frac{\sqrt{3+2\sqrt5}}{3}\right) ≈ 24.33196°}
+
+Small snub icosicosidodecahedron	seside	Small snub icosicosidodecahedron.png	s5/2s3s3*a	3.3.3.3.3.5/2	60	180	60 triangles
+20 hexagrams
+12 pentagrams	Semi-uniform truncated icosahedron	Small snub icosicosidodecahedron	H3	5/2-3: {\displaystyle \arccos\left(-\sqrt{\frac{15-2\sqrt5+2\sqrt{30\sqrt5-65}}{15}}\right) \approx 161.02258°}{\displaystyle \arccos\left(-\sqrt{\frac{15-2\sqrt5+2\sqrt{30\sqrt5-65}}{15}}\right) \approx 161.02258°}
+3-3: {\displaystyle \arccos\left(-\frac{\sqrt{3+2\sqrt5}}{3}\right) \approx 155.66804°}{\displaystyle \arccos\left(-\frac{\sqrt{3+2\sqrt5}}{3}\right) \approx 155.66804°}
+
