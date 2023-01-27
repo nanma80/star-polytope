@@ -41,7 +41,8 @@ frameCount = 10;
 
 (* suboptimal = True; *)
 suboptimal = False;
-weights = {1, 1, 1};
+weights = {1, 1, 0};
+(* weights = {1, 1}; *)
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -622,7 +623,8 @@ exportAnimation[] := Module[
 
 	For[iteration = 1, iteration <= iterationLimit, iteration++,
 		Print[DateString["ISODateTime"] <> " Iteration " <> IntegerString[iteration] ];
-		neighborDistance = Ceiling[iteration/5];
+		neighborDistance = Ceiling[(iteration - 1)/4];
+		If[neighborDistance < 1, neighborDistance = 1];
 
 		neighbors = Apply[Union, Map[getNeighborEdgeLists[#, graphEdgeList, neighborDistance]&, selectedEdges]];
 		Print["neighbor count " <> IntegerString[Length[neighbors]] ];
@@ -640,6 +642,7 @@ exportAnimation[] := Module[
 			rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
 			maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
 			unfoldPercents = {-1, -2, -3};
+			(* unfoldPercents = {-1, -2}; *)
 			
 			distinctFacesCounts = Map[testFold[faces, rotationSchedule, Table[#, {k, 1, maxLevel}]]&,unfoldPercents];
 
@@ -663,11 +666,11 @@ exportAnimation[] := Module[
 					Exit[];
 				];
 
-(* 				If[Total[distinctFacesCounts[[{1, 3}]]] == 32 * 2,
+				If[Total[distinctFacesCounts[[{1, 2}]]] == 32 * 2,
 					Print["Found a less ideal net. The first two fold shapes are complete"];
 					Exit[];
 				];
- *)
+
 				If[KeyExistsQ[processedNeighbors, neighbor] == False,
 					AppendTo[bestEdgeList, neighbor];
 				];

@@ -447,6 +447,8 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 		];
 	];
 
+	Print[(rotationAngle + originalDihedralAngle) * 180.0/Pi];
+
 	rotatedFaces
 ];
 
@@ -491,7 +493,6 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	relativeVertices = Map[# - solidCenter &, allVertices];
 	radius = Max[Norm/@relativeVertices];
 	range = radius * 0.8;
-	Print["range = " <> ToString[range]];
 
 	(* range = If[Max[foldPercents] > 0, Max[foldPercents] * 2 + 1, 1] + 0.4 (r - 1); *)
 
@@ -597,7 +598,7 @@ exportAnimation[] := Module[
 	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
 	Print[adjMatrix];
 
-	edgeList = {1 \[UndirectedEdge] 15, 1 \[UndirectedEdge] 17, 1 \[UndirectedEdge] 18, 2 \[UndirectedEdge] 27, 2 \[UndirectedEdge] 32, 3 \[UndirectedEdge] 19, 3 \[UndirectedEdge] 30, 4 \[UndirectedEdge] 21, 4 \[UndirectedEdge] 27, 4 \[UndirectedEdge] 28, 5 \[UndirectedEdge] 22, 5 \[UndirectedEdge] 26, 5 \[UndirectedEdge] 28, 5 \[UndirectedEdge] 31, 6 \[UndirectedEdge] 26, 7 \[UndirectedEdge] 25, 7 \[UndirectedEdge] 30, 7 \[UndirectedEdge] 32, 8 \[UndirectedEdge] 15, 8 \[UndirectedEdge] 20, 8 \[UndirectedEdge] 24, 9 \[UndirectedEdge] 17, 9 \[UndirectedEdge] 23, 9 \[UndirectedEdge] 29, 10 \[UndirectedEdge] 14, 10 \[UndirectedEdge] 25, 11 \[UndirectedEdge] 13, 11 \[UndirectedEdge] 16, 11 \[UndirectedEdge] 21, 12 \[UndirectedEdge] 20, 12 \[UndirectedEdge] 22};
+	edgeList = {1 \[UndirectedEdge] 13, 1 \[UndirectedEdge] 14, 1 \[UndirectedEdge] 15, 1 \[UndirectedEdge] 17, 2 \[UndirectedEdge] 27, 3 \[UndirectedEdge] 19, 3 \[UndirectedEdge] 27, 3 \[UndirectedEdge] 30, 4 \[UndirectedEdge] 16, 4 \[UndirectedEdge] 21, 4 \[UndirectedEdge] 22, 4 \[UndirectedEdge] 28, 5 \[UndirectedEdge] 22, 5 \[UndirectedEdge] 31, 6 \[UndirectedEdge] 24, 6 \[UndirectedEdge] 26, 6 \[UndirectedEdge] 31, 6 \[UndirectedEdge] 32, 7 \[UndirectedEdge] 23, 7 \[UndirectedEdge] 25, 8 \[UndirectedEdge] 15, 8 \[UndirectedEdge] 20, 9 \[UndirectedEdge] 18, 9 \[UndirectedEdge] 24, 9 \[UndirectedEdge] 29, 10 \[UndirectedEdge] 14, 10 \[UndirectedEdge] 23, 11 \[UndirectedEdge] 19, 11 \[UndirectedEdge] 21, 12 \[UndirectedEdge] 20, 12 \[UndirectedEdge] 22};
 
 	(* graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ]; *)
 	(* spanningTree = FindSpanningTree[DirectedGraph[graph]]; *)
@@ -605,10 +606,10 @@ exportAnimation[] := Module[
 
 	pentagonIds = Select[Range[Length[faces]], Length[faces[[#]]]==5 &];
 	(* Print[pentagonIds]; *)
-	treeHeights = Map[{#, TreeDepth[GraphTree[spanningTree, #]]}&, pentagonIds];
+	treeHeights = Sort[Map[{ TreeDepth[GraphTree[spanningTree, #]], #}&, pentagonIds]];
 	Print[treeHeights];
-	(* Exit[]; *)
-	rootFaceId = 5;
+	rootFaceId = treeHeights[[1]][[2]];
+	Print["rootFaceId = " <> IntegerString[rootFaceId]];
 
 	(* Exit[]; *)
 	tree = GraphTree[spanningTree, rootFaceId];
