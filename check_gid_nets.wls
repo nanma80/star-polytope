@@ -41,8 +41,8 @@ frameCount = 10;
 
 (* suboptimal = True; *)
 suboptimal = False;
-weights = {1, 1, 0};
-(* weights = {1, 1}; *)
+(* weights = {1, 1, 0}; *)
+weights = {1, 1};
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -614,17 +614,18 @@ exportAnimation[] := Module[
 	selectedEdges = { treeEdgeList };
 	processedNeighbors = <||>;
 
-	(* injectedEdges = {1 \[UndirectedEdge] 4, 1 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 12, 2 \[UndirectedEdge] 13, 3 \[UndirectedEdge] 13, 4 \[UndirectedEdge] 15, 5 \[UndirectedEdge] 16, 7 \[UndirectedEdge] 16, 8 \[UndirectedEdge] 31, 9 \[UndirectedEdge] 14, 10 \[UndirectedEdge] 28, 11 \[UndirectedEdge] 29, 12 \[UndirectedEdge] 8, 12 \[UndirectedEdge] 26, 13 \[UndirectedEdge] 9, 14 \[UndirectedEdge] 10, 14 \[UndirectedEdge] 23, 15 \[UndirectedEdge] 24, 16 \[UndirectedEdge] 25, 17 \[UndirectedEdge] 18, 17 \[UndirectedEdge] 20, 17 \[UndirectedEdge] 22, 19 \[UndirectedEdge] 29, 19 \[UndirectedEdge] 30, 21 \[UndirectedEdge] 32, 24 \[UndirectedEdge] 28, 25 \[UndirectedEdge] 29, 27 \[UndirectedEdge] 31, 30 \[UndirectedEdge] 20, 31 \[UndirectedEdge] 21, 32 \[UndirectedEdge] 22}; *)
+	injectedEdges =  {1 \[UndirectedEdge] 13, 1 \[UndirectedEdge] 15, 1 \[UndirectedEdge] 18, 2 \[UndirectedEdge] 31, 2 \[UndirectedEdge] 32, 3 \[UndirectedEdge] 19, 3 \[UndirectedEdge] 27, 3 \[UndirectedEdge] 30, 4 \[UndirectedEdge] 21, 4 \[UndirectedEdge] 28, 5 \[UndirectedEdge] 22, 6 \[UndirectedEdge] 26, 6 \[UndirectedEdge] 32, 7 \[UndirectedEdge] 25, 7 \[UndirectedEdge] 30, 7 \[UndirectedEdge] 32, 8 \[UndirectedEdge] 15, 8 \[UndirectedEdge] 24, 8 \[UndirectedEdge] 26, 9 \[UndirectedEdge] 17, 9 \[UndirectedEdge] 18, 9 \[UndirectedEdge] 29, 10 \[UndirectedEdge] 17, 10 \[UndirectedEdge] 23, 11 \[UndirectedEdge] 13, 11 \[UndirectedEdge] 14, 11 \[UndirectedEdge] 16, 11 \[UndirectedEdge] 21, 12 \[UndirectedEdge] 16, 12 \[UndirectedEdge] 20, 12 \[UndirectedEdge] 22};
 	(* selectedEdges = { injectedEdges }; *)
-	(* maxFaceCount = Dot[{32, 32, 29}, weights]; *)
+	(* maxFaceCount = Dot[{32, 22, 20}, weights]; *)
 
-	iterationLimit = 60;
+	iterationLimit = 30;
 	truncationLimit = 10000;
 
 	For[iteration = 1, iteration <= iterationLimit, iteration++,
 		Print[DateString["ISODateTime"] <> " Iteration " <> IntegerString[iteration] ];
-		neighborDistance = Ceiling[(iteration - 1)/4];
+		neighborDistance = Ceiling[(iteration)/4];		
 		If[neighborDistance < 1, neighborDistance = 1];
+		If[neighborDistance >= 59, neighborDistance += (maxFaceCount - 59) * 2];
 
 		neighbors = Apply[Union, Map[getNeighborEdgeLists[#, graphEdgeList, neighborDistance]&, selectedEdges]];
 		Print["neighbor count " <> IntegerString[Length[neighbors]] ];
@@ -641,14 +642,14 @@ exportAnimation[] := Module[
 
 			rotationSchedule = buildSchedule[tree, rotationSchedule, 1];
 			maxLevel = Max[Map[#[[3]]&, rotationSchedule ]];
-			unfoldPercents = {-1, -2, -3};
-			(* unfoldPercents = {-1, -2}; *)
+			(* unfoldPercents = {-1, -2, -3}; *)
+			unfoldPercents = {-1, -2};
 			
 			distinctFacesCounts = Map[testFold[faces, rotationSchedule, Table[#, {k, 1, maxLevel}]]&,unfoldPercents];
 
 			If[Dot[distinctFacesCounts, weights] > maxFaceCount,
 				maxFaceCount = Dot[distinctFacesCounts, weights];
-				Print[DateString["ISODateTime"] <> " Iteration " <> IntegerString[iteration] <> " Updated maxFaceCount to " <> IntegerString[maxFaceCount] ];
+				Print[DateString["ISODateTime"] <> " Iteration " <> IntegerString[iteration] " neighbor count " <> IntegerString[Length[neighbors]] <> " Updated maxFaceCount to " <> IntegerString[maxFaceCount] ];
 				Print[distinctFacesCounts];
 				Print["resetting bestEdgeList"];
 				bestEdgeList = {};
@@ -670,6 +671,11 @@ exportAnimation[] := Module[
 					Print["Found a less ideal net. The first two fold shapes are complete"];
 					Exit[];
 				];
+
+(* 				If[Total[distinctFacesCounts[[{1}]]] == 32 * 1,
+					Print["Found a less ideal net. The first fold shape is complete"];
+					Exit[];
+				]; *)
 
 				If[KeyExistsQ[processedNeighbors, neighbor] == False,
 					AppendTo[bestEdgeList, neighbor];

@@ -33,10 +33,10 @@ stageCount = 2;
 
 (* frameCount = 2; *)
 (* frameCount = 5; *)
-frameCount = 10;
+(* frameCount = 10; *)
 (* frameCount = 12; *)
 (* frameCount = 150; *)
-(* frameCount = 200; *)
+frameCount = 200;
 (* frameCount = 220; *)
 
 (* suboptimal = True; *)
@@ -417,7 +417,8 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			angle37 = Pi - angle142; (* 37.38 *)
 
 			(* angleToStellate = -2 * originalDihedralAngle + Pi; *)
-			angleToStellate = angle37 - originalDihedralAngle;
+			(* angleToStellate = angle37 - originalDihedralAngle; *)
+			angleToStellate = angle100 - originalDihedralAngle;
 
 			If[Length[face1] + Length[face2] == 7,
 				angleToStellate = Pi;
@@ -600,6 +601,9 @@ exportAnimation[] := Module[
 
 	edgeList = {1 \[UndirectedEdge] 13, 1 \[UndirectedEdge] 14, 1 \[UndirectedEdge] 15, 1 \[UndirectedEdge] 17, 2 \[UndirectedEdge] 27, 3 \[UndirectedEdge] 19, 3 \[UndirectedEdge] 27, 3 \[UndirectedEdge] 30, 4 \[UndirectedEdge] 16, 4 \[UndirectedEdge] 21, 4 \[UndirectedEdge] 22, 4 \[UndirectedEdge] 28, 5 \[UndirectedEdge] 22, 5 \[UndirectedEdge] 31, 6 \[UndirectedEdge] 24, 6 \[UndirectedEdge] 26, 6 \[UndirectedEdge] 31, 6 \[UndirectedEdge] 32, 7 \[UndirectedEdge] 23, 7 \[UndirectedEdge] 25, 8 \[UndirectedEdge] 15, 8 \[UndirectedEdge] 20, 9 \[UndirectedEdge] 18, 9 \[UndirectedEdge] 24, 9 \[UndirectedEdge] 29, 10 \[UndirectedEdge] 14, 10 \[UndirectedEdge] 23, 11 \[UndirectedEdge] 19, 11 \[UndirectedEdge] 21, 12 \[UndirectedEdge] 20, 12 \[UndirectedEdge] 22};
 
+	(* 32, 22, 20 *)
+	edgeList = {1 \[UndirectedEdge] 13, 1 \[UndirectedEdge] 15, 1 \[UndirectedEdge] 18, 2 \[UndirectedEdge] 31, 2 \[UndirectedEdge] 32, 3 \[UndirectedEdge] 19, 3 \[UndirectedEdge] 27, 3 \[UndirectedEdge] 30, 4 \[UndirectedEdge] 21, 4 \[UndirectedEdge] 28, 5 \[UndirectedEdge] 22, 6 \[UndirectedEdge] 26, 6 \[UndirectedEdge] 32, 7 \[UndirectedEdge] 25, 7 \[UndirectedEdge] 30, 7 \[UndirectedEdge] 32, 8 \[UndirectedEdge] 15, 8 \[UndirectedEdge] 24, 8 \[UndirectedEdge] 26, 9 \[UndirectedEdge] 17, 9 \[UndirectedEdge] 18, 9 \[UndirectedEdge] 29, 10 \[UndirectedEdge] 17, 10 \[UndirectedEdge] 23, 11 \[UndirectedEdge] 13, 11 \[UndirectedEdge] 14, 11 \[UndirectedEdge] 16, 11 \[UndirectedEdge] 21, 12 \[UndirectedEdge] 16, 12 \[UndirectedEdge] 20, 12 \[UndirectedEdge] 22};
+
 	(* graph = AdjacencyGraph[Range[Length[adjMatrix]], adjMatrix ]; *)
 	(* spanningTree = FindSpanningTree[DirectedGraph[graph]]; *)
 	spanningTree = FindSpanningTree[Graph[edgeList]];
@@ -647,15 +651,15 @@ exportAnimation[] := Module[
 	step1 = (angle142 - angle100)/(angle142 - angle37);
 	step2 = (angle100 - angle79)/(angle142 - angle37);
 	step3 = (angle79 - angle37)/(angle142 - angle37);
-	negativePercents = Join[
+(* 	negativePercents = Join[
 		Table[smoothFallFromTo[x, 0, 1, 0, -step1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
 		Table[-step1, {x, 0, 1, 1/(frameCount/4 - 1)}, {k, maxLevel}],
 	  Table[smoothFallFromTo[x, 0, 1, -step1, -step1 - step2], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
 	  Table[-step1 - step2, {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}],
 	  Table[smoothFallFromTo[x, 0, 1, -step1 - step2, -1], {x, 0, 1, 1/(frameCount/2 - 1)}, {k, maxLevel}]
-  ]//N;
+  ]//N; *)
 
-	(* negativePercents = Table[smoothFallFromTo[x, 0, 1, 0, -1]//N, {x, 0, 1, 1/(frameCount - 1)}, {k, maxLevel}]; *)
+	negativePercents = Table[smoothFallFromTo[x, 0, 1, 0, -1]//N, {x, 0, 1, 1/(frameCount - 1)}, {k, maxLevel}];
 	
 	(* returnPercents = Table[smoothFallFromTo[x, 0, 1, -1, -2]//N, {x, 0, 1, 1/(2 *frameCount - 1)}, {k, maxLevel}]; *)
 
