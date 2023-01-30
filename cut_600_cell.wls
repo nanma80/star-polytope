@@ -19,7 +19,14 @@
  *)
 
 shapes = {
-	"polytope_3_3_5_cell600"
+	(* "polytope_3_3_5_cell600" *)
+	"polytope_5_3_3_cell120"
+	(* "polytope_3_4_3" *)
+	(* "polytope_3_4_3_alt" *)
+	(* "polytope_4_3_3" *)
+	(* "polytope_3_3_4" *)
+	(* "polytope_3_3_3" *)
+	(* "polytope_5_3_52" *)
 };
 
 (* shape = "polytope_3_52_5"; *)
@@ -75,10 +82,50 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	vertices = Union[ Flatten[faces,1], SameTest -> ApproxSamePoint];
 	Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."];
 
-	faceCenters = Map[Mean, faces];
-	Print[Length[faceCenters]];
-	Print[faceCenters[[1]]];
-	pfcCounts = {};
+	(* Print[vertices]; *)
+	randomDirection = {1, 0.314, Pi, Exp[1]};
+	edgeDirections = Map[#[[1]] - #[[2]] &, edges];
+	edgeDirections = Map[If[Dot[randomDirection, #] > 0, 1, -1] * # &, edgeDirections];
+	edgeDirectionTally = Tally[edgeDirections, ApproxSamePoint[#1, #2]&];
+	tallyCounts = Map[#[[2]]&, edgeDirectionTally];
+	Print[tallyCounts];
+	tallyTally = Tally[tallyCounts];
+	Print[tallyTally];
+	uniqueDirections = Map[#[[1]]&, edgeDirectionTally];
+	uniqueDirections = Sort[uniqueDirections/Norm[uniqueDirections[[1]]] * 2.0];
+	Map[Print, uniqueDirections];
+
+(* 
+edge directions:
+120-cell: {{20, 60}}
+1200 edges are in 60 directions. They are the pairs of the 120 vertices of the 600-cell. There are 20 edges in each direction.
+
+600-cell: {{12, 60}}
+720 edges are in 60 directions. They are the pairs of the 120 vertices of the 600-cell. There are 12 edges in each direction.
+
+24-cell: {{8, 12}}
+96 edges are in 12 directions. They are the pairs of the 24 vertices of the same 24-cell (not dual). There are 8 edges in each direction.
+
+8-cell: tessaract {{8, 4}}
+32 edges are in 4 directions, x, y, z, w directions. They are the pairs of 8 vertices of the 16-cell. There are 8 edges in each direction.
+
+16-cell: {{2, 12}}
+24 edges are in 12 directions. They are the pairs of the 24 vertices of the same 24-cell. There are 2 edges in each direction.
+
+5-cell: {{1, 10}}
+10 edges are in 10 different directions.
+
+grand 120-cell {5,3,5/2}: {{12, 60}}
+As same as 600-cell edges.
+
+
+
+ *)
+
+
+
+
+(* 	pfcCounts = {};
 	pvCounts = {};
 
 	For[vid = 1, vid <= Length[vertices], vid++,
@@ -97,7 +144,7 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 
 	Print[pvCounts];
 	Print[Tally[pvCounts]];
-
+ *)
 
 
 	Exit[];
