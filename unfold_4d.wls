@@ -12,8 +12,9 @@ python -m SimpleHTTPServer 8000
 
 (* global config *)
 
+frameCount = 2;
 (* frameCount = 10; *)
-frameCount = 200;
+(* frameCount = 200; *)
 
 shapes = {
 	"test",
@@ -423,7 +424,7 @@ exportAnimation[shape_] := Module[
 	]; *)
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
-		(* If[frameIndex <= 30, Continue[]]; *)
+		If[frameIndex <= 5, Continue[]];
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -432,6 +433,8 @@ exportAnimation[shape_] := Module[
 		explosionFactor = explosionFactors[[frameIndex]];
 		exportImage[shape, rotatedCells, explosionFactor, 0, frameIndex];
 	];
+
+	Exit[];
 
     delay = If[frameCount > 30, 3, 50];
 
@@ -610,6 +613,7 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			originalDihedralAngle = ArcCos[ Dot[relativeCell1, relativeCell2]/Norm[relativeCell1]/Norm[relativeCell2] ];
 			(* Print[originalDihedralAngle / Pi * 180.]; *)
 			grand120CellDihedralAngle = 72/180 * Pi;
+			grand120CellDihedralAngle = (144)/180 * Pi;
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = grand120CellDihedralAngle - originalDihedralAngle;
 			perc = foldPercents[[level]];
@@ -624,6 +628,8 @@ foldCells[cells_, rotationSchedule_, foldPercents_] := Module[
 			];
 		];
 	];
+
+	Print[(angleToTarget * Abs[perc] +originalDihedralAngle) / Pi * 180.0];
 
 (* 	If[negativeFold && Mean[foldPercents] == -1,
 		activeFaces = Union[ Flatten[rotatedCells, 1], SameTest -> sameCenter ];
