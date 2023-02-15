@@ -47,10 +47,11 @@ epsilon = 0.00000001;
 ApproxSamePoint[point1_, point2_] := Round[point1, epsilon] == Round[point2, epsilon];
 sameCenter[set1_, set2_] := ApproxSamePoint[Total[N[set1]], Total[N[set2]]];
 (* sameCenter[edge1_, edge2_] := Total[edge1] == Total[edge2]; *)
-sameCellCenter[cell1_, cell2_] := getCellCenter[cell1] == getCellCenter[cell2];
 getCellCenter[cell_] := Mean[Flatten[cell, 1]];
+sameCellCenter[cell1_, cell2_] := ApproxSamePoint[getCellCenter[cell1], getCellCenter[cell2]];
 NormalizedDot[a_, b_] := FullSimplify[Dot[a, b]/Norm[a]/Norm[b]];
 randomDirection = {1, 0.314, Pi, Exp[1]};
+randomDirection2 = {0.01, 0.1, 1, 10};
 doubleRotationMatrix[theta_] := ArrayFlatten[{{RotationMatrix[-theta], 0}, {0, RotationMatrix[-theta]}}];
 getEdgesDirections[edges_] := Module[
 	{edgeDirections},
@@ -59,10 +60,20 @@ getEdgesDirections[edges_] := Module[
 	edgeDirections
 ];
 
+sameEdge[e1_, e2_] := sameCenter[e1, e2] && ((ApproxSamePoint[e1[[1]], e2[[1]]] && ApproxSamePoint[e1[[2]], e2[[2]]] ) || (ApproxSamePoint[e1[[1]], e2[[2]]] && ApproxSamePoint[e1[[2]], e2[[1]]] ));
+sortedDots[set_, direction_] := Sort[Map[Dot[direction, #]&, N[set] ]];
+sameSet[set1_, set2_] := sameCenter[set1, set2] && ApproxSamePoint[sortedDots[set1, randomDirection], sortedDots[set2, randomDirection]] && ApproxSamePoint[sortedDots[set1, randomDirection2], sortedDots[set2, randomDirection2]];
+
 aggrandizeCell[cell_, factor_] := Module[{},
 	cellCenter = getCellCenter[cell];
 	Map[(# - cellCenter)*factor + cellCenter &, cell, {2}]
 ];
+explodedCell[cell_, explosionFactor_] := Map[
+	(# + Mean[Map[Mean,cell]]*(Norm[First[First[cell]]//N]/Norm[Mean[Map[Mean,cell]]//N])^1.5 * explosionFactor)&, 
+	cell, {2}];
+projectToDirection[vertex4d_, projectionMatrix_] := vertex4d.Transpose[projectionMatrix];
+(* perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]] / (1 + point.(fullProjectionMatrix[[4]])/wDistance); *)
+perspectiveProjection[point_, fullProjectionMatrix_, wDistance_ ] := projectToDirection[point, fullProjectionMatrix[[1;;3]]];
 
 exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
 	{
@@ -125,6 +136,9 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
 
 	activeCells = Map[explodedCell[#, explosionFactor]&, activeCells];
 	activeFaces = Flatten[activeCells, 1];
+	Print[Length[activeFaces]];
+	Print[Length[Union[activeFaces, SameTest -> sameCenter]]];
+
 	(* activeEdges = Union[ Flatten[Map[getEdgesFromFace, activeFaces], 1], SameTest -> sameCenter]; *)
 	(* activeVertices = Union[ Flatten[activeFaces,1], SameTest -> sameVertex]; *)
 	activeEdges = Flatten[Map[getEdgesFromFace, activeFaces], 1];
@@ -154,7 +168,7 @@ exportImage[shape_, cells_, explosionFactor_, theta_, serialNumber_] := Module[
     projectedActiveFaces = Map[perspectiveProjection[#, fullProjectionMatrix, wDistance]&, activeFaces, {2}];
     range = Max[Flatten[activeFaces]] * 2.3;
     range = Max[Flatten[activeFaces]] * 1.4; (* 120-cell *)
-    
+
     range = 6;
     viewPoint = {50, -50, 50};
 
@@ -260,10 +274,69 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 
 	northCellVertices = Union[Flatten[cells[[northCellId]], 1]//N, SameTest -> ApproxSamePoint ];
 
-	randomDirection = {0.01, 0.1, 1, 10.0};
-	northCellVertex1 = Sort[northCellVertices, #1.randomDirection > #2.randomDirection &][[1]];
-	Print[northCellVertex1];
-	selectedLayer4Ids = Sort[layer4CellIds, cellCenters[[#1]].northCellVertex1 > cellCenters[[#2]].northCellVertex1 &][[Range[3]]];
+	randomDirectionVertex1 = {0.01, 0.1, 1, 10.0};
+
+	northCellFace1 = Sort[cells[[northCellId]]//N,  Mean[#1].randomDirectionVertex1 > Mean[#2].randomDirectionVertex1 &][[1]];
+	Print[northCellFace1];
+
+	newFace1 = {};
+	For[vid = 1, vid <= Length[northCellFace1], vid++,
+		northCellVertex1 = northCellFace1[[vid]];
+		selectedLayer4Ids = Sort[layer4CellIds, cellCenters[[#1]].northCellVertex1 > cellCenters[[#2]].northCellVertex1 &][[Range[3]]];
+
+		selectedCellIds = Join[{northCellId}, selectedLayer4Ids];
+		Print[selectedCellIds];
+
+		constraints = Map[Dot[{x, y, z, w}, cellCenters[[#]]] == Dot[cellCenters[[#]], cellCenters[[#]] ] &, selectedCellIds];
+		solutions = Solve[Apply[And, constraints], {x, y, z, w}];
+		newVertex = {x, y, z, w}/.solutions[[1]];
+		AppendTo[newFace1, newVertex];
+	];
+
+	newFaceCenter1 = Mean[newFace1];
+	cellCentersMidPoint = Mean[ cellCenters[[ {40, 88} ]] ];
+
+	Print[newFaceCenter1/Norm[newFaceCenter1]];
+	Print[cellCentersMidPoint/Norm[cellCentersMidPoint]];
+
+	vectorsInFace1 = Map[(# - newFaceCenter1)/Norm[# - newFaceCenter1] &, newFace1];
+
+	newFaceNorm = Orthogonalize[ Join[vectorsInFace1[[ Range[3] ]], {{2, -1.4, 0.3, 0.9}}]][[4]];
+	newFaceNorm = newFaceNorm/Norm[newFaceNorm];
+
+	cellCenterDiff = cellCenters[[88]] - cellCenters[[40]];
+
+	(* Print[Map[ Dot[cellCenterDiff, #]& , vectorsInFace1]]; *)
+
+	(* analyzeCellId = 40; *)
+	analyzeCellId = 88;
+
+	Print[];
+	Print[(newFaceCenter1 - cellCenters[[analyzeCellId]])/Norm[(newFaceCenter1 - cellCenters[[analyzeCellId]])]];
+	Print[(newFaceCenter1 - cellCenters[[analyzeCellId]]) ];
+	Print[];
+
+	aligningFaceId = If[analyzeCellId == 40, 5, 7];
+	relativeFaceCenters = Map[ (Mean[#] - cellCenters[[analyzeCellId]])&, cells[[analyzeCellId]] ];
+	(* Map[Print[#/Norm[#]]&, relativeFaceCenters]; *)
+	relativeFaceCenter = relativeFaceCenters[[aligningFaceId]];
+	Print[relativeFaceCenter];
+	aligningFace = cells[[analyzeCellId]][[aligningFaceId]];
+
+	(* Print[Norm[(newFaceCenter1 - cellCenters[[analyzeCellId]])]/Norm[relativeFaceCenter ]]; *)
+	(* 2.236 *)
+
+	Print[Round[Map[(# - cellCenters[[analyzeCellId]]) &, newFace1], epsilon]//Sort];
+	Print[Round[Map[(# - cellCenters[[analyzeCellId]])*Sqrt[5] &, aligningFace], epsilon]//Sort];
+
+	(* 
+		for cell 88, there's a twist between the old face on the cell, and the new face
+	 *)
+	Exit[];
+
+	(* northCellVertex1 = Sort[northCellVertices, #1.randomDirectionVertex1 > #2.randomDirectionVertex1 &][[1]]; *)
+	(* Print[northCellVertex1]; *)
+
 
 	selectedCellIds = Join[{northCellId}, selectedLayer4Ids];
 	Print[selectedCellIds];
@@ -279,28 +352,46 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	Print[ Map[ApproxSamePoint[#, 0.0] &, newVertex - northCellVertex1 Sqrt[5] ]];
 	(* For layer 4, the new vertex is Sqrt[5] times the original vertex *)
 
+	Map[Print[Norm[newVertex - cellCenters[[#]]]]&, selectedCellIds];
+
+
+	Exit[];
+
 	newCells = Map[aggrandizeCell[#, Sqrt[5]]&, cells 1.0];
 
 	Print[newCells//Length];
 	Print[newCells[[1]]//Length];
 	Print[newCells[[1]][[1]]//Length];
-	Print[newCells[[1]][[1]][[1]] ];
 
 	newNorthCellVertices = Union[Flatten[newCells[[northCellId]], 1]//N, SameTest -> ApproxSamePoint ];
 	(* Print[newNorthCellVertices]; *)
 	(* Intersection[ newNorthCellVertices, {newVertex}, SameTest -> ApproxSamePoint]//Print; *)
 
-	exportImage[shape, newCells, 0, 0, 40];
+	(* exportImage[shape, newCells, 0, 0, 40]; *)
+	Print["There are " <> IntegerString[Length[newCells]] <> " cells in total."];
 
-(* 	faces = Union[ Flatten[newCells * 1.0, 1], SameTest -> sameCenter];
-	Print["There are " <> IntegerString[Length[faces]] <> " faces in total."];
+(* 	face1 = newCells[[northCellId]][[1]];
+	Print[face1//Sort];
 
-	edges = Union[ Flatten[Map[getEdgesFromFace, faces], 1], SameTest -> sameCenter];
-	Print["There are " <> IntegerString[Length[edges]] <> " edges in total."];
+	allFaces = Flatten[newCells * 1.0, 1];
+	facesSameCenter = Select[allFaces, sameCenter[#, face1]&];
+	Print[Length[facesSameCenter]];
+	Map[Print[Sort[#]]&, facesSameCenter]; *)
+
+	(* exportImage[shape, {facesSameCenter}, 0, 0, 41]; *)
+
+	Exit[];
+
+	faces = Union[ Flatten[newCells * 1.0, 1], SameTest -> sameSet];
+	(* faces = Flatten[newCells * 1.0, 1]; *)
+	Print["There are " <> IntegerString[Length[faces]] <> " unique faces in total."];
+
+	edges = Union[ Flatten[Map[getEdgesFromFace, faces], 1], SameTest -> sameSet];
+	Print["There are " <> IntegerString[Length[edges]] <> " unique edges in total."];
 
 	vertices = Union[ Flatten[faces,1], SameTest -> ApproxSamePoint];
-	Print["There are " <> IntegerString[Length[vertices]] <> " vertices in total."];
- *)
+	Print["There are " <> IntegerString[Length[vertices]] <> " unique vertices in total."];
+
 
 
 ];
@@ -312,5 +403,11 @@ levels:
 1.309: 20
 0.809: 12
 0
+
+new cells:
+There are 120 cells in total.
+There are 1440 unique faces in total.
+There are 3600 unique edges in total.
+There are 2400 unique vertices in total.
 
  *)
