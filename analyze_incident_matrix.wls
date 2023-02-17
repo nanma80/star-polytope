@@ -1,14 +1,14 @@
 #!/usr/bin/env wolframscript
 
 shapes = {
-	"polytope_3_3_3",
-	"polytope_4_3_3",
-	"polytope_3_3_4",
-	"polytope_3_4_3",
+	(* "polytope_3_3_3", *)
+	(* "polytope_4_3_3", *)
+	(* "polytope_3_3_4", *)
+	(* "polytope_3_4_3", *)
 	(* "polytope_3_4_3_alt" *)
 	(* "polytope_5_3_52" *)
 	"polytope_5_3_3_cell120"
-	(* "polytope_3_3_5_cell600" *)
+	(* ,"polytope_3_3_5_cell600" *)
 };
 
 (* shapes = {
@@ -25,7 +25,7 @@ shapes = {
 
 cellCenterRelation = True;
 edgeDirectionRelation = False;
-
+antipodalPairs = True;
 
 dataFolder = "data";
 exportToPov = True;
@@ -46,10 +46,11 @@ epsilon = 0.00000001;
 ApproxSamePoint[point1_, point2_] := Round[point1, epsilon] == Round[point2, epsilon];
 sameCenter[set1_, set2_] := ApproxSamePoint[Total[N[set1]], Total[N[set2]]];
 (* sameCenter[edge1_, edge2_] := Total[edge1] == Total[edge2]; *)
-sameCellCenter[cell1_, cell2_] := getCellCenter[cell1] == getCellCenter[cell2];
+sameCellCenter[cell1_, cell2_] := ApproxSamePoint[ getCellCenter[cell1], getCellCenter[cell2]];
 getCellCenter[cell_] := Mean[Flatten[cell, 1]];
 NormalizedDot[a_, b_] := FullSimplify[Dot[a, b]/Norm[a]/Norm[b]];
-randomDirection = {1, 0.314, Pi, Exp[1]};
+(* randomDirection = {1, 0.314, Pi, Exp[1]}; *)
+randomDirection = {123.32532, 10.325, Pi/Exp[1], Exp[1]*0.05};
 
 getEdgesDirections[edges_] := Module[
 	{edgeDirections},
@@ -77,14 +78,25 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 	cells = Get[dataFileName];
 	Print["There are " <> IntegerString[Length[cells]] <> " cells in total."];
 
+	cells = SortBy[cells, -Dot[getCellCenter[#], randomDirection]& ];
+	If[antipodalPairs,
+		cells = Select[cells, Dot[getCellCenter[#], randomDirection] > 0 &]
+	];
+
 	If[cellCenterRelation,
 		cellCenters = Map[getCellCenter, cells * 1.0];
+		Print["cellCenters"];
+		Print[cellCenters];
+		Print[];
 		cellCenterDots = Map[NormalizedDot[cellCenters[[1]], #]&, cellCenters];
 		dotsTally = Sort[Tally[Round[cellCenterDots, epsilon]]];
 		Print[dotsTally];
 
 		For[dotId = 1, dotId <= Length[dotsTally], dotId++,
 			dot = dotsTally[[dotId]][[1]];
+			If[antipodalPairs && Abs[dot] > epsilon,
+				Continue[]
+			];
 			incidentMatrix = Table[
 				If[ Round[NormalizedDot[cellCenters[[i]], cellCenters[[j]]], epsilon] == dot,
 				1, 0],
@@ -93,6 +105,10 @@ For[shapeIndex = 1, shapeIndex <= Length[shapes], shapeIndex ++,
 
 			matrixRank = MatrixRank[incidentMatrix, Modulus -> 2];
 			Print[{dot, matrixRank}];
+
+			If[Abs[dot] < 0.1,
+				Print[incidentMatrix];
+			];
 		];
 	];
 
