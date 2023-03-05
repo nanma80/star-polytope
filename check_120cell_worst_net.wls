@@ -883,7 +883,7 @@ For[iteration = 1, iteration <= iterationLimit, iteration++,
 
 	For[neighborId = 1, neighborId <= Length[neighbors], neighborId++,
 		If[Mod[neighborId, 100] == 0, Print["Processing neighborId " <> IntegerString[neighborId]]];
-		If[neighborId > 1000, Break[]];
+		If[neighborId > 300, Break[]];
 		neighbor = neighbors[[neighborId]];
 		spanningTree = FindSpanningTree[Graph[neighbor]];
 		tree = GraphTree[spanningTree, 41];
