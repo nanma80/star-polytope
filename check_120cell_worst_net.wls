@@ -620,13 +620,19 @@ testFold[cells_, rotationSchedule_, foldPercents_] := Module[
 
 	rotatedCellCentersTally = Tally[rotatedCellCenters, ApproxSamePoint[#1, #2]&];
 	cellTallyCounts = Sort[Map[#[[2]]&, rotatedCellCentersTally], Greater];
-	
+
+	uniqueCenters = Union[rotatedCellCenters, SameTest -> ApproxSamePoint];
+	uniqueCentersCount = Length[uniqueCenters];
+	distanceLevels = Map[Length[Tally[#, ApproxSamePoint[#1, #2] &]] &, Table[EuclideanDistance[uniqueCenters[[i]], uniqueCenters[[j]]], {i, uniqueCentersCount}, {j, uniqueCentersCount}]];
+
+	distanceLevelsTally = Sort[Tally[distanceLevels]];
+
 (* 	rotatedEdges = Flatten[Map[getEdgesFromFace, rotatedFaces], 1];
 	rotatedEdgeCenters = Map[Mean, rotatedEdges];
 	rotatedEdgeCentersTally = Tally[rotatedEdgeCenters, ApproxSamePoint[#1, #2]&];
 	edgeTallyCounts = Sort[Map[#[[2]]&, rotatedEdgeCentersTally], Greater]; *)
 	(* Print[edgeTallyCounts]; *)
-	cellTallyCounts
+	{cellTallyCounts, distanceLevelsTally}
 ];
 
 
@@ -862,9 +868,15 @@ graphEdgeList = Sort[Map[Sort[#] &, graphEdgeList]];
 randomSubset = graphEdgeList;
 spanningTree = FindSpanningTree[Graph[randomSubset]];
 tree = GraphTree[spanningTree];
-(* treeEdgeList = EdgeList[spanningTree]; *)
+treeEdgeList = EdgeList[spanningTree];
 (* treeEdgeList = Sort[Map[Sort[#] &, treeEdgeList]]; *)
+
+(* 33 unique cells *)
 treeEdgeList = {1 \[UndirectedEdge] 8, 1 \[UndirectedEdge] 12, 1 \[UndirectedEdge] 14, 1 \[UndirectedEdge] 19, 1 \[UndirectedEdge] 29, 1 \[UndirectedEdge] 52, 1 \[UndirectedEdge] 53, 1 \[UndirectedEdge] 54, 1 \[UndirectedEdge] 59, 1 \[UndirectedEdge] 61, 1 \[UndirectedEdge] 65, 1 \[UndirectedEdge] 102, 2 \[UndirectedEdge] 3, 2 \[UndirectedEdge] 5, 2 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 10, 2 \[UndirectedEdge] 13, 2 \[UndirectedEdge] 15, 2 \[UndirectedEdge] 25, 2 \[UndirectedEdge] 31, 2 \[UndirectedEdge] 104, 2 \[UndirectedEdge] 110, 3 \[UndirectedEdge] 12, 3 \[UndirectedEdge] 27, 3 \[UndirectedEdge] 30, 3 \[UndirectedEdge] 51, 3 \[UndirectedEdge] 60, 4 \[UndirectedEdge] 7, 4 \[UndirectedEdge] 14, 4 \[UndirectedEdge] 16, 4 \[UndirectedEdge] 17, 4 \[UndirectedEdge] 20, 4 \[UndirectedEdge] 32, 4 \[UndirectedEdge] 36, 4 \[UndirectedEdge] 40, 5 \[UndirectedEdge] 41, 6 \[UndirectedEdge] 42, 6 \[UndirectedEdge] 56, 6 \[UndirectedEdge] 103, 7 \[UndirectedEdge] 22, 7 \[UndirectedEdge] 23, 7 \[UndirectedEdge] 43, 8 \[UndirectedEdge] 9, 8 \[UndirectedEdge] 18, 8 \[UndirectedEdge] 21, 9 \[UndirectedEdge] 11, 9 \[UndirectedEdge] 64, 10 \[UndirectedEdge] 55, 11 \[UndirectedEdge] 69, 12 \[UndirectedEdge] 28, 13 \[UndirectedEdge] 111, 15 \[UndirectedEdge] 66, 16 \[UndirectedEdge] 33, 16 \[UndirectedEdge] 38, 18 \[UndirectedEdge] 35, 18 \[UndirectedEdge] 68, 19 \[UndirectedEdge] 37, 19 \[UndirectedEdge] 39, 21 \[UndirectedEdge] 47, 21 \[UndirectedEdge] 63, 22 \[UndirectedEdge] 49, 23 \[UndirectedEdge] 50, 24 \[UndirectedEdge] 103, 25 \[UndirectedEdge] 48, 26 \[UndirectedEdge] 57, 26 \[UndirectedEdge] 110, 27 \[UndirectedEdge] 78, 27 \[UndirectedEdge] 112, 28 \[UndirectedEdge] 85, 28 \[UndirectedEdge] 98, 29 \[UndirectedEdge] 70, 29 \[UndirectedEdge] 71, 29 \[UndirectedEdge] 82, 29 \[UndirectedEdge] 87, 30 \[UndirectedEdge] 34, 30 \[UndirectedEdge] 79, 30 \[UndirectedEdge] 115, 32 \[UndirectedEdge] 72, 34 \[UndirectedEdge] 80, 34 \[UndirectedEdge] 113, 35 \[UndirectedEdge] 44, 36 \[UndirectedEdge] 45, 36 \[UndirectedEdge] 73, 37 \[UndirectedEdge] 93, 39 \[UndirectedEdge] 88, 41 \[UndirectedEdge] 117, 43 \[UndirectedEdge] 94, 44 \[UndirectedEdge] 77, 44 \[UndirectedEdge] 114, 45 \[UndirectedEdge] 74, 46 \[UndirectedEdge] 111, 47 \[UndirectedEdge] 91, 49 \[UndirectedEdge] 101, 51 \[UndirectedEdge] 83, 52 \[UndirectedEdge] 76, 54 \[UndirectedEdge] 62, 58 \[UndirectedEdge] 67, 63 \[UndirectedEdge] 75, 67 \[UndirectedEdge] 104, 70 \[UndirectedEdge] 118, 71 \[UndirectedEdge] 86, 71 \[UndirectedEdge] 106, 72 \[UndirectedEdge] 90, 72 \[UndirectedEdge] 99, 73 \[UndirectedEdge] 100, 75 \[UndirectedEdge] 92, 79 \[UndirectedEdge] 89, 81 \[UndirectedEdge] 112, 83 \[UndirectedEdge] 95, 84 \[UndirectedEdge] 96, 86 \[UndirectedEdge] 107, 96 \[UndirectedEdge] 97, 96 \[UndirectedEdge] 98, 100 \[UndirectedEdge] 119, 105 \[UndirectedEdge] 109, 108 \[UndirectedEdge] 109, 109 \[UndirectedEdge] 113, 112 \[UndirectedEdge] 116, 118 \[UndirectedEdge] 120};
+
+(* 42 + 7 = 49 *)
+(* treeEdgeList = {1 \[UndirectedEdge] 8, 1 \[UndirectedEdge] 12, 1 \[UndirectedEdge] 14, 1 \[UndirectedEdge] 19, 1 \[UndirectedEdge] 29, 1 \[UndirectedEdge] 52, 1 \[UndirectedEdge] 53, 1 \[UndirectedEdge] 54, 1 \[UndirectedEdge] 59, 1 \[UndirectedEdge] 61, 1 \[UndirectedEdge] 65, 1 \[UndirectedEdge] 102, 2 \[UndirectedEdge] 3, 2 \[UndirectedEdge] 5, 2 \[UndirectedEdge] 6, 2 \[UndirectedEdge] 10, 2 \[UndirectedEdge] 110, 3 \[UndirectedEdge] 15, 3 \[UndirectedEdge] 27, 3 \[UndirectedEdge] 30, 3 \[UndirectedEdge] 31, 3 \[UndirectedEdge] 51, 3 \[UndirectedEdge] 60, 4 \[UndirectedEdge] 7, 4 \[UndirectedEdge] 19, 4 \[UndirectedEdge] 20, 4 \[UndirectedEdge] 32, 4 \[UndirectedEdge] 36, 4 \[UndirectedEdge] 40, 5 \[UndirectedEdge] 41, 6 \[UndirectedEdge] 42, 6 \[UndirectedEdge] 56, 7 \[UndirectedEdge] 22, 7 \[UndirectedEdge] 43, 8 \[UndirectedEdge] 9, 8 \[UndirectedEdge] 18, 8 \[UndirectedEdge] 21, 8 \[UndirectedEdge] 104, 9 \[UndirectedEdge] 11, 9 \[UndirectedEdge] 64, 10 \[UndirectedEdge] 55, 11 \[UndirectedEdge] 69, 12 \[UndirectedEdge] 3, 12 \[UndirectedEdge] 13, 12 \[UndirectedEdge] 16, 12 \[UndirectedEdge] 28, 13 \[UndirectedEdge] 111, 15 \[UndirectedEdge] 66, 16 \[UndirectedEdge] 33, 16 \[UndirectedEdge] 38, 17 \[UndirectedEdge] 22, 18 \[UndirectedEdge] 35, 18 \[UndirectedEdge] 68, 19 \[UndirectedEdge] 37, 19 \[UndirectedEdge] 39, 20 \[UndirectedEdge] 23, 21 \[UndirectedEdge] 47, 21 \[UndirectedEdge] 63, 22 \[UndirectedEdge] 49, 23 \[UndirectedEdge] 50, 25 \[UndirectedEdge] 48, 25 \[UndirectedEdge] 110, 26 \[UndirectedEdge] 57, 27 \[UndirectedEdge] 78, 27 \[UndirectedEdge] 112, 28 \[UndirectedEdge] 85, 28 \[UndirectedEdge] 98, 29 \[UndirectedEdge] 70, 29 \[UndirectedEdge] 71, 29 \[UndirectedEdge] 82, 29 \[UndirectedEdge] 87, 30 \[UndirectedEdge] 79, 30 \[UndirectedEdge] 115, 32 \[UndirectedEdge] 72, 34 \[UndirectedEdge] 41, 34 \[UndirectedEdge] 80, 34 \[UndirectedEdge] 113, 35 \[UndirectedEdge] 44, 36 \[UndirectedEdge] 45, 36 \[UndirectedEdge] 73, 37 \[UndirectedEdge] 93, 39 \[UndirectedEdge] 88, 40 \[UndirectedEdge] 94, 41 \[UndirectedEdge] 117, 44 \[UndirectedEdge] 77, 45 \[UndirectedEdge] 74, 47 \[UndirectedEdge] 91, 51 \[UndirectedEdge] 83, 52 \[UndirectedEdge] 76, 54 \[UndirectedEdge] 62, 60 \[UndirectedEdge] 84, 63 \[UndirectedEdge] 75, 67 \[UndirectedEdge] 58, 68 \[UndirectedEdge] 114, 69 \[UndirectedEdge] 101, 70 \[UndirectedEdge] 118, 71 \[UndirectedEdge] 86, 71 \[UndirectedEdge] 106, 72 \[UndirectedEdge] 90, 75 \[UndirectedEdge] 92, 79 \[UndirectedEdge] 89, 82 \[UndirectedEdge] 105, 83 \[UndirectedEdge] 95, 85 \[UndirectedEdge] 99, 87 \[UndirectedEdge] 100, 88 \[UndirectedEdge] 107, 96 \[UndirectedEdge] 97, 98 \[UndirectedEdge] 96, 100 \[UndirectedEdge] 119, 103 \[UndirectedEdge] 24, 103 \[UndirectedEdge] 104, 104 \[UndirectedEdge] 67, 108 \[UndirectedEdge] 109, 110 \[UndirectedEdge] 26, 111 \[UndirectedEdge] 46, 112 \[UndirectedEdge] 81, 112 \[UndirectedEdge] 116, 113 \[UndirectedEdge] 109, 118 \[UndirectedEdge] 120}; *)
+
 selectedEdges = { treeEdgeList };
 
 processedNeighbors = <||>;
@@ -883,7 +895,7 @@ For[iteration = 1, iteration <= iterationLimit, iteration++,
 
 	For[neighborId = 1, neighborId <= Length[neighbors], neighborId++,
 		If[Mod[neighborId, 100] == 0, Print["Processing neighborId " <> IntegerString[neighborId]]];
-		If[neighborId > 300, Break[]];
+		If[neighborId > 1000, Break[]];
 		neighbor = neighbors[[neighborId]];
 		spanningTree = FindSpanningTree[Graph[neighbor]];
 		tree = GraphTree[spanningTree, 41];
@@ -896,8 +908,12 @@ For[iteration = 1, iteration <= iterationLimit, iteration++,
 		unfoldPercents = {-1};
 		weights = {1};
 
-		distinctCellsCounts = Map[Length[testFold[cells, rotationSchedule, Table[#, {k, 1, maxLevel}]]]&, unfoldPercents];
-		target = 32;
+		foldResult = testFold[cells, rotationSchedule, Table[-1, {k, 1, maxLevel}]];
+
+		score = Length[foldResult[[1]]] + foldResult[[2]][[1]][[1]];
+
+		distinctCellsCounts = {score};
+		target = 33 + 3;
 
 		If[Dot[distinctCellsCounts, weights] < maxCellCount,
 			maxCellCount = Dot[distinctCellsCounts, weights];
@@ -913,9 +929,8 @@ For[iteration = 1, iteration <= iterationLimit, iteration++,
 		If[Dot[distinctCellsCounts, weights] == maxCellCount,
 			Print[DateString["ISODateTime"] <> " Iteration " <> IntegerString[iteration] <> " neighborDistance:" <> IntegerString[neighborDistance] <> " Keeping maxCellCount as " <> IntegerString[maxCellCount] <> " processedNeighbors count: " <> IntegerString[Length[processedNeighbors]] ];
 			Print[distinctCellsCounts];
-
-			cellTallyCounts = testFold[cells, rotationSchedule, Table[-1, {k, 1, maxLevel}]];
-			Print[cellTallyCounts];
+			Print[foldResult];
+			Print[{Length[foldResult[[1]]], foldResult[[2]][[1]][[1]] }];
 
 			(* Print["rootCellId: " <> IntegerString[rootCellId] ]; *)
 			(* Print[neighbor]; *)
@@ -925,14 +940,6 @@ For[iteration = 1, iteration <= iterationLimit, iteration++,
 
 				Print["rootCellId: " <> IntegerString[rootCellId] ];
 				Print[neighbor];
-
-				cellTallyCounts = testFold[cells, rotationSchedule, Table[-1, {k, 1, maxLevel}]];
-				Print[cellTallyCounts];
-
-				cellTallyTally = Tally[cellTallyCounts];
-				If[Length[cellTallyTally] == 1,
-					Exit[];
-				];
 
 				Exit[];
 			];
