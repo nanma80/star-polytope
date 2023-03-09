@@ -322,11 +322,11 @@ stellateFace[halfEdges_, r_, level_] := Module[
 ];
 
 
-elements3D[faces_, stellationLevel_, spinAngle_, sig_, range_] := Module[
+elements3D[faces_, stellationLevel_, spinAngle_, flipAngle_, sig_, range_] := Module[
 	{allEdges, edges, allVertices, vertices, ratio, selectedFaces, edgeGroups},
 
 	staticOrientation = RotationMatrix[{rootFaceCenter, {0, 0, -1}}];
-	rotation = RotationMatrix[spinAngle, {0, 0, 1}].staticOrientation;
+	rotation = RotationMatrix[flipAngle, {-1, -1, 0}].RotationMatrix[spinAngle, {0, 0, 1}].staticOrientation;
 	selectedFaces = Map[(rotation.#) &, faces, {2}];
 	selectedFaces = Map[scaleFace[#, r]&, selectedFaces];
 	allEdges = Flatten[Map[getEdgesFromFace, selectedFaces], 1];
@@ -417,7 +417,7 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 	rotatedFaces
 ];
 
-exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngle_, frameIndex_, outputFolderName_] := Module[
+exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngle_, flipAngle_, frameIndex_, outputFolderName_] := Module[
 	{},
 
 	(* Return[]; *)
@@ -433,6 +433,10 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	Print[faceTallyCounts];
 	Print[faceTallyCounts//Length];
 
+(* 	distanceLevels = Map[Tally[#, ApproxSamePoint[#1, #2] &] &, Table[EuclideanDistance[rotatedFaceCenters[[i]], rotatedFaceCenters[[j]]], {i, Length[rotatedFaceCenters]}, {j, Length[rotatedFaceCenters]}]];
+	Map[Print, distanceLevels];
+	Exit[];
+ *)
 	rotatedEdges = Flatten[Map[getEdgesFromFace, rotatedFaces], 1];
 	rotatedEdgeCenters = Map[Mean, rotatedEdges];
 	rotatedEdgeCentersTally = Tally[rotatedEdgeCenters, ApproxSamePoint[#1, #2]&];
@@ -442,7 +446,7 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 
 	range = If[Max[foldPercents] > 0, Max[foldPercents] + 1, 1] + 0.4 (r - 1);
 
-	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, -1, range];
+	graph = elements3D[rotatedFaces, stellationLevel, spinAngle, flipAngle, -1, range];
 	testing = (outputFolderName == "test");
 
 	outputFolder = FileNameJoin[{imageFolder, outputFolderName}];
@@ -535,11 +539,13 @@ exportAnimation[] := Module[
 			edgeList = {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 6, 1 \[UndirectedEdge] 7, 1 \[UndirectedEdge] 8, 2 \[UndirectedEdge] 9, 3 \[UndirectedEdge] 5, 4 \[UndirectedEdge] 5, 4 \[UndirectedEdge] 11, 7 \[UndirectedEdge] 12, 8 \[UndirectedEdge] 10};
 			spanningTree = FindSpanningTree[Graph[edgeList]];
 
-			pentagonIds = Select[Range[Length[faces]], Length[faces[[#]]]==5 &];
-			treeHeights = Sort[Map[{ TreeDepth[GraphTree[spanningTree, #]], #}&, pentagonIds]];
-			Print[treeHeights];
-			rootFaceId = treeHeights[[1]][[2]];
-			rootFaceId = 4;
+			(* pentagonIds = Select[Range[Length[faces]], Length[faces[[#]]]==5 &]; *)
+			(* treeHeights = Sort[Map[{ TreeDepth[GraphTree[spanningTree, #]], #}&, pentagonIds]]; *)
+			(* Print[treeHeights]; *)
+			(* Exit[]; *)
+			(* rootFaceId = treeHeights[[1]][[2]]; *)
+			rootFaceId = 1;
+			(* rootFaceId = 4; *)
 			Print["rootFaceId = " <> IntegerString[rootFaceId]];
 			tree = GraphTree[spanningTree, rootFaceId];
 		];
@@ -582,27 +588,39 @@ exportAnimation[] := Module[
 		];
 	];
 	
-	minusOnes = Table[-1.0, {x, 0, 1, 1/(frameCount - 1)}, {k, maxLevel}];
+	minusOnes = Table[-1.0, {x, 0, 1, 1/(4 * frameCount - 1)}, {k, maxLevel}];
 	
 	If[worst,
 		unfoldPercents = Join[unfoldPercents, minusOnes];
 	];
 
-	unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]];
+	(* unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]]; *)
 
 	If[r > 1,
 		unfoldPercents = Map[Min[#, 0.99]&, unfoldPercents, {2}];
 	];
 
 	Print[unfoldPercents];
+	flipTransitionStart = 0.6;
+	flipTransitionEnd = 0.8;
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* If[frameIndex != 25, Continue[]]; *)
+		(* If[frameIndex <= 42, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
-		spinAngle = -Pi/2 - If[p == 4, Pi/6, Pi/4] - frameIndex/Length[unfoldPercents] * 2 * Pi + If[suboptimal, -Pi/4, 0];
-		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, frameIndex, outputFolderName];
+		spinAngle = -Pi/2 - If[p == 4, Pi/6, Pi/4] - frameIndex/Length[unfoldPercents] * 2 * Pi + If[suboptimal, -Pi/4, 0] + If[worst, Pi/3, 0];
+		flipAngle = If[ frameIndex < flipTransitionStart Length[unfoldPercents], 
+			0, 
+			If[frameIndex > flipTransitionEnd Length[unfoldPercents],
+				Pi,
+				(frameIndex - flipTransitionStart Length[unfoldPercents])/(flipTransitionEnd Length[unfoldPercents] - flipTransitionStart Length[unfoldPercents]) * Pi 
+			]
+		];
+(* 		Print["flipAngle"];
+		Print[flipAngle/Pi//N]; *)
+		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, flipAngle, frameIndex, outputFolderName];
 	];
 
 	(* Exit[]; *)
