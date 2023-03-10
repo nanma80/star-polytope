@@ -40,7 +40,7 @@ frameCount = 160;
 
 (* suboptimal = True; *)
 suboptimal = False;
-worst = True;
+worst = False;
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -339,7 +339,7 @@ elements3D[faces_, stellationLevel_, spinAngle_, flipAngle_, sig_, range_] := Mo
 
 	viewCenter = Mean[faceCenters];
 	thickness = 0.01 * range;
-	opacity = 1;
+	opacity = 0.5;
 
 	elements = {
 			Table[{
@@ -397,6 +397,7 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			(* Print[originalDihedralAngle / Pi * 180]; *)
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = -2 * originalDihedralAngle + Pi;
+			(* angleToStellate = 84 * Pi/180.0 - originalDihedralAngle; *)
 
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
@@ -413,6 +414,9 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			];
 		];
 	];
+
+	Print["dihedral angle:"];
+	Print[(angleToTarget * Abs[perc] + originalDihedralAngle)/Pi*180.];
 
 	rotatedFaces
 ];
@@ -580,20 +584,21 @@ exportAnimation[] := Module[
       ]//N;
 
 			unfoldPercents = Join[unfoldPercents, negativePercents ],
-			If[worst,
+(* 			If[worst,
 				negativePercents = Table[smoothFallFromTo[x, 0, 1, 0, -1]//N, {x, 0, 1, 1/(frameCount - 1)}, {k, maxLevel}];
 				unfoldPercents = Join[unfoldPercents, negativePercents ],
 				unfoldPercents = Join[unfoldPercents, Map[Reverse , unfoldPercents - 1] ];
-			];
+			]; *)
 		];
 	];
 	
-	minusOnes = Table[-1.0, {x, 0, 1, 1/(4 * frameCount - 1)}, {k, maxLevel}];
-	
-	If[worst,
-		unfoldPercents = Join[unfoldPercents, minusOnes];
-	];
+	negativePercents = Table[smoothFallFromTo[x, 0, 1, 0, -1]//N, {x, 0, 1, 1/(frameCount - 1)}, {k, maxLevel}];
+	unfoldPercents = Join[unfoldPercents, negativePercents ];
 
+	minusOnes = Table[-1.0, {x, 0, 1, 1/(If[worst, 4, 1] * frameCount - 1)}, {k, maxLevel}];
+		
+	unfoldPercents = Join[unfoldPercents, minusOnes];
+	
 	(* unfoldPercents = Join[unfoldPercents, Reverse[unfoldPercents]]; *)
 
 	If[r > 1,
@@ -601,12 +606,16 @@ exportAnimation[] := Module[
 	];
 
 	Print[unfoldPercents];
-	flipTransitionStart = 0.6;
-	flipTransitionEnd = 0.8;
+	If[worst,
+		flipTransitionStart = 0.6;	flipTransitionEnd = 0.8,
+		flipTransitionStart = 1.0-epsilon;	flipTransitionEnd = 1.0
+	];
 
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* If[frameIndex != 25, Continue[]]; *)
 		(* If[frameIndex <= 42, Continue[]]; *)
+		(* If[frameIndex != 800, Continue[]]; *)
+		Continue[];
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -676,3 +685,12 @@ exportAnimation[];
 for ($num = 69 ; $num -le 99 ; $num++) { cp spinning_frame_0068.png "spinning_frame_00$num.png" }
 
  *)
+
+(* 
+worst folding: 229 out of 160 (total 960):
+about 96 deg
+
+worst folding: 252 out of 160 (total 960):
+about 84 deg
+
+*)
