@@ -430,8 +430,18 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	(* Print[edgeTallyCounts]; *)
 	(* Print[edgeTallyCounts//Length]; *)
 
-	If[Length[faceTallyCounts] == 12,
-		Print["Found a good net"];
+	(* If[Length[faceTallyCounts] == 12, *)
+	If[Length[faceTallyCounts] == 6,
+		(* Print["Found a good net"]; *)
+		(* Print[Map[{#[[1]], #[[2]] }&, rotationSchedule]]; *)
+		Return[1];
+	];
+
+	If[Length[faceTallyCounts] < 6,
+		Print["Found a net generating less than 6 unique faces"];
+		Print[Length[faceTallyCounts]];
+		Print[faceTallyCounts];
+		Exit[];
 		Print[Map[{#[[1]], #[[2]] }&, rotationSchedule]];
 		Return[1];
 	];
@@ -503,11 +513,11 @@ total tree count, good net count, trees per good net
 {403202, 384, 1050.0052083333333}
  *)
 
-	goodNetCount = 384;
-	treeCount = 403202;
+	(* goodNetCount = 384; *)
+	(* treeCount = 403202; *)
 
 	For[subsetId = 1, subsetId <= Length[selectedFirstEdgesOptions], subsetId ++,
-		If[subsetId <= 2, Continue[]];
+		(* If[subsetId <= 2, Continue[]]; *)
 		selectedFirstEdges = selectedFirstEdgesOptions[[subsetId]];
 		firstEdgesCount = Length[selectedFirstEdges];
 		Print["subsetId " <> IntegerString[subsetId] <> " out of " <> IntegerString[Length[selectedFirstEdgesOptions]] ];
@@ -531,6 +541,7 @@ total tree count, good net count, trees per good net
 			
 			If[Mod[treeId, 1000] == 0, 
 				Print[DateString["ISODateTime"] <> " subsetId " <> IntegerString[subsetId] <> " out of " <> IntegerString[Length[selectedFirstEdgesOptions]] <> " treeId: " <> IntegerString[treeId] <> " out of " <> IntegerString[Length[trees]] ];
+				Print["goodNetCount: " <> IntegerString[goodNetCount] <> " treeCount: " <> IntegerString[treeCount] <> " trees per good net: " <> ToString[treeCount * 1.0 / goodNetCount] ];
 			];
 
 			tree = GraphTree[FindSpanningTree[DirectedGraph[ trees[[treeId]] ]]];
@@ -554,7 +565,7 @@ total tree count, good net count, trees per good net
 				isGoodNet = exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, maxLevel}], 1, 0, frameIndex, outputFolderName];
 				goodNetCount += isGoodNet;
 				If[isGoodNet == 1,
-					Print["goodNetCount: " <> IntegerString[goodNetCount] <> " treeCount: " <> IntegerString[treeCount] <> " trees per good net: " <> ToString[treeCount * 1.0 / goodNetCount] ];
+					(* Print["goodNetCount: " <> IntegerString[goodNetCount] <> " treeCount: " <> IntegerString[treeCount] <> " trees per good net: " <> ToString[treeCount * 1.0 / goodNetCount] ]; *)
 				];
 			];
 		];
@@ -634,6 +645,15 @@ total tree count, good net count, trees per good net
 {5184000, 7320, 708.1967213114754}
 
 43200/61
+
+
+Finding the worst net (6 unique faces)
+total tree count, good net count, trees per good net
+{5184000, 188880, 27.44599745870394}
+21600/787
+
+worst net/good net = 25.8032...
+
 
  *)
 
