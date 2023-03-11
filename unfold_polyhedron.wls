@@ -40,7 +40,7 @@ frameCount = 160;
 
 (* suboptimal = True; *)
 suboptimal = False;
-worst = False;
+worst = True;
 
 argv = Rest @ $ScriptCommandLine;
 If[Length[argv] >= 2, 
@@ -397,7 +397,7 @@ foldFaces[faces_, rotationSchedule_, foldPercents_] := Module[
 			(* Print[originalDihedralAngle / Pi * 180]; *)
 			angleToFlat = Pi - originalDihedralAngle;
 			angleToStellate = -2 * originalDihedralAngle + Pi;
-			(* angleToStellate = 84 * Pi/180.0 - originalDihedralAngle; *)
+			(* angleToStellate = ArcCos[-(1-2/Sqrt[5])] - originalDihedralAngle; *)
 
 			perc = foldPercents[[level]];
 			angleToTarget = If[perc >= 0, angleToFlat, angleToStellate];
@@ -614,8 +614,7 @@ exportAnimation[] := Module[
 	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
 		(* If[frameIndex != 25, Continue[]]; *)
 		(* If[frameIndex <= 42, Continue[]]; *)
-		(* If[frameIndex != 800, Continue[]]; *)
-		Continue[];
+		If[frameIndex != 800, Continue[]];
 		unfoldPercent = unfoldPercents[[frameIndex]];
 		Print["exporting frame " <> IntegerString[frameIndex] <> " / " <> IntegerString[Length[unfoldPercents]] ];
 		(* exportFrame[faces, rotationSchedule, 1, spinAngle, frameIndex, outputFolderName]; *)
@@ -632,7 +631,7 @@ exportAnimation[] := Module[
 		exportFrame[faces, rotationSchedule, unfoldPercent, 1, spinAngle, flipAngle, frameIndex, outputFolderName];
 	];
 
-	(* Exit[]; *)
+	Exit[];
 
 	delay = If[Length[unfoldPercents] >= 50, 3, Floor[500/Length[unfoldPercents]]];
 
