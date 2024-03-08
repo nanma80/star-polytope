@@ -13,8 +13,8 @@ python -m SimpleHTTPServer 8000
 (* global config *)
 
 (* frameCount = 5; *)
-frameCount = 10;
-(* frameCount = 150; *)
+(* frameCount = 10; *)
+frameCount = 100;
 (* frameCount = 160; *)
 
 shapes = {
@@ -430,7 +430,9 @@ exportAnimation[shape_] := Module[
 	Print[Map[First, unfoldPercents]];
 	Print[explosionFactors];
 
-	For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++,
+	(* For[frameIndex = 1, frameIndex <= Length[unfoldPercents], frameIndex++, *)
+	(* do not overfold by limiting length to half *)
+	For[frameIndex = 1, frameIndex <= Length[unfoldPercents]/2, frameIndex++,
 		(* Continue[]; *)
 		(* If[frameIndex < 30, Continue[]]; *)
 		unfoldPercent = unfoldPercents[[frameIndex]];
