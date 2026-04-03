@@ -430,21 +430,22 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	(* Print[edgeTallyCounts]; *)
 	(* Print[edgeTallyCounts//Length]; *)
 
-	(* If[Length[faceTallyCounts] == 12, *)
-	If[Length[faceTallyCounts] == 6,
-		(* Print["Found a good net"]; *)
-		(* Print[Map[{#[[1]], #[[2]] }&, rotationSchedule]]; *)
+	If[Length[faceTallyCounts] == 12,
+	(* If[Length[faceTallyCounts] == 6, *)
+		Print["Found a good net"];
+		Print[Map[{#[[1]], #[[2]] }&, rotationSchedule]];
 		Return[1];
 	];
 
-	If[Length[faceTallyCounts] < 6,
+(* detecting worse net with < 6 *)
+(* 	If[Length[faceTallyCounts] < 6,
 		Print["Found a net generating less than 6 unique faces"];
 		Print[Length[faceTallyCounts]];
 		Print[faceTallyCounts];
 		Exit[];
 		Print[Map[{#[[1]], #[[2]] }&, rotationSchedule]];
 		Return[1];
-	];
+	]; *)
 
 	Return[0];
 ];
@@ -565,7 +566,8 @@ total tree count, good net count, trees per good net
 				isGoodNet = exportFrame[faces, rotationSchedule, Table[unfoldPercent, {k, 1, maxLevel}], 1, 0, frameIndex, outputFolderName];
 				goodNetCount += isGoodNet;
 				If[isGoodNet == 1,
-					(* Print["goodNetCount: " <> IntegerString[goodNetCount] <> " treeCount: " <> IntegerString[treeCount] <> " trees per good net: " <> ToString[treeCount * 1.0 / goodNetCount] ]; *)
+					Print["Found a good net"];
+					Print["goodNetCount: " <> IntegerString[goodNetCount] <> " treeCount: " <> IntegerString[treeCount] <> " trees per good net: " <> ToString[treeCount * 1.0 / goodNetCount] ];
 				];
 			];
 		];
