@@ -434,6 +434,7 @@ exportFrame[faces_, rotationSchedule_, foldPercents_, stellationLevel_, spinAngl
 	(* If[Length[faceTallyCounts] == 6, *)
 		Print["Found a good net"];
 		Print[Map[{#[[1]], #[[2]] }&, rotationSchedule]];
+		Write[goodNetFile, Map[{#[[1]], #[[2]] }&, rotationSchedule]];
 		Return[1];
 	];
 
@@ -489,6 +490,10 @@ exportAnimation[] := Module[
 	gifFolder = FileNameJoin[{imageFolder, shape}];
 	If[!DirectoryQ[gifFolder], CreateDirectory[gifFolder]];
 
+	goodNetFolder = FileNameJoin[{imageFolder, "Dodecahedron"}];
+	If[!DirectoryQ[goodNetFolder], CreateDirectory[goodNetFolder]];
+	goodNetFile = OpenWrite[FileNameJoin[{goodNetFolder, "good_nets.txt"}], PageWidth -> Infinity];
+
 	faces = generateFaces[p, q];
 	adjMatrix = Table[If[adjacentFacesIndex[faces, id1, id2], 1, 0], {id1, 1, Length[faces]}, {id2, 1, Length[faces]}];
 	Print[adjMatrix];
@@ -518,7 +523,7 @@ total tree count, good net count, trees per good net
 	(* treeCount = 403202; *)
 
 	For[subsetId = 1, subsetId <= Length[selectedFirstEdgesOptions], subsetId ++,
-		(* If[subsetId <= 2, Continue[]]; *)
+		If[subsetId != 2, Continue[]];
 		selectedFirstEdges = selectedFirstEdgesOptions[[subsetId]];
 		firstEdgesCount = Length[selectedFirstEdges];
 		Print["subsetId " <> IntegerString[subsetId] <> " out of " <> IntegerString[Length[selectedFirstEdgesOptions]] ];
@@ -577,6 +582,8 @@ total tree count, good net count, trees per good net
 		Print[{treeCount, goodNetCount, treeCount * 1.0 / goodNetCount}];
 	];
 
+	Close[goodNetFile];
+	Print["Good nets saved to " <> FileNameJoin[{goodNetFolder, "good_nets.txt"}]];
 
 
 (* 	spanningTree = FindSpanningTree[DirectedGraph[graph]];
