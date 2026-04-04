@@ -3,11 +3,12 @@
 (* Visualize all 74 distinct good nets of the dodecahedron/great dodecahedron.
    Reads the two net list files (orbit60 and orbit120) and generates one image per net.
    
-   Usage: wolframscript -file visualize_all_good_nets.wls
+   Run from the repo root:
+     wolframscript -file AI_assisted_analysis\common_nets_between_dodec_and_great_dodec\visualize_all_good_nets.wls
    
    Output:
-     AI_assisted_analysis/good_net_images_orbit60/  (26 images)
-     AI_assisted_analysis/good_net_images_orbit120/ (48 images)
+     AI_assisted_analysis/common_nets_between_dodec_and_great_dodec/good_net_images/orbit60_26_nets/   (26 images)
+     AI_assisted_analysis/common_nets_between_dodec_and_great_dodec/good_net_images/orbit120_48_nets/  (48 images)
 *)
 
 p = 5; q = 3; r = 1;
@@ -273,7 +274,7 @@ Print["Generating dodecahedron faces..."];
 faces = generateFaces[p, q];
 Print["Generated " <> IntegerString[Length[faces]] <> " faces."];
 
-baseFolder = "AI_assisted_analysis";
+baseFolder = FileNameJoin[{"AI_assisted_analysis", "common_nets_between_dodec_and_great_dodec"}];
 
 (* Read net files *)
 orbit60File = FileNameJoin[{baseFolder, "good_nets_orbit60.txt"}];
@@ -288,10 +289,11 @@ orbit120Nets = ToExpression[Import[orbit120File, "Text"]];
 Print["Read " <> IntegerString[Length[orbit120Nets]] <> " orbit-120 nets."];
 
 (* Create output folders *)
-folder60 = FileNameJoin[{baseFolder, "good_net_images_orbit60"}];
-folder120 = FileNameJoin[{baseFolder, "good_net_images_orbit120"}];
-If[!DirectoryQ[folder60], CreateDirectory[folder60]];
-If[!DirectoryQ[folder120], CreateDirectory[folder120]];
+imageFolder = FileNameJoin[{baseFolder, "good_net_images"}];
+folder60 = FileNameJoin[{imageFolder, "orbit60_26_nets"}];
+folder120 = FileNameJoin[{imageFolder, "orbit120_48_nets"}];
+If[!DirectoryQ[folder60], CreateDirectory[folder60, CreateIntermediateDirectories -> True]];
+If[!DirectoryQ[folder120], CreateDirectory[folder120, CreateIntermediateDirectories -> True]];
 
 (* Render orbit-60 nets *)
 Print["=== Rendering " <> IntegerString[Length[orbit60Nets]] <> " orbit-60 nets ==="];

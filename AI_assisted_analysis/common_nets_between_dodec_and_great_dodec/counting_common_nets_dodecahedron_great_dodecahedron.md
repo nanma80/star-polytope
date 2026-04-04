@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-A **net** of a polyhedron is a planar arrangement of its faces obtained by cutting along edges and unfolding to a flat shape. For a dodecahedron (12 pentagonal faces, 30 edges, 20 vertices), every net corresponds to a **spanning tree** of the dual graph of edges-between-faces (the icosahedral/dodecahedral adjacency graph). A spanning tree selects 11 of the 30 edges as "fold edges" (hinges); the remaining 19 edges are cut.
+A **net** of a polyhedron is a planar arrangement of its faces obtained by cutting along edges and unfolding to a flat shape. For a dodecahedron (12 pentagonal faces, 30 edges, 20 vertices), every net corresponds to a **spanning tree** of the dual graph of edges-between-faces (the face-adjacency graph). A spanning tree selects 11 of the 30 edges as "fold edges" (hinges); the remaining 19 edges are cut.
 
 The regular dodecahedron {5, 3} and the great dodecahedron {5, 5/2} share the same face shape (regular pentagons) and the same number of faces (12). They differ in how faces are arranged: the dihedral angle of the great dodecahedron causes faces to interpenetrate.
 
@@ -14,6 +14,23 @@ Given a net (spanning tree) of the dodecahedron, we can fold it in two ways:
 2. **Fold to great dodecahedron**: instead of the dodecahedral dihedral angle, use the great dodecahedral dihedral angle at each hinge. This causes faces to intersect. Sometimes all 12 distinct face positions of the great dodecahedron are covered; sometimes faces collide (two or more faces land on the same position), leaving fewer than 12 distinct positions covered.
 
 A net is a **"good net"** (common net) if the second folding covers all 12 faces of the great dodecahedron. Such a net is a **common net** of both the dodecahedron and the great dodecahedron.
+
+### Why the same spanning trees apply to both polyhedra
+
+The face-adjacency graph of a polyhedron is determined by its dual's 1-skeleton. The key observation is:
+
+- Dual of dodecahedron {5, 3} = icosahedron {3, 5} → 12 vertices, 30 edges
+- Dual of great dodecahedron {5, 5/2} = small stellated dodecahedron {5/2, 5} → 12 vertices, 30 edges
+
+The icosahedron and small stellated dodecahedron share the same 12 vertices and 30 edges (the same 1-skeleton). They are both 5-regular graphs on 12 vertices, isomorphic as abstract graphs, and have the same Laplacian spectrum: {5+√5 (×3), 6 (×5), 5−√5 (×3), 0 (×1)}.
+
+Applying Kirchhoff's matrix tree theorem to both:
+
+$$\text{# spanning trees} = \frac{1}{12} (5+\sqrt{5})^3 \cdot 6^5 \cdot (5-\sqrt{5})^3 = \frac{1}{12} \cdot 20^3 \cdot 7776 = 5{,}184{,}000$$
+
+This was verified computationally by constructing both dual graphs explicitly and computing the determinant of the reduced Laplacian.
+
+Since the two dual graphs share the same 1-skeleton, the face-adjacency pairs are identical: two faces share a dodecahedral edge if and only if they share a great-dodecahedral edge (though the geometric edges themselves differ — the dodecahedron has 20 vertices while the great dodecahedron has 12). This is why a single spanning tree can serve as a net for both polyhedra, differing only in the dihedral angle used at each hinge.
 
 ## Algorithm in `count_dodecahedron_nets.wls`
 
@@ -77,7 +94,7 @@ Good nets are quite rare: roughly 1 in 708 spanning trees folds into a valid gre
 
 The 5,184,000 count enumerates **labeled** spanning trees: each tree is a specific subset of 11 edges of the face-adjacency graph with faces labeled 1–12. Two different labeled trees that are related by a symmetry of the dodecahedron produce the **same geometric net** (same 2D planar shape, up to rigid motion).
 
-The well-known count of **43,380 distinct nets** for the regular dodecahedron is obtained by quotienting out the symmetry group.
+The well-known count of **43,380 distinct nets** for the regular dodecahedron is obtained by quotienting out the symmetry group. Since the face-adjacency graph is identical for both polyhedra (see above), the great dodecahedron also has exactly **43,380 distinct nets**.
 
 ### Symmetry group
 
@@ -100,7 +117,27 @@ where Fix(g) is the number of spanning trees invariant under symmetry g.
 - The difference of 180 comes from spanning trees that are invariant under some non-identity symmetry. These trees have orbits of size < 120, so they contribute "extra" to the orbit count.
 - Equivalently: Σ_{g≠e} |Fix(g)| = 43,380 × 120 − 5,184,000 = **21,600** total extra fixed points from non-trivial symmetries.
 
-### Distinct good nets
+### Orbit structure of all 43,380 dodecahedron nets
+
+The possible orbit sizes for spanning trees are constrained by the structure of Ih and the fact that a spanning tree has 11 edges. The only possible orbit sizes are **60** and **120** — no others. This is proved by ruling out all stabilizer subgroups of order ≥ 3:
+
+**No element of order 3 or 5 can fix a spanning tree.** A C₃ rotation permutes 12 faces in four 3-cycles (no fixed points), so all edge orbits under C₃ have size 3. Since 11 is not divisible by 3, no invariant spanning tree exists. The same argument applies to C₅: edge orbits have size 5, and 11 is not divisible by 5.
+
+**No element whose group contains the inversion can fix a spanning tree.** The inversion permutes all 12 faces in 6 transpositions, with no adjacent pair forming a transposition (opposite faces are at distance 3 in the icosahedron graph). So all edge orbits have size 2, but 11 is odd. This rules out the inversion directly, and also rules out S₆ (whose cube is the inversion) and S₁₀ (whose fifth power is the inversion).
+
+**No Klein four-group V₄ can fix a spanning tree.** There are 35 Klein four-groups in Ih. For V₄ subgroups consisting of 3 C₂ rotations: no edge can be simultaneously fixed by all three (if two C₂ rotations both swap the endpoints of an edge, their product fixes a vertex, contradicting C₂ rotations having no fixed vertices). All edge orbits therefore have size 2 or 4 (even), and 11 is odd. For V₄ subgroups containing reflections: size-1 edge orbits do exist (a reflection can fix an edge whose endpoints are both on the mirror plane), but a connectivity analysis of the quotient graph shows the vertex orbits (1 of size 4, 4 of size 2 = 5 groups) cannot be spanned — the mandatory self-loop orbits consume edge-orbit slots, leaving too few inter-group bridges. This was verified by exhaustive computation over all 35 V₄ subgroups.
+
+**Therefore, stabilizers have order at most 2**, and the only possible orbit sizes are 60 (stabilizer = one involution) and 120 (trivial stabilizer). Solving:
+
+| Orbit size | Stabilizer | Count | Labeled trees |
+|---|---|---|---|
+| 120 | trivial | 43,020 | 5,162,400 |
+| 60 | order 2 | 360 | 21,600 |
+| **Total** | | **43,380** | **5,184,000** |
+
+Only 360 out of 43,380 nets (0.83%) have any non-trivial symmetry.
+
+### Distinct good nets (common nets)
 
 For good nets:
 - Labeled count: **7,320**
@@ -113,9 +150,27 @@ For good nets:
 | 60 | 26 | 2 | 26 × 60 = 1,560 |
 | **Total** | **74** | | **7,320** |
 
-The 26 nets with orbit size 60 are each fixed by exactly one non-trivial symmetry (an order-2 element of Ih, i.e., a reflection or point inversion). These smaller orbits are why the naïve division 7,320 / 120 = 61 undercounts: Burnside's lemma gives the correct count of 74.
-
 The earlier prediction of 61 was wrong because exact divisibility of the labeled count by the group order is a necessary but not sufficient condition for all orbits to have full size. The coincidence masked 26 smaller orbits.
+
+### Why common nets are enriched for symmetry
+
+The common-net property selects for 2-fold symmetry at a dramatic rate:
+
+| | Orbit-60 | Orbit-120 |
+|---|---|---|
+| All dodecahedron nets | 360 (0.83%) | 43,020 (99.17%) |
+| Common nets | 26 (35.1%) | 48 (64.9%) |
+| **Selection rate** | **7.2%** | **0.11%** |
+
+An orbit-60 net is **~65× more likely** to be a common net than an orbit-120 net.
+
+This enrichment can be understood through several complementary perspectives:
+
+1. **The fold defines a face permutation, and common nets require bijectivity.** When folding with great-dodecahedron angles, each of the 12 faces lands at some position among the 12 great-dodecahedron face planes. This defines a map {1,…,12} → {1,…,12}. A "good" net is one where this map is a bijection. A "bad" net has collisions (the worst case being 6 positions each hit twice).
+
+2. **Symmetry halves the independent constraints.** If the tree has an involution σ, the fold map must commute with σ. The 12 faces split into 6 pairs under σ, and the bijectivity condition reduces from "12 independent images all distinct" to "6 representative images form valid pairs." This roughly squares the probability of success.
+
+3. **Path coherence in symmetric trees.** Each face's final 3D position is determined by cumulative rotations along its root-to-leaf path. In a symmetric tree, faces related by σ traverse "mirror" paths, so their cumulative rotations are related by the same symmetry. This ensures symmetric faces land in symmetrically-related positions rather than independently drifting into collisions.
 
 ### Chirality (mirror symmetry)
 
@@ -137,13 +192,17 @@ Under the **rotation subgroup** (order 60, no reflections):
 
 The 26 nets with orbit size 60 under Ih split into orbits of size 30 under rotations (2 × 26 = 52 rotation-orbits of size 30). The 48 nets with orbit size 120 under Ih split into orbits of size 60 (2 × 48 = 96 rotation-orbits of size 60). Total rotation-orbits: 52 + 96 = 148 ✓.
 
-## Implementation Plan: Finding and Visualizing Distinct Good Nets
+The chirality of all common nets is related to the asymmetry of the fold operation: `angleToStellate = −2 × dihedral + π` reverses the folding direction compared to flat unfolding, breaking parity.
 
-### Phase 1: Collect good net data ✓
+---
+
+## Implementation: Finding and Visualizing Distinct Good Nets
+
+### Phase 1: Collect good net data — `count_dodecahedron_nets.wls`
 
 Modified `count_dodecahedron_nets.wls` to save the spanning tree edge list for each good net. Output: `output/Dodecahedron/good_nets.txt`, containing 7,320 lines (one per labeled good net). Each line is a Mathematica list of 11 directed `{parent, child}` edge pairs from the fold schedule.
 
-### Phase 2 & 3: Classify good nets ✓ — `classify_good_nets.wls`
+### Phase 2 & 3: Classify good nets — `classify_good_nets.wls`
 
 This script reads the 7,320 good nets and classifies them into equivalence classes under the full icosahedral symmetry group Ih (order 120).
 
@@ -174,41 +233,31 @@ The representative for each equivalence class is the **first net encountered in 
 
 ### Phase 4: Visualize — `visualize_all_good_nets.wls`
 
-**Status: script tested with testCount=3 (6 images verified). Ready for full run (all 74 nets).**
-
-The script `AI_assisted_analysis/visualize_all_good_nets.wls` generates one image per distinct good net. It reads the two net list files and renders each as a fully unfolded flat net (the dodecahedron net laid flat in 2D).
+The script generates one image per distinct good net, rendered as a fully unfolded flat net (the dodecahedron net laid flat in 2D).
 
 #### How it works
 
 1. **Reads** `good_nets_orbit60.txt` (26 nets) and `good_nets_orbit120.txt` (48 nets). Each net is a list of 11 directed `{parent, child}` edge pairs.
-2. **Converts** each edge list to a rooted Mathematica `Tree` using `edgeListToTree[edgeList, root]`. This function builds an adjacency list from the edges (treated as undirected), then does a DFS from the root (the first parent vertex in the edge list) to construct the `Tree` object. This automates the manual tree construction that was previously done by hand (e.g., line 538 of `unfold_great_dodec_top_view.wls`).
+2. **Converts** each edge list to a rooted Mathematica `Tree` using `edgeListToTree[edgeList, root]`. This function builds an adjacency list from the edges (treated as undirected), then does a DFS from the root (the first parent vertex in the edge list) to construct the `Tree` object.
 3. **Folds** the dodecahedron faces using `buildSchedule` + `foldFaces` with `foldPercent = 1.0` (fully unfolded flat).
-4. **Renders** using POVRayRender and saves to two folders.
+4. **Renders** using POVRayRender and saves to the output folder.
 
 #### How to run
 
 From the repo root, on a machine with the `POVRayRender` Mathematica package installed:
 
 ```
-wolframscript -file AI_assisted_analysis\visualize_all_good_nets.wls
+wolframscript -file AI_assisted_analysis\common_nets_between_dodec_and_great_dodec\visualize_all_good_nets.wls
 ```
-
-**Current test mode**: The script has a `testCount = 3` variable near the bottom that limits rendering to 3 nets per group (6 total). To render all 74 nets, change `testCount` to the full count or replace it with `Length[orbit60Nets]` / `Length[orbit120Nets]`.
 
 #### Output
 
-| Folder | Contents |
+All 74 images are in `good_net_images/`:
+
+| Subfolder | Contents |
 |---|---|
-| `AI_assisted_analysis/good_net_images_orbit60/` | 26 images: `net_01.png` … `net_26.png` |
-| `AI_assisted_analysis/good_net_images_orbit120/` | 48 images: `net_01.png` … `net_48.png` |
-
-#### Next steps after Phase 4
-
-1. **Run the script** on a machine with POVRayRender installed. First test with `testCount = 3` to verify images look correct (compare orbit-60 net #1 against the known good net from `unfold_great_dodec_top_view.wls`).
-2. **Set `testCount` to full** and render all 74 nets.
-3. **Review images** — verify all 74 are visually distinct and look like valid dodecahedron nets.
-4. **(Optional) Render great dodecahedron folding**: The current script only renders the flat unfolded net. To also show the great dodecahedron folding, change `foldPercents` from `Table[1.0, ...]` (flat) to `Table[-1.0, ...]` (great dodecahedron). This uses the same `angleToStellate` logic from the original script.
-5. **(Optional) Investigate orbit-60 stabilizers**: Identify which specific symmetry element (reflection/inversion) fixes each of the 26 orbit-60 nets. This would characterize *why* those nets have extra symmetry.
+| `good_net_images/orbit60_26_nets/` | 26 images: `net_01.png` … `net_26.png` |
+| `good_net_images/orbit120_48_nets/` | 48 images: `net_01.png` … `net_48.png` |
 
 ### Notes
 
