@@ -104,54 +104,111 @@ where Fix(g) is the number of spanning trees invariant under symmetry g.
 
 For good nets:
 - Labeled count: **7,320**
-- 7,320 / 120 = **61 exactly**
-- This exact divisibility means **no good net spanning tree is fixed by any non-trivial symmetry** — every good net orbit has exactly 120 elements.
-- Therefore: **61 distinct good nets** (up to full icosahedral symmetry, including reflections).
+- 7,320 / 120 = 61 exactly — but this does **not** imply all orbits have size 120.
+- Computation (see `classify_good_nets.wls`) reveals **74 distinct good nets**, with two types:
 
-The comment in the script confirms: 43,200 / 61 ≈ 708.2 (ratio of distinct spanning trees to distinct good nets).
+| Orbit size | Count | Stabilizer order | Labeled trees |
+|---|---|---|---|
+| 120 | 48 | 1 (trivial) | 48 × 120 = 5,760 |
+| 60 | 26 | 2 | 26 × 60 = 1,560 |
+| **Total** | **74** | | **7,320** |
+
+The 26 nets with orbit size 60 are each fixed by exactly one non-trivial symmetry (an order-2 element of Ih, i.e., a reflection or point inversion). These smaller orbits are why the naïve division 7,320 / 120 = 61 undercounts: Burnside's lemma gives the correct count of 74.
+
+The earlier prediction of 61 was wrong because exact divisibility of the labeled count by the group order is a necessary but not sufficient condition for all orbits to have full size. The coincidence masked 26 smaller orbits.
 
 ### Chirality (mirror symmetry)
 
-If we only quotient by the **rotation subgroup** (order 60, no reflections):
-- 7,320 / 60 = **122** labeled orbits under rotations alone.
-- Each of the 61 full-symmetry orbits splits into either:
-  - **1 orbit** of size 120 under rotations: the net is **achiral** (equal to its mirror image) → counted once
-  - **2 orbits** of size 60 under rotations: the net is **chiral** (distinct from its mirror image) → counted as a chiral pair
+Under the **rotation subgroup** (order 60, no reflections):
+- **148 distinct nets** under rotations only.
+- Each of the 74 full-symmetry orbits splits into either:
+  - **1 orbit** of size 120 under rotations → the net is **achiral** (equal to its mirror image)
+  - **2 orbits** of size 60 under rotations → the net is **chiral** (distinct from its mirror image)
 
-- If c = number of chiral pairs and a = number of achiral nets, then:
-  - a + c = 61 (full symmetry classes)
-  - a + 2c = 122 (rotation-only classes)
-  - Solving: c = 61, a = 0 → **all 61 good nets are chiral** (OR some might be achiral, reducing the rotation-only count below 122)
-  
-  Actually: since a + 2c = 122 and a + c = 61, we get c = 61 and a = 0. This would mean all good nets are chiral — none is equal to its mirror image. This needs verification.
+| Rotation orbit size | Count |
+|---|---|
+| 60 | 96 |
+| 30 | 52 |
+
+- If c = number of chiral pairs and a = number of achiral nets:
+  - a + c = 74 (full symmetry classes)
+  - a + 2c = 148 (rotation-only classes)
+  - Solving: **c = 74, a = 0** → **all 74 good nets are chiral**. No common net equals its mirror image.
+
+The 26 nets with orbit size 60 under Ih split into orbits of size 30 under rotations (2 × 26 = 52 rotation-orbits of size 30). The 48 nets with orbit size 120 under Ih split into orbits of size 60 (2 × 48 = 96 rotation-orbits of size 60). Total rotation-orbits: 52 + 96 = 148 ✓.
 
 ## Implementation Plan: Finding and Visualizing Distinct Good Nets
 
-### Phase 1: Collect good net data
+### Phase 1: Collect good net data ✓
 
-Modify `count_dodecahedron_nets.wls` to save the spanning tree edge list for each good net to a file. The output should be a machine-readable list of the 7,320 good net spanning trees.
+Modified `count_dodecahedron_nets.wls` to save the spanning tree edge list for each good net. Output: `output/Dodecahedron/good_nets.txt`, containing 7,320 lines (one per labeled good net). Each line is a Mathematica list of 11 directed `{parent, child}` edge pairs from the fold schedule.
 
-### Phase 2: Compute symmetry group permutations
+### Phase 2 & 3: Classify good nets ✓ — `classify_good_nets.wls`
 
-Compute the 120 elements of the icosahedral symmetry group as permutations of the 12 face labels:
-1. Generate the 12 face centers from the dodecahedron.
-2. For each symmetry (rotation/reflection matrix), determine which face maps to which → a permutation.
-3. Store all 120 permutations.
+This script reads the 7,320 good nets and classifies them into equivalence classes under the full icosahedral symmetry group Ih (order 120).
 
-### Phase 3: Canonicalize and classify
+#### Step 1: Generate the symmetry group
 
-For each good net spanning tree (a set of 11 edges, where each edge is a pair {i,j} of face indices):
-1. Apply each of the 120 permutations to the edge set.
-2. Sort the resulting edge set lexicographically.
-3. The **canonical form** is the lexicographically smallest result.
-4. Two good nets with the same canonical form are equivalent.
+The script reuses the Wythoff construction from `count_dodecahedron_nets.wls` to generate the 12 dodecahedron faces and their 3 mirror planes. It then builds all 120 elements of Ih as 3×3 matrices by BFS: starting from the identity matrix, repeatedly multiplying by the 3 reflection matrices `R_i = I − 2nnᵀ/(n·n)` (one per mirror plane) until the group closes at order 120.
 
-### Phase 4: Visualize
+#### Step 2: Convert to face permutations
 
-For each of the (expected) 61 equivalence classes:
-1. Select one representative spanning tree.
-2. Unfold the dodecahedron according to that tree → 2D net.
-3. Render the net (both as dodecahedron net and showing the great dodecahedron folding).
+Each 3×3 symmetry matrix is converted to a permutation of {1, …, 12} by applying it to the 12 face centers and matching each transformed center to its nearest original face center.
+
+#### Step 3: Canonicalize
+
+Each good net is represented as an **edge set**: the 11 `{parent, child}` pairs are converted to sorted undirected edges `{min, max}`, then sorted lexicographically. To canonicalize, all 120 permutations are applied to the edge set (permuting face labels), and the **lexicographically smallest** result is taken as the canonical form. Two nets are equivalent iff they have the same canonical form.
+
+#### Step 4: Representative selection
+
+The representative for each equivalence class is the **first net encountered in `good_nets.txt`** whose canonical form defines that class. Since `good_nets.txt` is ordered by the enumeration order of subset IDs and spanning trees, the representative is simply whichever labeled tree in the orbit was found earliest during the Phase 1 enumeration.
+
+#### Output files
+
+| File | Description |
+|---|---|
+| `good_nets_orbit60.txt` | 26 distinct nets with orbit size 60 (stabilizer order 2) |
+| `good_nets_orbit120.txt` | 48 distinct nets with orbit size 120 (trivial stabilizer) |
+| `distinct_good_nets.txt` | All 74 representative nets (one per class) |
+| `good_nets_classification.txt` | Full classification with orbit sizes and representative indices |
+
+### Phase 4: Visualize — `visualize_all_good_nets.wls`
+
+**Status: script written, not yet run. Requires POVRayRender package.**
+
+The script `AI_assisted_analysis/visualize_all_good_nets.wls` generates one image per distinct good net. It reads the two net list files and renders each as a fully unfolded flat net (the dodecahedron net laid flat in 2D).
+
+#### How it works
+
+1. **Reads** `good_nets_orbit60.txt` (26 nets) and `good_nets_orbit120.txt` (48 nets). Each net is a list of 11 directed `{parent, child}` edge pairs.
+2. **Converts** each edge list to a rooted Mathematica `Tree` using `edgeListToTree[edgeList, root]`. This function builds an adjacency list from the edges (treated as undirected), then does a DFS from the root (the first parent vertex in the edge list) to construct the `Tree` object. This automates the manual tree construction that was previously done by hand (e.g., line 538 of `unfold_great_dodec_top_view.wls`).
+3. **Folds** the dodecahedron faces using `buildSchedule` + `foldFaces` with `foldPercent = 1.0` (fully unfolded flat).
+4. **Renders** using POVRayRender and saves to two folders.
+
+#### How to run
+
+From the repo root, on a machine with the `POVRayRender` Mathematica package installed:
+
+```
+wolframscript -file AI_assisted_analysis\visualize_all_good_nets.wls
+```
+
+**Current test mode**: The script has a `testCount = 3` variable near the bottom that limits rendering to 3 nets per group (6 total). To render all 74 nets, change `testCount` to the full count or replace it with `Length[orbit60Nets]` / `Length[orbit120Nets]`.
+
+#### Output
+
+| Folder | Contents |
+|---|---|
+| `AI_assisted_analysis/good_net_images_orbit60/` | 26 images: `net_01.png` … `net_26.png` |
+| `AI_assisted_analysis/good_net_images_orbit120/` | 48 images: `net_01.png` … `net_48.png` |
+
+#### Next steps after Phase 4
+
+1. **Run the script** on a machine with POVRayRender installed. First test with `testCount = 3` to verify images look correct (compare orbit-60 net #1 against the known good net from `unfold_great_dodec_top_view.wls`).
+2. **Set `testCount` to full** and render all 74 nets.
+3. **Review images** — verify all 74 are visually distinct and look like valid dodecahedron nets.
+4. **(Optional) Render great dodecahedron folding**: The current script only renders the flat unfolded net. To also show the great dodecahedron folding, change `foldPercents` from `Table[1.0, ...]` (flat) to `Table[-1.0, ...]` (great dodecahedron). This uses the same `angleToStellate` logic from the original script.
+5. **(Optional) Investigate orbit-60 stabilizers**: Identify which specific symmetry element (reflection/inversion) fixes each of the 26 orbit-60 nets. This would characterize *why* those nets have extra symmetry.
 
 ### Notes
 
