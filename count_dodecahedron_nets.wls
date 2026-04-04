@@ -523,7 +523,7 @@ total tree count, good net count, trees per good net
 	(* treeCount = 403202; *)
 
 	For[subsetId = 1, subsetId <= Length[selectedFirstEdgesOptions], subsetId ++,
-		If[subsetId != 2, Continue[]];
+		(* If[subsetId != 2, Continue[]]; *)
 		selectedFirstEdges = selectedFirstEdgesOptions[[subsetId]];
 		firstEdgesCount = Length[selectedFirstEdges];
 		Print["subsetId " <> IntegerString[subsetId] <> " out of " <> IntegerString[Length[selectedFirstEdgesOptions]] ];
