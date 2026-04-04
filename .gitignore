@@ -4,6 +4,7 @@ tmp*
 *.png
 *.gif
 !output/**
+!AI_assisted_analysis/**/*.png
 
 output/*test*.png
 output/*test*/**

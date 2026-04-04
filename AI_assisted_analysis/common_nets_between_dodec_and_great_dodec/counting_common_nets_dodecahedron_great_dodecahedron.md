@@ -174,7 +174,7 @@ The representative for each equivalence class is the **first net encountered in 
 
 ### Phase 4: Visualize — `visualize_all_good_nets.wls`
 
-**Status: script written, not yet run. Requires POVRayRender package.**
+**Status: script tested with testCount=3 (6 images verified). Ready for full run (all 74 nets).**
 
 The script `AI_assisted_analysis/visualize_all_good_nets.wls` generates one image per distinct good net. It reads the two net list files and renders each as a fully unfolded flat net (the dodecahedron net laid flat in 2D).
 

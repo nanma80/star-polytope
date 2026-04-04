@@ -12,7 +12,7 @@
 
 p = 5; q = 3; r = 1;
 
-imageSize = {4, 3} * 2160 / 3;
+imageSize = {4, 3} * 1080 / 3;
 lightSource = {50, -50, 50};
 lighting = {{"Point", White, lightSource}};
 
@@ -260,6 +260,10 @@ renderNet[faces_, edgeList_, netIndex_, outputFolder_] := Module[
     outputFileName = FileNameJoin[{outputFolder, "net_" <> IntegerString[netIndex, 10, 2] <> ".png"}];
     If[FileExistsQ[outputFileName], DeleteFile[outputFileName]];
     POVRayRender[graph, Method -> "Triangle", OutputPath -> outputFileName, ImageSize -> imageSize, RenderOptions -> "+A0.001 -J +UA"];
+
+    cropCommand = "mogrify -crop " <> IntegerString[imageSize[[2]]] <> "x" <> IntegerString[imageSize[[2]]] <> "+" <> IntegerString[(imageSize[[1]]-imageSize[[2]])/2] <> "+0 " <> outputFileName;
+    Run[cropCommand];
+
     Print["Saved " <> outputFileName];
 ];
 
@@ -290,20 +294,19 @@ If[!DirectoryQ[folder60], CreateDirectory[folder60]];
 If[!DirectoryQ[folder120], CreateDirectory[folder120]];
 
 (* Render orbit-60 nets *)
-testCount = 3; (* Set to Length[orbit60Nets] or Length[orbit120Nets] for full run *)
-Print["=== Rendering " <> IntegerString[testCount] <> " orbit-60 nets (test) ==="];
+Print["=== Rendering " <> IntegerString[Length[orbit60Nets]] <> " orbit-60 nets ==="];
 Do[
-    Print["Orbit-60 net " <> IntegerString[i] <> " / " <> IntegerString[testCount]];
+    Print["Orbit-60 net " <> IntegerString[i] <> " / " <> IntegerString[Length[orbit60Nets]]];
     renderNet[faces, orbit60Nets[[i]], i, folder60],
-    {i, testCount}
+    {i, Length[orbit60Nets]}
 ];
 
 (* Render orbit-120 nets *)
-Print["=== Rendering " <> IntegerString[testCount] <> " orbit-120 nets (test) ==="];
+Print["=== Rendering " <> IntegerString[Length[orbit120Nets]] <> " orbit-120 nets ==="];
 Do[
-    Print["Orbit-120 net " <> IntegerString[i] <> " / " <> IntegerString[testCount]];
+    Print["Orbit-120 net " <> IntegerString[i] <> " / " <> IntegerString[Length[orbit120Nets]]];
     renderNet[faces, orbit120Nets[[i]], i, folder120],
-    {i, testCount}
+    {i, Length[orbit120Nets]}
 ];
 
 Print["Done! Generated " <> IntegerString[Length[orbit60Nets] + Length[orbit120Nets]] <> " images total."];
