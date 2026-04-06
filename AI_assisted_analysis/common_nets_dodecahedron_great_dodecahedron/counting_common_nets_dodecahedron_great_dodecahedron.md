@@ -26,7 +26,7 @@ The icosahedron and small stellated dodecahedron share the same 12 vertices and 
 
 Applying Kirchhoff's matrix tree theorem to both:
 
-$$\text{# spanning trees} = \frac{1}{12} (5+\sqrt{5})^3 \cdot 6^5 \cdot (5-\sqrt{5})^3 = \frac{1}{12} \cdot 20^3 \cdot 7776 = 5{,}184{,}000$$
+$$\text{\# spanning trees} = \frac{1}{12} (5+\sqrt{5})^3 \cdot 6^5 \cdot (5-\sqrt{5})^3 = \frac{1}{12} \cdot 20^3 \cdot 7776 = 5{,}184{,}000$$
 
 This was verified computationally by constructing both dual graphs explicitly and computing the determinant of the reduced Laplacian.
 
@@ -108,7 +108,7 @@ Each symmetry acts on the 12 faces as a permutation π ∈ S₁₂. Two labeled 
 
 By Burnside's lemma (a.k.a. the Cauchy–Frobenius lemma):
 
-$$\text{# distinct nets} = \frac{1}{|G|} \sum_{g \in G} |\text{Fix}(g)|$$
+$$\text{\# distinct nets} = \frac{1}{|G|} \sum_{g \in G} |\text{Fix}(g)|$$
 
 where Fix(g) is the number of spanning trees invariant under symmetry g.
 
@@ -119,38 +119,45 @@ where Fix(g) is the number of spanning trees invariant under symmetry g.
 
 ### Orbit structure of all 43,380 dodecahedron nets
 
-The possible orbit sizes for spanning trees are constrained by the structure of Ih and the fact that a spanning tree has 11 edges. The only possible orbit sizes are **60** and **120** — no others. This is proved by ruling out all stabilizer subgroups of order ≥ 3:
+The possible orbit sizes for spanning trees are constrained by the structure of Ih and the fact that a spanning tree has 11 edges. The only possible orbit sizes are **60** and **120** — no others, and the 360 symmetric nets all have a C₂ rotational symmetry (never a reflection).
 
-**No element of order 3 or 5 can fix a spanning tree.** A C₃ rotation permutes 12 faces in four 3-cycles (no fixed points), so all edge orbits under C₃ have size 3. Since 11 is not divisible by 3, no invariant spanning tree exists. The same argument applies to C₅: edge orbits have size 5, and 11 is not divisible by 5.
+This was first established by Buekenhout and Parker (1998), who proved three key results (Section 5.6 of their paper):
 
-**No element whose group contains the inversion can fix a spanning tree.** The inversion permutes all 12 faces in 6 transpositions, with no adjacent pair forming a transposition (opposite faces are at distance 3 in the icosahedron graph). So all edge orbits have size 2, but 11 is odd. This rules out the inversion directly, and also rules out S₆ (whose cube is the inversion) and S₁₀ (whose fifth power is the inversion).
+**Lemma 5.6.1** (only order-2 rotations can stabilize a tree): If a non-identity symmetry g fixes a spanning tree, then g has order 2 and has no fixed vertices (Fix g = ∅). The proof rules out order 3 and 5 by noting that a fixed edge implies a fixed vertex, which acts on the pentagonal vertex-figure and forces g to have order 2, a contradiction. It then rules out order-2 elements with fixed vertices: such an element fixes exactly 4 vertices, forming a disconnected subgraph, which contradicts the requirement (their Lemma 3.5) that the fixed-point set of a tree-stabilizing symmetry be connected. Since Fix g = ∅ means no fixed vertices, g must be a rotation (not a reflection), specifically a C₂ rotation through opposite edge midpoints.
 
-**No Klein four-group V₄ can fix a spanning tree.** There are 35 Klein four-groups in Ih. For V₄ subgroups consisting of 3 C₂ rotations: no edge can be simultaneously fixed by all three (if two C₂ rotations both swap the endpoints of an edge, their product fixes a vertex, contradicting C₂ rotations having no fixed vertices). All edge orbits therefore have size 2 or 4 (even), and 11 is odd. For V₄ subgroups containing reflections: size-1 edge orbits do exist (a reflection can fix an edge whose endpoints are both on the mirror plane), but a connectivity analysis of the quotient graph shows the vertex orbits (1 of size 4, 4 of size 2 = 5 groups) cannot be spanned — the mandatory self-loop orbits consume edge-orbit slots, leaving too few inter-group bridges. This was verified by exhaustive computation over all 35 V₄ subgroups.
+**Lemma 5.6.2** (counting fixed trees): All such order-2 rotations are conjugate in Ih. There are |C_g| = 15 of them, and each fixes |σ_g| = 1,440 spanning trees. The 1,440 is computed via a quotient graph: under a C₂ rotation, the 30 edges split into 2 invariant edges and 4 orbits of size 2. The quotient graph Q(F, g) has 720 spanning trees, and each gives 2 spanning trees of the original graph (from a choice at the invariant edges), yielding 1,440.
 
-**Therefore, stabilizers have order at most 2**, and the only possible orbit sizes are 60 (stabilizer = one involution) and 120 (trivial stabilizer). Solving:
+**Proposition 5.6.3** (Burnside's lemma): The number of distinct nets is:
+
+$$u(F) = \frac{1}{120}(120 \times 43{,}200 + 15 \times 1{,}440) = 43{,}380$$
+
+where 43,200 = 5,184,000 / 120 is the identity's contribution.
+
+The orbit-size decomposition follows immediately (though Buekenhout and Parker did not write it out): the 15 × 1,440 = 21,600 non-identity fixed points correspond to 21,600 / 60 = **360** orbit-60 nets, each stabilized by exactly one C₂ rotation. The remaining 43,380 − 360 = **43,020** nets have trivial stabilizer (orbit size 120). Mabry later stated the number 360 explicitly in the context of pyritohedra, deriving it independently from the formula 216,810 = 5 × 43,380 − 2 × 360 for pyritohedron nets.
+
+More broadly, **no improper symmetry** (orientation-reversing element) fixes any spanning tree. Lemma 5.6.1 rules out reflections (which fix 2 vertices, contradicting Fix g = ∅). The inversion is ruled out separately: it swaps all 12 faces in 6 non-adjacent pairs, giving all edge orbits size 2, and 11 (odd) cannot be a sum of 2s. Together, these imply that **all 43,380 dodecahedron nets are chiral** (none equals its mirror image). Under the rotation subgroup (order 60), every full-symmetry orbit of size 120 splits into two orbits of size 60 (a chiral pair), and every orbit of size 60 splits into two orbits of size 30.
 
 | Orbit size | Stabilizer | Count | Labeled trees |
 |---|---|---|---|
-| 120 | trivial | 43,020 | 5,162,400 |
-| 60 | order 2 | 360 | 21,600 |
+| 120 | trivial | 43,020 (99.17%) | 43,020 × 120 = 5,162,400 |
+| 60 | C₂ rotation | 360 (0.83%) | 360 × 60 = 21,600 |
 | **Total** | | **43,380** | **5,184,000** |
 
-Only 360 out of 43,380 nets (0.83%) have any non-trivial symmetry.
+**References:**
+- F. Buekenhout, M. Parker, "The Number of Nets of the Regular Convex Polytopes in Dimension ≤ 4," *Discrete Mathematics* 186 (1998), 69–94.
+- R. Mabry, "Pyritomania: Nets of Pyritohedra," https://lsusmath.rickmabry.org/rmabry/dodec/pyrito/pyrito1.html
 
-### Distinct good nets (common nets)
+### Orbit structure of the 74 common nets
 
-For good nets:
-- Labeled count: **7,320**
-- 7,320 / 120 = 61 exactly — but this does **not** imply all orbits have size 120.
-- Computation (see `classify_good_nets.wls`) reveals **74 distinct good nets**, with two types:
+Computation (see `classify_good_nets.wls`) reveals **74 distinct common nets**:
 
-| Orbit size | Count | Stabilizer order | Labeled trees |
+| Orbit size | Stabilizer | Count | Labeled trees |
 |---|---|---|---|
-| 120 | 48 | 1 (trivial) | 48 × 120 = 5,760 |
-| 60 | 26 | 2 | 26 × 60 = 1,560 |
-| **Total** | **74** | | **7,320** |
+| 120 | trivial | 48 (64.9%) | 48 × 120 = 5,760 |
+| 60 | C₂ rotation | 26 (35.1%) | 26 × 60 = 1,560 |
+| **Total** | | **74** | **7,320** |
 
-The earlier prediction of 61 was wrong because exact divisibility of the labeled count by the group order is a necessary but not sufficient condition for all orbits to have full size. The coincidence masked 26 smaller orbits.
+The naïve estimate of 7,320 / 120 = 61 distinct nets is wrong because exact divisibility of the labeled count by the group order is a necessary but not sufficient condition for all orbits to have full size. The coincidence masked 26 smaller orbits.
 
 ### Why common nets are enriched for symmetry
 
@@ -172,27 +179,9 @@ This enrichment can be understood through several complementary perspectives:
 
 3. **Path coherence in symmetric trees.** Each face's final 3D position is determined by cumulative rotations along its root-to-leaf path. In a symmetric tree, faces related by σ traverse "mirror" paths, so their cumulative rotations are related by the same symmetry. This ensures symmetric faces land in symmetrically-related positions rather than independently drifting into collisions.
 
-### Chirality (mirror symmetry)
+### Chirality
 
-Under the **rotation subgroup** (order 60, no reflections):
-- **148 distinct nets** under rotations only.
-- Each of the 74 full-symmetry orbits splits into either:
-  - **1 orbit** of size 120 under rotations → the net is **achiral** (equal to its mirror image)
-  - **2 orbits** of size 60 under rotations → the net is **chiral** (distinct from its mirror image)
-
-| Rotation orbit size | Count |
-|---|---|
-| 60 | 96 |
-| 30 | 52 |
-
-- If c = number of chiral pairs and a = number of achiral nets:
-  - a + c = 74 (full symmetry classes)
-  - a + 2c = 148 (rotation-only classes)
-  - Solving: **c = 74, a = 0** → **all 74 good nets are chiral**. No common net equals its mirror image.
-
-The 26 nets with orbit size 60 under Ih split into orbits of size 30 under rotations (2 × 26 = 52 rotation-orbits of size 30). The 48 nets with orbit size 120 under Ih split into orbits of size 60 (2 × 48 = 96 rotation-orbits of size 60). Total rotation-orbits: 52 + 96 = 148 ✓.
-
-The chirality of all common nets is related to the asymmetry of the fold operation: `angleToStellate = −2 × dihedral + π` reverses the folding direction compared to flat unfolding, breaking parity.
+Since all 43,380 dodecahedron nets are chiral (see above), all 74 common nets are chiral as well. Under the rotation subgroup (order 60), each Ih orbit splits into two rotation-orbits: the 48 orbit-120 nets split into 96 rotation-orbits of size 60, and the 26 orbit-60 nets split into 52 rotation-orbits of size 30. Total: 148 distinct common nets under rotations only.
 
 ---
 
